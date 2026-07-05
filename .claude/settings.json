@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Edit", "Write",
+      "Bash(npm install:*)", "Bash(npm run:*)", "Bash(npx prisma:*)",
+      "Bash(npx playwright:*)", "Bash(npx next:*)", "Bash(node:*)",
+      "Bash(mkdir:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(mv:*)", "Bash(cp:*)",
+      "Bash(git add:*)", "Bash(git commit:*)", "Bash(git status)", "Bash(git diff:*)"
+    ],
+    "deny": ["Bash(rm -rf:*)", "Bash(git push:*)", "Read(.env)", "Read(.env.*)"]
+  }
+}

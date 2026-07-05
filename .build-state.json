@@ -1,0 +1,22 @@
+{
+  "phase": 1,
+  "phaseStatus": "IN_PROGRESS",
+  "completedPhases": [],
+  "currentTask": "Phase 1 — foundation",
+  "completedTasks": [
+    "scaffold Next.js 14.2.35",
+    "install all deps (Prisma pinned v6)",
+    "start PostgreSQL 16 + create humiley_procurement DB",
+    "write full prisma/schema.prisma (~50 models) + migrate init",
+    "generate Prisma client + lib/db.ts singleton",
+    "CLAUDE.md (§22.1)",
+    ".claude/settings.json (§23)",
+    "package.json scripts (check/seed/test:e2e)",
+    ".env + .env.example",
+    "§22.2 folder skeleton",
+    "docs/PHASE-REPORTS.md + checkpoint infra"
+  ],
+  "nextAction": "lib core (money/dates/docnum/audit) + Tailwind brand theme (§10) + Auth.js v5 credentials + bcrypt + lib/rbac.ts + next-intl en/vi middleware + (portal) app shell (§11 sidebar/topbar/locale/bell) + seed script (§13) + admin user CRUD + §22.3 shared components; then finalize Phase 1 report + `phase-1` commit",
+  "lastCheckpointCommit": "",
+  "updatedAt": "2026-07-06T00:00:00+07:00"
+}
