@@ -1,10 +1,10 @@
 {
-  "phase": 2,
+  "phase": 3,
   "phaseStatus": "NOT_STARTED",
-  "completedPhases": [1],
-  "currentTask": "Phase 2 — master data CRUD",
+  "completedPhases": [1, 2],
+  "currentTask": "Phase 3 — Purchase Requisition module",
   "completedTasks": [],
-  "nextAction": "Phase 2 (§22.7 prompt 2): master data CRUD (departments, cost centers, categories, items, UoM, vendors — no approval flow yet) using DocListPage/DocDetailLayout; xlsx importers for items and vendors (§17). Extend prisma/seed.ts with vendors + 20 items + budgets + warehouses. Run npm run check + npm run seed, verify, append Phase Report, commit phase-2.",
-  "lastCheckpointCommit": "phase-1",
+  "nextAction": "Phase 3 (§22.7 prompt 3): PR module per §5 — PR list/new/detail using DocListPage/DocDetailLayout/LineItemsEditor; docnum service (HML-PR-YYYY-NNNN via lib/docnum); attachments (lib/storage adapter); audit; budget stock-hint on lines (free-stock note). PR status DRAFT→SUBMITTED (approval engine is Phase 4). Extend seed with a demo PR. Run npm run check + npm run seed, verify, append Phase Report, commit phase-3.",
+  "lastCheckpointCommit": "phase-2",
   "updatedAt": "2026-07-06T00:00:00+07:00"
 }

@@ -119,7 +119,9 @@
     "MATCHED": "Đã đối chiếu",
     "OPEN": "Đang mở",
     "ACTIVE": "Hoạt động",
-    "INACTIVE": "Ngừng"
+    "INACTIVE": "Ngừng",
+    "BLACKLISTED": "Danh sách đen",
+    "CONVERTED": "Đã chuyển đổi"
   },
   "admin": {
     "users": {
@@ -137,6 +139,49 @@
       "created": "Đã tạo người dùng.",
       "updated": "Đã cập nhật người dùng.",
       "defaultPassword": "Mật khẩu mặc định là Humiley@2026 (người dùng phải đổi khi đăng nhập lần đầu)."
+    },
+    "md": {
+      "fields": {
+        "code": "Mã",
+        "nameEn": "Tên (EN)",
+        "nameVn": "Tên (VN)",
+        "department": "Phòng ban",
+        "manager": "Người quản lý",
+        "category": "Nhóm hàng",
+        "parent": "Nhóm cha",
+        "uom": "Đơn vị tính",
+        "spec": "Quy cách",
+        "price": "Giá gần nhất (VND)",
+        "lotTracked": "Theo lô / mẻ",
+        "active": "Hoạt động",
+        "capex": "Nhóm CAPEX"
+      },
+      "departments": { "title": "Phòng ban", "subtitle": "Các phòng ban công ty", "new": "Thêm phòng ban" },
+      "costCenters": { "title": "Trung tâm chi phí", "subtitle": "Trung tâm chi phí theo phòng ban", "new": "Thêm trung tâm chi phí" },
+      "categories": { "title": "Nhóm hàng", "subtitle": "Nhóm hàng / chi phí", "new": "Thêm nhóm hàng" },
+      "uom": { "title": "Đơn vị tính", "subtitle": "Đơn vị dùng cho vật tư và chứng từ", "new": "Thêm đơn vị" },
+      "items": { "title": "Vật tư", "subtitle": "Danh mục vật tư", "new": "Thêm vật tư", "import": "Nhập từ Excel" }
+    }
+  },
+  "vendors": {
+    "title": "Nhà cung cấp",
+    "subtitle": "Danh mục nhà cung cấp",
+    "new": "Thêm nhà cung cấp",
+    "import": "Nhập từ Excel",
+    "fields": {
+      "code": "Mã",
+      "nameEn": "Tên (EN)",
+      "nameVn": "Tên (VN)",
+      "taxCode": "Mã số thuế",
+      "address": "Địa chỉ",
+      "contactName": "Người liên hệ",
+      "contactEmail": "Email liên hệ",
+      "contactPhone": "Điện thoại",
+      "paymentTermDays": "Điều khoản thanh toán (ngày)",
+      "bankName": "Ngân hàng",
+      "bankAccount": "Số tài khoản",
+      "categories": "Nhóm cung cấp (phân tách bằng dấu phẩy)",
+      "rating": "Đánh giá"
     }
   }
 }

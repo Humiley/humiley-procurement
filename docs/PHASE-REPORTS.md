@@ -4,6 +4,60 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
 
 ---
 
+## Phase 2 — Master Data — ✅ COMPLETE
+
+**Summary.** CRUD for all master data — departments, cost centers, categories (tree + CAPEX
+flag), units of measure, catalog items, and vendors — built on the §22.3 shared components, plus
+Excel/CSV importers for items and vendors (§17). Seed extended with the full master-data set.
+
+### Definition of Done (§22.6)
+- ✅ `npm run check` — 0 type errors, 0 lint errors.
+- ✅ `npm run seed` — OK (8 UoM, 5 categories, 5 cost centers, 20 items, 3 approved vendors,
+  7 budgets FY2026, + Phase 1 depts/users).
+- ✅ `npm run build` — all new routes compile.
+- ✅ Acceptance demonstrated against seed data (authenticated runtime smoke test):
+  - `/admin/{departments,cost-centers,categories,uom,items}` + `/vendors` all → 200, render
+    seeded rows (verified `HVAC-AHU-05`, `V-CLEAN01`, `CC-ENG`).
+  - Items import CSV → `{created:1, updated:1, skipped:0}`; vendors import → `{created:1}`.
+  - Unauthenticated `POST /api/admin/import` → blocked (307 → login; route also `isAdmin`-guards).
+- ✅ New strings in BOTH `messages/en.json` and `messages/vi.json` (`admin.md.*`, `vendors.*`).
+- ✅ Every mutation: Zod (`lib/schemas/masterdata.ts`) + RBAC (`requireRoles`) + audit.
+
+### Acceptance criteria (§22.7 prompt 2)
+- ✅ Master-data CRUD (departments, cost centers, categories, items, UoM, vendors — no approval
+  flow yet) using DocListPage-based lists. · ✅ xlsx importers for items and vendors (§17).
+
+### Files of note
+- `components/admin/MasterDataManager.tsx` — generic list + modal-form CRUD driven by a
+  **serializable** column spec (`MdColumnSpec` with a `kind` discriminator) + field config.
+- `components/admin/ExcelImportButton.tsx` + `app/api/admin/import/route.ts` — .xlsx (exceljs) /
+  .csv importer with header mapping, upsert-by-code, per-row error report, template download.
+- `lib/schemas/masterdata.ts`; `app/(portal)/admin/masterdata.actions.ts`;
+  `app/(portal)/admin/{departments,cost-centers,categories,uom,items}/page.tsx`;
+  `app/(portal)/vendors/{page,actions}.ts`.
+
+### ⚠️ Decisions (this phase)
+- **Serializable column spec** — the initial design passed `render`/`value` closures from Server
+  Components into the client `MasterDataManager`, which is illegal across the RSC boundary
+  (three pages 500'd). Refactored so pages pass a plain `MdColumnSpec` (`kind: text|money|status|
+  bool|flag`) and the client builds the render closures. (Caught + fixed by runtime smoke test.)
+- **Importers accept .xlsx and .csv**, keyed by header names; upsert by `code`; the "template"
+  download is a header-only CSV (opens in Excel). Server-side parse (exceljs for xlsx). exceljs's
+  bundled `Buffer` type lags `@types/node` 20 — cast to its own param type at the call site.
+- **Vendors are created `DRAFT`** (default) and seeded `APPROVED`; the vendor **approval flow**
+  (status transitions, evaluation) is Phase 5. Vendor CRUD allowed for ADMIN + PURCHASER; the
+  vendor **detail page** (`/vendors/[id]` with DocDetailLayout) also lands in Phase 5.
+- **Seed grows** — Phase 2 added master data + budgets. Budgets are per cost-center × category for
+  the machine's current fiscal year.
+
+### ⚠️ Known limitations
+- Categories support a parent (tree) but the list is flat (indented tree view is cosmetic, later).
+- Item stock policies / warehouses are NOT seeded yet (Phase 9 inventory).
+- Master-data lists use client-side filter/sort/CSV-export (as in Phase 1); server pagination is
+  layered if any list outgrows one page.
+
+---
+
 ## Phase 1 — Foundation — ✅ COMPLETE
 
 **Summary.** Project scaffold, full Prisma schema (all §4 entities) + migration, Auth.js v5

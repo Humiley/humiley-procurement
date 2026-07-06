@@ -119,7 +119,9 @@
     "MATCHED": "Matched",
     "OPEN": "Open",
     "ACTIVE": "Active",
-    "INACTIVE": "Inactive"
+    "INACTIVE": "Inactive",
+    "BLACKLISTED": "Blacklisted",
+    "CONVERTED": "Converted"
   },
   "admin": {
     "users": {
@@ -137,6 +139,49 @@
       "created": "User created.",
       "updated": "User updated.",
       "defaultPassword": "The default password is Humiley@2026 (user must change on first login)."
+    },
+    "md": {
+      "fields": {
+        "code": "Code",
+        "nameEn": "Name (EN)",
+        "nameVn": "Name (VN)",
+        "department": "Department",
+        "manager": "Manager",
+        "category": "Category",
+        "parent": "Parent category",
+        "uom": "Unit of measure",
+        "spec": "Specification",
+        "price": "Last price (VND)",
+        "lotTracked": "Lot / batch tracked",
+        "active": "Active",
+        "capex": "CAPEX category"
+      },
+      "departments": { "title": "Departments", "subtitle": "Company departments", "new": "New department" },
+      "costCenters": { "title": "Cost Centers", "subtitle": "Budget cost centers by department", "new": "New cost center" },
+      "categories": { "title": "Categories", "subtitle": "Item / spend categories", "new": "New category" },
+      "uom": { "title": "Units of Measure", "subtitle": "Units used on items and documents", "new": "New unit" },
+      "items": { "title": "Items", "subtitle": "Catalog items", "new": "New item", "import": "Import from Excel" }
+    }
+  },
+  "vendors": {
+    "title": "Vendors",
+    "subtitle": "Supplier master",
+    "new": "New vendor",
+    "import": "Import from Excel",
+    "fields": {
+      "code": "Code",
+      "nameEn": "Name (EN)",
+      "nameVn": "Name (VN)",
+      "taxCode": "Tax code",
+      "address": "Address",
+      "contactName": "Contact name",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "paymentTermDays": "Payment terms (days)",
+      "bankName": "Bank name",
+      "bankAccount": "Bank account",
+      "categories": "Supply categories (comma-separated)",
+      "rating": "Rating"
     }
   }
 }
