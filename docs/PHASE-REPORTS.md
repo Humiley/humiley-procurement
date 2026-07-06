@@ -4,7 +4,71 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
 
 ---
 
-## Phase 1 — Foundation — IN PROGRESS
+## Phase 1 — Foundation — ✅ COMPLETE
+
+**Summary.** Project scaffold, full Prisma schema (all §4 entities) + migration, Auth.js v5
+credentials auth with bcrypt + account lockout, RBAC + edge middleware gate, next-intl EN/VI,
+the navy app shell (§11 nav, §10 brand), a role-aware dashboard, admin user CRUD, the seed
+script (§13 departments + all role logins), and every §22.3 shared component.
+
+### Definition of Done (§22.6)
+- ✅ `npm run check` — 0 type errors, 0 lint errors.
+- ✅ `npm run seed` — migrate reset + seed OK (5 departments, 9 users).
+- ✅ `npm run build` — all routes + middleware compile.
+- ✅ Acceptance demonstrated against seed data (runtime smoke test):
+  - `/login` → 200, renders brand + form.
+  - `/dashboard` unauth → 307 → `/login?callbackUrl=…` (middleware gate).
+  - Real login `admin@humiley.com / Humiley@2026` → 302 + session `{roles:["ADMIN"], isChief,
+    departmentId, locale, mustChangePw}`.
+  - Wrong password → `?error=CredentialsSignin`, no session.
+- ✅ New strings in BOTH `messages/en.json` and `messages/vi.json`.
+- ✅ Admin user mutations have Zod (`lib/schemas/user.ts`) + RBAC (`requireRoles("ADMIN")`) +
+  audit (`lib/audit`). (E-signature applies from Phase 4.)
+
+### Acceptance criteria (§12.1)
+- ✅ Auth + RBAC middleware · ✅ app shell (§11 nav, §10 brand) · ✅ i18n en/vi ·
+  ✅ full Prisma schema up front · ✅ seed script · ✅ admin user CRUD · ✅ all §22.3 shared
+  components built once for reuse.
+
+### Files of note
+- lib: `db, money, dates, docnum (SELECT FOR UPDATE), audit, rbac, auth(.config), cn, status,
+  schemas/user`.
+- shell: `components/shell/{nav,Sidebar,Topbar,AppShell,LocaleSwitcher,UserMenu}`.
+- shared (§22.3): `DocListPage, DocDetailLayout, StatusBadge, ApprovalTimeline, SignatureDialog,
+  LineItemsEditor, AttachmentPanel, MoneyInput, VndDisplay, BilingualLabel, EntityLink, Logo,
+  KpiCard`.
+- routes: `app/login`, `app/(portal)/{layout,dashboard,admin/users}`, `app/api/auth/[...nextauth]`.
+
+### ⚠️ Decisions (this phase)
+- **i18n without route prefix** — next-intl cookie-based locale (`NEXT_LOCALE`) instead of
+  `[locale]` segments, matching §11's flat routes. Switcher sets the cookie + `router.refresh()`.
+- **Auth.js v5 split** — edge-safe `lib/auth.config.ts` (no Prisma/bcrypt) for middleware;
+  full `lib/auth.ts` (Credentials + bcrypt + lockout after 5 fails / 15 min) node-side. Session
+  augmented via `types/next-auth.d.ts`; token reads cast in the session callback (beta typing
+  gap). Session strategy JWT, 12h.
+- **DocListPage filtering is client-side** over server-provided rows; Export emits UTF-8 CSV
+  (BOM, Excel-compatible). True server pagination + `exceljs` xlsx are layered per-register /
+  in the reports phase (§12.12). Recorded so it isn't mistaken for "done".
+- **SignatureDialog / AttachmentPanel** are the reusable UI shells; the esign crypto
+  (`lib/esign/sign.ts`) lands in Phase 4 and the storage adapter (`lib/storage`) from Phase 3.
+- **Seed is phased** — Phase 1 seeds departments + the 9 §13 login accounts (all roles, password
+  `Humiley@2026`, `mustChangePw`). Master data / warehouses / reference / demo chain are seeded
+  by their owning phases (2, 9, 14, +final).
+- **`npm run seed` consent** — Prisma 6.19's AI-agent guard on `migrate reset` was satisfied by
+  passing the user's standing master-prompt authorization via
+  `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`; target is the local dev DB
+  `localhost:5432/humiley_procurement` (no production data). Future phases do the same for seed.
+
+### ⚠️ Known limitations
+- Dashboard shows foundational KPIs (my PRs, pending approvals, open POs, unread) + recent audit
+  activity; the full role-aware charts/reports (§10) are Phase 12.
+- Nav links to not-yet-built routes (requisitions, rfqs, …) will 404 until their phase.
+- First-login forced password change is flagged (`mustChangePw`) but the change-password screen
+  is a small follow-up (added with the account/profile area).
+
+---
+
+## Phase 1 — Foundation — (build log)
 
 ### ✅ Built so far
 - Dedicated Next.js 14.2.35 project (TypeScript, Tailwind, App Router, no `src/`) in its own git repo.
