@@ -21,6 +21,70 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 10 — Inventory Extended (§10b) — ✅ COMPLETE
+
+**Summary.** The stock layer is now operationally complete. **Transfers** (Chuyển kho) move goods
+between warehouses in two signed steps: dispatch posts `TRANSFER_OUT` at the source's average cost
+(ISSUED signature, status → IN_TRANSIT) and the receiving keeper's confirmation posts `TRANSFER_IN`
+at the SAME unit cost (RECEIVED signature) — value is preserved end to end. **Stock counts** (Kiểm
+kê) snapshot every balance line into a count sheet; the keeper enters counted quantities (variances
+compute live and persist), and POSTING is a DIRECTOR-signed act (§19 meaning COUNTED) that turns
+variances into `ADJUST_IN`/`ADJUST_OUT` movements at the line's current average cost. **Reorder
+automation** closes the §10b loop: after every OUT movement (goods issue or transfer dispatch),
+`ItemStockPolicy` is checked — when on-hand + open-PO < min, PURCHASERs get a bilingual
+notification (deduped on unread) and the `/inventory/reorder` console shows every breach with a
+one-click **Generate draft PR** (source=REORDER, reorderQty lines priced from the catalog).
+The `/inventory` overview became the §10b dashboard: value KPIs + below-min and in-transit cards,
+a below-min banner, stock value by warehouse, and a zero-movement-in-90-days panel.
+
+### Built
+- transfers: lib/schemas/transfer.ts · inventory/transfers/actions.ts (create TRF docnum /
+  dispatch ISSUED-signed OUT + IN_TRANSIT / receive RECEIVED-signed IN at dispatch cost /
+  cancel) · TransferForm + TransferDetailActions · pages list/new/[id] (movements + signatures).
+- counts: inventory/counts/actions.ts (createCount snapshot COUNTING / saveCounts variance /
+  postCount DIRECTOR+ADMIN, COUNTED signature, ADJUST movements) · CountSheet + NewCountButton ·
+  pages list/[id].
+- reorder: lib/stock/reorder.ts (findReorderBreaches + checkReorderAfterOut, hooked into GI
+  execute AND transfer dispatch) · inventory/reorder/actions.ts (generateReorderPr → DRAFT PR
+  source=REORDER) · ReorderPanel + /inventory/reorder page.
+- dashboard: /inventory extended (below-min + in-transit KPIs, banner, value-by-warehouse,
+  slow movers) · seed: WH-SITE warehouse + HVAC-DMPR-30 policy (min 5 / max 40 / reorder 20) ·
+  trf + cnt + reorder i18n EN/VN + statuses IN_TRANSIT/COUNTING/POSTED.
+
+### E2E evidence (browser, fresh seed)
+- GRN 10 pcs @ 1M into WH-MAIN, then transfer HML-TRF-2026-0001 of 6 pcs WH-MAIN → WH-SITE:
+  dispatch (ISSUED sig) → TRANSFER_OUT 6 @ 1,000,000, WH-MAIN 4, IN_TRANSIT; receive (RECEIVED
+  sig) → TRANSFER_IN 6 @ 1,000,000, **WH-SITE 6 @ avg 1,000,000 — cost preserved**.
+- **Reorder fired on the dispatch OUT**: 4 on hand + 0 open PO < min 5 → notification to
+  purchaser@humiley.com; /inventory/reorder showed the breach (4 | 0 | 5 | 20 PCS); Generate
+  draft PR → **HML-PR-2026-0004, DRAFT, source=REORDER, 20 pcs @ 950,000 (catalog last price),
+  total 19,000,000 ₫**.
+- Count HML-CNT-2026-0001 on WH-SITE: counted 5 vs system 6 → variance −1 (live + persisted);
+  Finance Director posted with COUNTED signature + reason ("1 damper damaged on site") →
+  **ADJUST_OUT 1 @ 1,000,000, WH-SITE 6 → 5, count POSTED**.
+- Movement ledger reads GRN_IN 10 → TRANSFER_OUT 6 → TRANSFER_IN 6 → ADJUST_OUT 1 (MOV-000001…4).
+- Dashboard verified: KPIs (32,140,000 ₫ total, below-min 1, in-transit live), below-min banner,
+  value by warehouse (WH-MAIN 27.14M / WH-SITE 5M), slow-movers panel (seed-only lines).
+
+### §23 decisions (spec didn't specify — decided and logged)
+1. **Transfer signatures**: dispatch = ISSUED, receipt = RECEIVED (§19 "every consequential act");
+   the spec lists no explicit transfer signature but stock leaves/enters a warehouse.
+2. **Counts skip DRAFT**: a count is created directly in COUNTING with the snapshot taken at
+   creation (a count sheet without its snapshot has no meaning). countedQty starts at systemQty.
+3. **Count posting authority** = role gate (DIRECTOR or ADMIN signs COUNTED) rather than an
+   approval-matrix flow — §10b says "requires DIRECTOR approval", the signature IS the approval.
+4. **ADJUST_IN cost** = the line's current average cost (gains don't change avgCost, they extend it),
+   keeping valuation consistent; ADJUST_OUT posts at avg like every OUT.
+5. **Open-PO quantity in the reorder check is company-wide** (POs carry no destination warehouse).
+6. **Reorder dedupe** = skip while an UNREAD notification exists for the same warehouse+item link;
+   once read, a persisting breach may notify again (safety over silence). Nightly job deferred to
+   the governance/API phase — every OUT already triggers the check, so a scheduled sweep adds
+   little in v1 (logged as future work §17).
+7. **xlsx import for counted quantities deferred** to the reports/xlsx phase (12) where the xlsx
+   toolchain lands; v1 enters counts in the sheet UI.
+
+---
+
 ## Phase 9 — Inventory Core (§10b) — ✅ COMPLETE
 
 **Summary.** Stock is live on a single-writer architecture: `lib/stock/post-movement.ts` is the ONLY

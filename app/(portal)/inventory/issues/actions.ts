@@ -10,6 +10,7 @@ import { transition, staleError } from "@/lib/workflow/transition";
 import { createSteps, applyDecision, type Decision } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { postMovement, StockError } from "@/lib/stock/post-movement";
+import { checkReorderAfterOut } from "@/lib/stock/reorder";
 import { giCreateSchema, giExecuteSchema, type GiCreatePayload, type GiExecutePayload } from "@/lib/schemas/gi";
 import type { SignatureMeaning } from "@prisma/client";
 
@@ -202,6 +203,8 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
     if (e instanceof StockError) throw new Error(e.message);
     throw e;
   }
+
+  await checkReorderAfterOut(gi.warehouseId, issuing.map((l) => lineById.get(l.lineId)!.itemId));
 
   // §10b: the issued cost charges the cost center's budget under "from stock"
   try {

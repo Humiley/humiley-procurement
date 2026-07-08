@@ -399,6 +399,27 @@ async function seedDemoStock() {
       await db.stockBalance.create({ data: { warehouseId: wh.id, itemId: item.id, qtyOnHand: s.qty, avgCostVnd: s.avg } });
     }
   }
+
+  // Phase 10: a site warehouse (transfer destination) + a reorder policy on the demo damper.
+  await db.warehouse.upsert({
+    where: { code: "WH-SITE" },
+    update: {},
+    create: {
+      code: "WH-SITE",
+      nameEn: "Site Warehouse — Long Thanh",
+      nameVn: "Kho công trường — Long Thành",
+      address: "Long Thanh Factory, Dong Nai",
+      keeperId: keeper?.id ?? null,
+    },
+  });
+  const damper = await db.item.findUnique({ where: { code: "HVAC-DMPR-30" } });
+  if (damper) {
+    await db.itemStockPolicy.upsert({
+      where: { itemId_warehouseId: { itemId: damper.id, warehouseId: wh.id } },
+      update: { minQty: 5, reorderQty: 20 },
+      create: { itemId: damper.id, warehouseId: wh.id, minQty: 5, maxQty: 40, reorderQty: 20 },
+    });
+  }
 }
 
 // ---- Phase 3: one demo requisition (SUBMITTED, 3 lines) ----------------------
