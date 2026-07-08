@@ -21,6 +21,66 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 16 — Integration & API (§17) + Portal Integration Plan — ✅ COMPLETE
+
+**Summary.** The portal now talks to the outside world. **REST API** `/api/v1/*` (read-first, per
+§17): vendors, purchase-orders (with lines + received/invoiced qtys), invoices, payment-requests,
+stock-balances (lot-aware), requisitions — token-authenticated (`Authorization: Bearer hml_…`),
+paginated, Decimal-safe, described by a machine-readable **OpenAPI** document at /api/v1/openapi.
+API keys are minted in the admin console (token shown ONCE, only its SHA-256 stored, deactivate
+anytime, last-used tracking). **Outbound webhooks**: subscriptions per event (po.approved ·
+invoice.matched · payment.paid · stock.belowMin) with optional HMAC signing
+(X-Humiley-Signature) — fired best-effort from the real business actions and testable with a
+one-click ping. **Accounting export** (§17 anti-double-import): MATCHED invoices and PAID payment
+requests export as CSV batches (HML-EXP numbering); every exported row is stamped with its batch
+id so a second export finds nothing. And the standing user requirement is now a deliverable:
+**docs/PORTAL-INTEGRATION.md** — the exact plan to run procurement as an app of the Humiley
+Portal (procurement.humiley.com behind the existing Caddy, Entra ID SSO as an Auth.js provider
+addition with email-mapped users and NO JIT provisioning, launcher tile + opt-in access, §19
+signing-mode decision under SSO, API/webhook touchpoints for portal widgets, rollout checklist).
+
+### Built
+- migration `api_webhooks_export` (ApiKey · WebhookSubscription · ExportBatch · exportBatchId on
+  Invoice/PaymentRequest) · lib/api-auth.ts (mint/verify, Bearer, list params) · lib/webhooks.ts
+  (HMAC, 5s timeout, never throws into business tx) · app/api/v1/{vendors,purchase-orders,
+  invoices,payment-requests,stock-balances,requisitions,openapi} · middleware matcher excludes
+  /api/v1 (token auth guards it) · integration.actions.ts + IntegrationPanels (keys + hooks +
+  test ping) · export.actions.ts + ExportPanel + /admin/accounting-export · webhook fires wired
+  into decidePo / verifyInvoice / markPaymentRequestPaid / checkReorderAfterOut ·
+  docs/PORTAL-INTEGRATION.md · integration/acctExport i18n EN/VN.
+
+### E2E evidence (browser + curl + local sink)
+- Minted "E2E capture key" in the console (token displayed once: hml_k22U…); curl:
+  **no token → 401** {"error":"Missing bearer token"}; with the token →
+  /api/v1/vendors returned the vendor JSON, /api/v1/stock-balances returned lot-aware balances;
+  /api/v1/openapi returned the OpenAPI 3.0.3 document.
+- Registered webhook http://127.0.0.1:4567/hooks (secret set, payment.paid) → **Test ping
+  delivered to the local sink** with X-Humiley-Event: test.ping and a valid-looking
+  X-Humiley-Signature sha256 HMAC; payload carried pingedBy + subscription.
+- Accounting export: 2 pending matched invoices → "Export CSV batch" downloaded
+  HML-EXP-2026-0001-invoices.csv and reported "Batch HML-EXP-2026-0001 exported (2 rows)";
+  DB shows the ExportBatch row and both invoices stamped; pending count fell to 0 and the
+  button disabled (server additionally refuses with "Nothing to export").
+
+### §23 decisions (spec didn't specify or v1-scoped — decided and logged)
+1. **/api/v1 is excluded from the session middleware** — machine clients can't hold Auth.js
+   cookies; requireApiKey guards every route (401 proven). The OpenAPI document itself is public
+   (it's documentation, contains no data).
+2. **Write endpoints deliberately absent** — §17 says read-first; mutations stay behind the §19
+   signing ceremony which a bearer token must not bypass.
+3. **CSV (UTF-8 BOM) instead of xlsx for accounting batches** — MISA/Bravo import both; CSV keeps
+   the export dependency-free. Admin-configurable column mapping deferred; the template is fixed
+   and documented by its header row.
+4. **Webhook delivery is fire-and-forget** (5s timeout, allSettled, console-logged failures) — a
+   delivery-log table with retries is the scale-up path, noted for ops.
+5. **xlsx importers (items/vendors/opening stock/budgets) deferred** — go-live migration tooling,
+   tracked in VALIDATION.md §8 backlog with the other §17 extras (FX auto-fetch, e-invoice XML).
+6. SSO is documented as a config-level provider addition (PORTAL-INTEGRATION.md) rather than
+   coded now — the user's environment decision (shared vs sibling Entra app, signing mode under
+   SSO) gates the implementation; everything app-side is already provider-agnostic.
+
+---
+
 ## Phase 15 — Governance & Controls (§15 / §16 / §19) — ✅ COMPLETE
 
 **Summary.** The audit-facing control layer is in. **Vendor bank-change dual control** (highest

@@ -834,6 +834,8 @@
     "broken": "Phát hiện {count} chuỗi bị gãy — cần điều tra ngay:"
   },
   "adminSettings": {
+    "exportTitle": "Xuất dữ liệu kế toán",
+    "exportDesc": "Lô CSV hóa đơn đã khớp và thanh toán đã chi cho MISA/Bravo.",
     "title": "Quản trị & Kiểm soát",
     "subtitle": "Bảng điều khiển §15/§19 — toàn vẹn, nhật ký, ngoại lệ.",
     "auditTitle": "Nhật ký hệ thống",
@@ -855,6 +857,40 @@
     "detail": "Chi tiết",
     "empty": "Không có bản ghi phù hợp.",
     "cap": "Hiển thị 100 bản ghi mới nhất — lọc thêm để xem lịch sử cũ hơn."
+  },
+  "integration": {
+    "keysTitle": "Khóa API (§17)",
+    "keysHint": "REST API chỉ-đọc tại /api/v1 — xác thực bằng `Authorization: Bearer hml_…`. Token chỉ hiển thị MỘT lần khi tạo; hệ thống chỉ lưu mã băm.",
+    "keyNamePh": "VD: Kế toán MISA",
+    "mint": "Tạo khóa",
+    "copyOnce": "Sao chép ngay — chỉ hiện một lần:",
+    "noKeys": "Chưa có khóa API.",
+    "active": "Hoạt động",
+    "inactive": "Đã tắt",
+    "lastUsed": "dùng lần cuối {when}",
+    "neverUsed": "chưa dùng",
+    "deactivate": "Vô hiệu hóa",
+    "openapiHint": "Đặc tả máy đọc được:",
+    "hooksTitle": "Webhook gửi đi (§17)",
+    "secret": "Mã bí mật HMAC (tùy chọn)",
+    "addHook": "Thêm webhook",
+    "noHooks": "Chưa có webhook.",
+    "test": "Gửi thử",
+    "pinged": "Đã gửi sự kiện thử tới {url}.",
+    "delete": "Xóa"
+  },
+  "acctExport": {
+    "title": "Xuất dữ liệu kế toán",
+    "back": "Quản trị",
+    "invoicesTitle": "Hóa đơn đã khớp",
+    "invoicesDesc": "Hóa đơn MATCHED chưa vào lô — CSV nhập hóa đơn mua vào MISA/Bravo.",
+    "paymentsTitle": "Đề nghị đã chi",
+    "paymentsDesc": "Đề nghị thanh toán PAID chưa vào lô — CSV cho sổ quỹ/ngân hàng.",
+    "exportCsv": "Xuất lô CSV",
+    "done": "Đã xuất lô {batch} ({rows} dòng) — các dòng đã khóa vào lô này.",
+    "history": "Các lô gần đây",
+    "noBatches": "Chưa có lô nào.",
+    "rows": "dòng"
   },
   "grn": {
     "lot": "Lô",

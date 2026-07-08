@@ -834,6 +834,8 @@
     "broken": "{count} broken chain(s) detected — investigate immediately:"
   },
   "adminSettings": {
+    "exportTitle": "Accounting export",
+    "exportDesc": "CSV batches of matched invoices and paid payments for MISA/Bravo.",
     "title": "Governance & Controls",
     "subtitle": "§15/§19 admin console — integrity, audit trail, exceptions.",
     "auditTitle": "Audit trail",
@@ -855,6 +857,40 @@
     "detail": "Detail",
     "empty": "No entries match.",
     "cap": "Newest 100 entries shown — refine the filters for older history."
+  },
+  "integration": {
+    "keysTitle": "API keys (§17)",
+    "keysHint": "Read-only REST API under /api/v1 — authenticate with `Authorization: Bearer hml_…`. The token is shown ONCE at creation; only its hash is stored.",
+    "keyNamePh": "e.g. MISA accounting",
+    "mint": "Create key",
+    "copyOnce": "Copy now — shown once:",
+    "noKeys": "No API keys yet.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "lastUsed": "last used {when}",
+    "neverUsed": "never used",
+    "deactivate": "Deactivate",
+    "openapiHint": "Machine-readable spec:",
+    "hooksTitle": "Outbound webhooks (§17)",
+    "secret": "HMAC secret (optional)",
+    "addHook": "Add webhook",
+    "noHooks": "No webhooks yet.",
+    "test": "Test ping",
+    "pinged": "Test event sent to {url}.",
+    "delete": "Delete"
+  },
+  "acctExport": {
+    "title": "Accounting Export",
+    "back": "Governance",
+    "invoicesTitle": "Matched invoices",
+    "invoicesDesc": "MATCHED invoices not yet in a batch — CSV for MISA/Bravo purchase-invoice import.",
+    "paymentsTitle": "Paid payment requests",
+    "paymentsDesc": "PAID payment requests not yet in a batch — CSV for the cash/bank journal.",
+    "exportCsv": "Export CSV batch",
+    "done": "Batch {batch} exported ({rows} rows) — rows are now locked to this batch.",
+    "history": "Recent batches",
+    "noBatches": "No batches yet.",
+    "rows": "rows"
   },
   "grn": {
     "lot": "Lot",

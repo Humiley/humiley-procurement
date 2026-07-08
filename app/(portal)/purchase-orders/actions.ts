@@ -188,6 +188,8 @@ export async function decidePo(params: { poId: string; decision: Decision; passw
 
   if (result.outcome === "approved") {
     if (!(await transition(db.purchaseOrder, po.id, "PENDING_APPROVAL", "APPROVED"))) throw staleError();
+    const { fireWebhook } = await import("@/lib/webhooks");
+    await fireWebhook("po.approved", { poId: po.id, poNumber: po.poNumber, total: String(po.total), vendorId: po.vendorId });
     try { const { moveCommitmentPrToPo } = await import("@/lib/budget"); await moveCommitmentPrToPo(po.id); } catch (e) { console.warn("budget move failed:", e); }   // §9: commitment moves PR→PO
   } else if (result.outcome === "rejected" || result.outcome === "returned") {
     // PoStatus has no REJECTED — both decisions send the PO back to DRAFT with the comment + audit trail.

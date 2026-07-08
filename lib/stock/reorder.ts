@@ -81,6 +81,8 @@ export async function checkReorderAfterOut(warehouseId: string, itemIds: string[
       const link = `/inventory/reorder?wh=${b.warehouseId}&item=${b.itemId}`;
       const dup = await db.notification.findFirst({ where: { link, isRead: false } });
       if (dup) continue;
+      const { fireWebhook } = await import("@/lib/webhooks");
+      await fireWebhook("stock.belowMin", { warehouse: b.warehouseCode, item: b.itemLabel, onHand: b.onHand, minQty: b.minQty, reorderQty: b.reorderQty });
       await notifyRole("PURCHASER", {
         titleEn: `Reorder: ${b.itemLabel} below minimum at ${b.warehouseCode}`,
         titleVn: `Đặt hàng lại: ${b.itemLabel} dưới tồn tối thiểu tại ${b.warehouseCode}`,

@@ -184,6 +184,10 @@ export async function verifyInvoice(params: { invoiceId: string; password: strin
     await tx.invoice.update({ where: { id: inv.id }, data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" } });
   });
 
+  if (match.matched) {
+    const { fireWebhook } = await import("@/lib/webhooks");
+    await fireWebhook("invoice.matched", { invoiceId: inv.id, invoiceNumber: inv.invoiceNumber, total: String(inv.total) });
+  }
   try {
     const { spendOnInvoice } = await import("@/lib/budget");
     await spendOnInvoice(inv.id);   // §9: matched invoice moves commitment → spent

@@ -288,6 +288,9 @@ export async function markPaymentRequestPaid(params: { id: string; password: str
     await db.invoice.updateMany({ where: { id: { in: invoiceIds } }, data: { paymentStatus: "PAID", paidDate: new Date() } });
   }
 
+  const { fireWebhook } = await import("@/lib/webhooks");
+  await fireWebhook("payment.paid", { paymentRequestId: preq.id, number: preq.paymentRequestNumber, amount: String(preq.amount), paymentRef: params.paymentRef.trim() });
+
   await audit({ userId: user.id, action: "PAYREQ_PAID", entityType: "PaymentRequest", entityId: preq.id, after: { ref: params.paymentRef.trim(), cascadedInvoices: invoiceIds.length, signatureId: sig.id } });
   revalidatePath(`/payment-requests/${preq.id}`);
   revalidatePath("/payment-requests");
