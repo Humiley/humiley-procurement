@@ -1,5 +1,5 @@
 {
-  "phase": 17,
+  "phase": "DONE",
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -17,11 +17,12 @@
     13,
     14,
     15,
-    16
+    16,
+    17
   ],
   "currentTask": "Phase 9 — Inventory core per §10b",
   "completedTasks": [],
-  "nextAction": "Phase 17 (§22.7 prompt 17): polish + E2E test suite — final phase. (1) Playwright e2e tests (npm run test:e2e): auth setup + core journeys as specs: login/logout, PR create→submit→approve (signed), PO from PR + contract price autofill, GRN with lot → stock, goods issue FEFO, payment request verify-gate, vendor bank dual control block, SoD refusals, API 401/200, exception register; use the seeded users; make tests idempotent via npm run seed in globalSetup. (2) Polish sweep: empty states verified, mobile card tables on key registers (spot check), 404/error pages, loading states. (3) FINAL-REPORT.md summarizing the whole build (17 phases, architecture, controls, portal integration pointer, deferred backlog consolidated). (4) Update README.md quickstart. npm run check + full test:e2e green + Phase Report + commit phase-17. THEN mark the build COMPLETE in .build-state.json (phase: 'DONE').",
-  "lastCheckpointCommit": "phase-16",
+  "nextAction": "BUILD COMPLETE — all 17 phases done and E2E-verified. See docs/FINAL-REPORT.md. Next milestones live OUTSIDE this build loop: (a) portal integration rollout per docs/PORTAL-INTEGRATION.md (Entra SSO switch-on, launcher tile, production deploy at procurement.humiley.com); (b) the consolidated deferred backlog in FINAL-REPORT.md.",
+  "lastCheckpointCommit": "phase-17",
   "updatedAt": "2026-07-09T02:00:00+07:00"
 }

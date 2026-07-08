@@ -21,6 +21,46 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 17 — Polish & E2E Test Suite — ✅ COMPLETE · **BUILD DONE (17/17)**
+
+**Summary.** The build closes with a deterministic Playwright suite and the last polish. **Tests**
+(`npm run test:e2e`): global setup reseeds the database, one worker runs nine specs serially —
+wrong-password rejection + sign-in/out; a 25-route smoke pass over every register as admin; the
+full PR journey (create with catalog line → submit → manager approves through the signed queue);
+PO-from-PR with the contract banner, the 280,000 auto-filled contracted price asserted on the
+input, and creation; the vendor bank dual control (edit bank → frozen-payment refusal text →
+Director signs the call-back confirmation → panel clears); the §10a verify gate (33M combined
+payment → L1 approved → chief accountant's premature final approval refused with "Accounting must
+verify"); API auth (401 bare, 200 + data with a minted bearer key, OpenAPI 3.0.3); and the scan
+hub (document code routes to the PO, unknown code reports "nothing matches"). **All 9 pass on a
+fresh seed (1.2m).** **Polish**: branded bilingual 404 (`app/not-found.tsx`) and in-app error
+boundary (`app/(portal)/error.tsx`). **Docs**: `docs/FINAL-REPORT.md` (whole-build summary,
+consolidated deferred backlog, run instructions) and a proper `README.md` quickstart.
+
+### Built
+- playwright.config.ts (serial, reseeding globalSetup, reuse dev server) · e2e/helpers.ts
+  (login/logout/sign ceremony helper) · e2e/01…08 specs · app/not-found.tsx +
+  app/(portal)/error.tsx · docs/FINAL-REPORT.md · README.md.
+
+### E2E evidence
+```
+9 passed (1.2m) — 01-auth(2) · 02-smoke · 03-pr-flow · 04-po-contract · 05-bank-control ·
+06-payreq-gate · 07-api · 08-scan-trace
+```
+`npm run check` clean.
+
+### §23 decisions
+1. **The demo seed IS the test fixture** — globalSetup reseeds, so every spec starts from the
+   same world and the suite doubles as a seed regression test.
+2. **One worker, serial files** — the journeys share a database; parallel workers would race the
+   same documents. Spec numbering fixes the order dependencies (bank control before further
+   payment specs).
+3. Error/404 pages use static bilingual text (they can render outside the intl provider) —
+   the one sanctioned exception to the messages-file rule, documented here.
+4. Deeper §21 scan-driven flows and remaining backlog live in FINAL-REPORT.md §deferred.
+
+---
+
 ## Phase 16 — Integration & API (§17) + Portal Integration Plan — ✅ COMPLETE
 
 **Summary.** The portal now talks to the outside world. **REST API** `/api/v1/*` (read-first, per

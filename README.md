@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Humiley Procurement Portal
 
-## Getting Started
+Enterprise procure-to-pay + inventory portal for Humiley Engineering & Solutions — bilingual
+EN/VN, 21 CFR Part 11-aligned e-signatures, full traceability. Built from
+`HUMILEY-PROCUREMENT-SPEC.md` (17 phases, all complete — see `docs/FINAL-REPORT.md`).
 
-First, run the development server:
+**Stack:** Next.js 14 (App Router) · TypeScript · Prisma 6 + PostgreSQL 16 · Auth.js v5 ·
+next-intl · Tailwind (Humiley brand) · Recharts · exceljs · bwip-js · Playwright.
+
+## Quickstart
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma migrate deploy      # local Postgres: humiley_procurement
+npm run seed                   # demo data (DESTRUCTIVE reset — dev only)
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in with any seeded user, password `Humiley@2026`:
+`admin@` · `purchaser@` · `mgr.eng@` · `director.fin@` · `accountant@` · `warehouse@` ·
+`req.eng@` …`humiley.com`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+|---|---|
+| `npm run check` | tsc + eslint (must pass after every change) |
+| `npm run seed` | reset + reseed demo data |
+| `npm run test:e2e` | Playwright journey suite (reseeds first) |
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+- `docs/FINAL-REPORT.md` — what was built, module by module.
+- `docs/PHASE-REPORTS.md` — per-phase build log with every logged decision.
+- `docs/VALIDATION.md` — §15/§16/§19 controls map for auditors.
+- `docs/PORTAL-INTEGRATION.md` — running this as an app of the Humiley Portal (Entra SSO,
+  launcher, deployment).
+- `/api/v1/openapi` — machine-readable API spec (token auth; mint keys in Admin → Governance).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Hard rules (see CLAUDE.md)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Money is Prisma Decimal end-to-end; every mutation is a Zod-validated, RBAC-checked, audited
+server action; status changes only via the optimistic-guarded transition helper; signatures only
+via the §19 ceremony; document numbers only via the gap-free sequence helper; every user-visible
+string lives in `messages/en.json` + `messages/vi.json`.
