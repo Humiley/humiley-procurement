@@ -1,5 +1,5 @@
 {
-  "phase": 7,
+  "phase": 8,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -7,11 +7,12 @@
     3,
     4,
     5,
-    6
+    6,
+    7
   ],
-  "currentTask": "Phase 7 \u2014 GRN + invoice + 3-way match + payment tracking per \u00a79",
+  "currentTask": "Phase 8 \u2014 Payment Request module per \u00a710a",
   "completedTasks": [],
-  "nextAction": "Phase 7 (\u00a722.7 prompt 7): GRN + invoice + 3-way match + payment tracking per \u00a79 \u2014 GRN: WAREHOUSE picks an open PO (SENT/PARTIALLY_RECEIVED), outstanding qty per line, over-receipt blocked beyond tolerance (default 0%), optional QC accepted/rejected + reason (rejected reopens PO line), partial deliveries (multiple GRNs per PO), PO status auto-updates PARTIALLY_RECEIVED/RECEIVED, GRN acceptance is a \u00a719 signature (meaning RECEIVED). Invoice (ACCOUNTANT): enter vendor invoice against PO, lines default from received-not-invoiced qty, 3-way match PO price/qty vs GRN accepted vs invoice (tolerance qty 0% price 2%), MATCHED/MISMATCH per line, mismatch needs ACCOUNTANT override with comment (Exception TOLERANCE_OVERRIDE), invoice verify = signature (VERIFIED). Payment tracking: due date from terms, mark paid/partially paid (signature PAID), aging buckets 0-30/31-60/61-90/90+. Budget: PR approval commits, PO approval moves commitment, invoice match moves to spent (lib/budget). npm run check + seed + browser E2E, Phase Report, commit phase-7.",
-  "lastCheckpointCommit": "phase-6",
-  "updatedAt": "2026-07-08T23:30:00+07:00"
+  "nextAction": "Phase 8 (\u00a722.7 prompt 8): Payment Request module per \u00a710a \u2014 all four types (PO_INVOICE from matched invoices; ADVANCE with % of PO and later offset; NON_PO expense with category; REFUND), docnum HML-PAY; requester creates -> chief-accountant verification step (isChief flag) -> Director approval via the \u00a76 engine (entityType PAYMENT_REQUEST; seed matrix) with \u00a719 signatures; paid cascade: marking the payment request PAID cascades PAID to its linked invoices (and their POs' payment view); voucher PDF on the brand letterhead (reuse lib/pdf fonts/layout, payment voucher with signature block); register + detail pages; notifications. npm run check + seed + browser E2E, Phase Report, commit phase-8.",
+  "lastCheckpointCommit": "phase-7",
+  "updatedAt": "2026-07-09T00:45:00+07:00"
 }

@@ -76,6 +76,7 @@ export async function decidePr(params: {
     });
   } else if (result.outcome === "approved") {
     if (!(await transition(db.purchaseRequisition, pr.id, "SUBMITTED", "APPROVED"))) throw staleError();
+    try { const { commitPr } = await import("@/lib/budget"); await commitPr(pr.id); } catch (e) { console.warn("budget commit failed:", e); }   // §9: approval commits the budget
   } else if (result.outcome === "rejected") {
     if (!(await transition(db.purchaseRequisition, pr.id, "SUBMITTED", "REJECTED"))) throw staleError();
   } else {

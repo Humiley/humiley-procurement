@@ -337,6 +337,7 @@ async function seedMasterData(deptByCode: Map<string, string>) {
     { cc: "CC-PRJ", cat: "HVAC", amount: 5_000_000_000 },
     { cc: "CC-PRJ", cat: "CAPX", amount: 3_000_000_000 },
     { cc: "CC-MFG", cat: "CONS", amount: 600_000_000 },
+    { cc: "CC-ENG", cat: "CONS", amount: 500_000_000 },
     { cc: "CC-ADM", cat: "SERV", amount: 400_000_000 },
     { cc: "CC-FIN", cat: "SERV", amount: 300_000_000 },
   ];
@@ -486,6 +487,63 @@ async function seedDemoPr() {
       });
       await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 2 }, create: { key: "PR", year: 2026, lastValue: 2 } });
       console.log(`Seeded demo PR ${pr2Number} (APPROVED — ready for Create PO).`);
+    }
+  }
+
+  // A CONVERTED PR + SENT PO pair so Phase-7 receiving/invoicing is demoable immediately.
+  const pr3Number = "HML-PR-2026-0003";
+  const po1Number = "HML-PO-2026-0001";
+  if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po1Number } })) && requester && cc && mgrEng && dirFin) {
+    const itm = await db.item.findFirst({ where: { code: "CONS-BOLT-M8" } });
+    const uomAny = await db.uom.findFirst({ where: { code: "BOX" } });
+    const vendor = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
+    const purchaser = await db.user.findUnique({ where: { email: "purchaser@humiley.com" } });
+    if (itm && uomAny && vendor && purchaser) {
+      const pr3 = await db.purchaseRequisition.create({
+        data: {
+          prNumber: pr3Number,
+          requesterId: requester.id,
+          departmentId: requester.departmentId!,
+          costCenterId: cc.id,
+          neededByDate: new Date(Date.now() + 10 * 24 * 3600 * 1000),
+          purpose: "Vật tư lắp đặt tuyến ống — demo nhận hàng (đã chuyển PO)",
+          status: "CONVERTED",
+          totalEstimatedVnd: 30_000_000,
+          currentApprovalLevel: 2,
+          lines: { create: [{ itemId: itm.id, uomId: uomAny.id, qty: 100, estUnitPriceVnd: 300_000 }] },
+        },
+        include: { lines: true },
+      });
+      await db.approvalStep.createMany({
+        data: [
+          { entityType: "PR", entityId: pr3.id, level: 1, approverId: mgrEng.id, status: "APPROVED", decidedAt: new Date() },
+          { entityType: "PR", entityId: pr3.id, level: 2, approverId: dirFin.id, status: "APPROVED", decidedAt: new Date() },
+        ],
+      });
+      await db.purchaseOrder.create({
+        data: {
+          poNumber: po1Number,
+          vendorId: vendor.id,
+          prId: pr3.id,
+          currency: "VND",
+          paymentTerms: "30 days after delivery",
+          incoterm: "DAP",
+          incotermPlace: "Nhà máy Long Thành, Đồng Nai",
+          expectedDate: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+          status: "SENT",
+          subtotal: 30_000_000,
+          vatPct: 10,
+          vatAmount: 3_000_000,
+          total: 33_000_000,
+          createdById: purchaser.id,
+          lines: {
+            create: [{ prLineId: pr3.lines[0].id, itemId: itm.id, description: `${itm.code} · ${itm.nameEn}`, uomId: uomAny.id, qty: 100, unitPrice: 300_000, amount: 30_000_000 }],
+          },
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 3 }, create: { key: "PR", year: 2026, lastValue: 3 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 1 }, create: { key: "PO", year: 2026, lastValue: 1 } });
+      console.log(`Seeded ${pr3Number} (CONVERTED) + ${po1Number} (SENT) — ready for GRN/invoice demo.`);
     }
   }
 }

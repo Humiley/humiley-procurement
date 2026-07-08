@@ -21,6 +21,84 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 7 — GRN · Invoice · 3-Way Match · Payments · Budget — ✅ COMPLETE
+
+**Summary.** The §9 receiving-to-payment loop is live end to end: WAREHOUSE receives against open
+POs with outstanding quantities shown and over-receipt hard-blocked (tolerance 0%); QC splits each
+receipt into accepted/rejected (reason required) and the acceptance is a §19 signature (RECEIVED)
+— accepted quantities post to the PO lines, rejected quantities keep the line open, and the PO
+auto-moves SENT → PARTIALLY_RECEIVED → RECEIVED. ACCOUNTANT enters vendor invoices with lines
+defaulted from received-not-yet-invoiced at PO prices; the 3-way match compares PO price/qty ↔ GRN
+accepted ↔ invoice per line (tolerances: qty 0%, price 2%) with per-line diffs; verifying is a
+signature (VERIFIED) and a MISMATCH can only be verified with an override comment that lands in
+the Exception register (TOLERANCE_OVERRIDE). Payments: due date derives from the vendor's terms,
+mark paid / partially paid are PAID signatures, and the register shows overdue aging buckets
+(0–30/31–60/61–90/90+). The §9 budget ledger runs on real hooks: PR approval commits, PO approval
+moves commitment PR→PO, verified invoices move commitment→spent, closing a PO releases the rest —
+visualised on the /budgets dashboard (spent/committed/remaining bars per cost center × category).
+
+### Built
+- **lib/budget/index.ts** — the ledger: `commitPr`, `moveCommitmentPrToPo`, `spendOnInvoice`,
+  `releaseOnPoClose`; per-line budget resolution (explicit PrLine.budgetId, else cost center ×
+  item category × FY), zero-clamped, best-effort on missing rows. Hooks wired into decidePr /
+  decidePo / verifyInvoice / closePo.
+- **GRN** (`goods-receipts/`): createGrn (open-PO guard, outstanding math, over-receipt block,
+  HML-GRN docnum, QC_PENDING), acceptGrn (accepted+rejected must equal received; reject reason
+  required; RECEIVED signature; PoLine.receivedQty += accepted; GRN → ACCEPTED /
+  PARTIALLY_REJECTED / REJECTED; PO status auto-update). Register + receive form (PO picker with
+  outstanding) + detail with QC panel and signature block.
+- **Invoice** (`invoices/`): createInvoice (received-not-invoiced defaults, vendor-terms due date,
+  PO VAT, HML-INV docnum, first-pass match stored), computeMatch (per-line price Δ% vs 2% + qty vs
+  GRN-accepted-uninvoiced at 0%), verifyInvoice (VERIFIED signature; mismatch needs override →
+  Exception TOLERANCE_OVERRIDE; posts invoicedQty; budget spend), markInvoicePaid (PAID signature;
+  PAID/PARTIALLY_PAID; requires prior verification). Register with aging chips + match/payment
+  badges; detail with the full match table (per-line diffs highlighted) and signature block.
+- **Budgets dashboard** (`/budgets`): FY rows with navy spent / amber committed bars, remaining,
+  over-budget flag.
+- Seed: HML-PR-2026-0003 (CONVERTED) + HML-PO-2026-0001 (SENT, PR-linked, item-linked line) so the
+  whole loop is demoable at once; CC-ENG × CONS budget row added.
+- i18n: full grn / invoice / budgets namespaces + GRN/match/payment status labels (EN/VN).
+
+### E2E evidence (browser, fresh seed)
+- Over-receipt of 150 vs 100 outstanding → blocked with the tolerance-0% error.
+- GRN-0001: received 60 → QC accepted 55 / rejected 5 ("Hộp móp, bu lông gỉ sét…") → RECEIVED
+  signature by the warehouse keeper → PoLine.receivedQty 55, GRN PARTIALLY_REJECTED, PO
+  PARTIALLY_RECEIVED. GRN-0002: +20 accepted.
+- INV-0001: defaults 55 @ 300,000 → MATCHED → VERIFIED signature → invoicedQty 55 → budget
+  CC-ENG×CONS spent 16.5M → PAID signature + paidDate; due = invoice date + 30d vendor terms.
+- INV-0002: 20 @ 320,000 (Δ 6.7% > 2%) → MISMATCH badge + per-line diff; verify without a comment
+  correctly REFUSED; override with justification → Exception TOLERANCE_OVERRIDE + VERIFIED-with-
+  reason signature → invoicedQty 75 → spend 22.9M.
+- Budget commit: approving the 50M PR (L1+L2 signed) committed its three lines by item category —
+  CC-ENG×HVAC 16.8M, ×ELEC 2.56M, ×CONS 1.45M. /budgets renders the bars (screenshot-verified).
+- Zero console errors; `npm run check` clean.
+
+### ⚠️ Decisions made without asking (§23)
+1. **Partial payments are a status only** — Invoice has no paidAmount column; PARTIALLY_PAID marks
+   the state (full amount tracking can add a column in a later phase if needed).
+2. **Invoice "verified" = the VERIFIED signature's existence** (no extra schema flag); markPaid
+   requires it.
+3. **Budget effects skip non-item lines** and pairs without a budget row (best-effort ledger);
+   §9's WARN/BLOCK over-budget gating on submit is deferred to the governance phase (§15) where
+   the per-department config model lands.
+4. **Stock posting deferred** — GRN acceptance does not yet write StockMovement/StockBalance;
+   that is Module I (§10b/§21) territory where lib/stock/post-movement.ts becomes the single
+   writer. GRN ↔ stock wiring lands there.
+5. **QC is one step with the receipt** (create QC_PENDING → accept/reject+sign) rather than a
+   separately-routed QC role — matches "optional QC step" with the §19 ceremony.
+6. **Invoice register visible** to ACCOUNTANT/ADMIN/PURCHASER/DIRECTOR/DEPT_MANAGER; create/verify/
+   pay restricted to ACCOUNTANT/ADMIN.
+
+### ⚠️ Known limitations
+- Invoice XML import (§16 e-invoice) and the invoice-file attachment reuse land with governance/
+  compliance (Phase 15 per §12 numbering).
+- releaseOnPoClose is unit-consistent with the ledger but exercised via code path only (no UI E2E
+  this round — closing the demo PO would have blocked further invoicing demos).
+- Aging buckets compute on render; a scheduled digest email of overdue invoices belongs to the
+  notifications hardening.
+
+---
+
 ## Phase 6 — RFQ / Sourcing — ✅ COMPLETE
 
 **Summary.** The §8 sourcing loop is live: RFQs are created from an approved PR (lines copied) or

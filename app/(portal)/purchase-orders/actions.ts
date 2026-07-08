@@ -176,6 +176,7 @@ export async function decidePo(params: { poId: string; decision: Decision; passw
 
   if (result.outcome === "approved") {
     if (!(await transition(db.purchaseOrder, po.id, "PENDING_APPROVAL", "APPROVED"))) throw staleError();
+    try { const { moveCommitmentPrToPo } = await import("@/lib/budget"); await moveCommitmentPrToPo(po.id); } catch (e) { console.warn("budget move failed:", e); }   // §9: commitment moves PR→PO
   } else if (result.outcome === "rejected" || result.outcome === "returned") {
     // PoStatus has no REJECTED — both decisions send the PO back to DRAFT with the comment + audit trail.
     if (!(await transition(db.purchaseOrder, po.id, "PENDING_APPROVAL", "DRAFT"))) throw staleError();
@@ -252,6 +253,7 @@ export async function closePo(id: string) {
   if (!po) throw new Error("Purchase order not found.");
   if (!["SENT", "PARTIALLY_RECEIVED", "RECEIVED"].includes(po.status)) throw new Error("Only a sent/received PO can be closed.");
   if (!(await transition(db.purchaseOrder, id, po.status, "CLOSED"))) throw staleError();
+  try { const { releaseOnPoClose } = await import("@/lib/budget"); await releaseOnPoClose(id); } catch (e) { console.warn("budget release failed:", e); }   // §9: closing releases remaining commitment
   await audit({ userId: user.id, action: "PO_CLOSE", entityType: "PurchaseOrder", entityId: id, before: { status: po.status }, after: { status: "CLOSED" } });
   revalidatePath(`/purchase-orders/${id}`);
   revalidatePath("/purchase-orders");
