@@ -3,7 +3,11 @@
     "name": "Humiley Procurement",
     "tagline": "Procure. Approve. Deliver."
   },
-  "locale": { "label": "Language", "en": "English", "vi": "Tiếng Việt" },
+  "locale": {
+    "label": "Language",
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
   "common": {
     "search": "Search",
     "new": "New",
@@ -156,11 +160,32 @@
         "active": "Active",
         "capex": "CAPEX category"
       },
-      "departments": { "title": "Departments", "subtitle": "Company departments", "new": "New department" },
-      "costCenters": { "title": "Cost Centers", "subtitle": "Budget cost centers by department", "new": "New cost center" },
-      "categories": { "title": "Categories", "subtitle": "Item / spend categories", "new": "New category" },
-      "uom": { "title": "Units of Measure", "subtitle": "Units used on items and documents", "new": "New unit" },
-      "items": { "title": "Items", "subtitle": "Catalog items", "new": "New item", "import": "Import from Excel" }
+      "departments": {
+        "title": "Departments",
+        "subtitle": "Company departments",
+        "new": "New department"
+      },
+      "costCenters": {
+        "title": "Cost Centers",
+        "subtitle": "Budget cost centers by department",
+        "new": "New cost center"
+      },
+      "categories": {
+        "title": "Categories",
+        "subtitle": "Item / spend categories",
+        "new": "New category"
+      },
+      "uom": {
+        "title": "Units of Measure",
+        "subtitle": "Units used on items and documents",
+        "new": "New unit"
+      },
+      "items": {
+        "title": "Items",
+        "subtitle": "Catalog items",
+        "new": "New item",
+        "import": "Import from Excel"
+      }
     }
   },
   "vendors": {
@@ -183,5 +208,43 @@
       "categories": "Supply categories (comma-separated)",
       "rating": "Rating"
     }
+  },
+  "pr": {
+    "title": "Purchase Requisitions",
+    "subtitle": "Request goods and services for approval",
+    "new": "New requisition",
+    "header": "Requisition details",
+    "department": "Department",
+    "costCenter": "Cost center",
+    "neededBy": "Needed by",
+    "projectCode": "Project code",
+    "purpose": "Purpose",
+    "lines": "Line items",
+    "saveDraft": "Save draft",
+    "submit": "Submit",
+    "edit": "Edit",
+    "recall": "Recall",
+    "cancelPr": "Cancel",
+    "cancelConfirm": "Cancel this requisition? This cannot be undone.",
+    "number": "PR No.",
+    "requester": "Requester",
+    "total": "Estimated total",
+    "requestedOn": "Created",
+    "tabDetails": "Details",
+    "tabApprovals": "Approvals & Signatures",
+    "tabAttachments": "Attachments",
+    "tabAudit": "Audit",
+    "linesEmpty": "No line items.",
+    "item": "Item",
+    "description": "Description",
+    "uom": "UoM",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "amount": "Amount",
+    "approvalsPending": "Approval routing is generated when the requisition is submitted (built in the approval phase).",
+    "myRequisitions": "My requisitions",
+    "deptRequisitions": "Department",
+    "allRequisitions": "All",
+    "stockHint": "In stock: {qty}"
   }
 }

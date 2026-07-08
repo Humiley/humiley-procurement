@@ -4,6 +4,85 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
 
 ---
 
+## Standing constraints (apply to every phase)
+
+- **Procurement is an APP of the Humiley Portal** (portal.humiley.com), alongside HR / Finance /
+  CRM / Projects — not a standalone silo. It remains the dedicated Next.js/Prisma app the spec
+  mandates (the portal is a separate Python app; we do NOT rewrite procurement into it). What this
+  requires, to be delivered at the Integration phase (§16/§17) and honored throughout:
+  1. **Brand consistency** with the portal (navy #205090 / emerald #00B060, bilingual EN/VN) —
+     already the case (§10). Keep it.
+  2. **Single sign-on** — the portal signs in with **Microsoft 365**. Procurement currently uses
+     Auth.js Credentials + bcrypt (spec §22.7 Phase 1). Plan an M365/Entra SSO provider so a
+     portal user lands in procurement already authenticated; reconcile the user directory (map
+     portal employees ↔ procurement `User`). Build so the auth provider is swappable.
+  3. **Launch surface** — a "Procurement" entry in the portal's app launcher/nav that opens this
+     app (subpath or subdomain), and app-level access consistent with the portal's apps/permission
+     model (opt-in per user, like the HR/Finance apps).
+  4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
+
+## Phase 3 — Purchase Requisitions — ✅ COMPLETE
+
+**Summary.** The PR module per §5: list, create/edit, detail, lifecycle actions, attachments,
+audit, doc numbering and the free-stock hint — all requester-self-service, on the shared
+components, bilingual, with money kept in Decimal on the server.
+
+### ✅ Built
+- **List** `/requisitions` — status tabs (All/Draft/Submitted/Approved/Rejected), search,
+  Excel export, PR-number monospace chip, VND totals; staff see their own + their department's.
+- **Create / edit** `/requisitions/new` + `/[id]/edit` — department locked to the requester,
+  cost centers scoped to that department, needed-by date, purpose, project code, and a
+  multi-line editor (`components/pr/PrLinesEditor`): catalog item picker (UoM auto-locked,
+  last purchase price auto-filled) or free-text lines, qty × unit price = live VND amounts +
+  estimated total. **§5 stock hint:** picking a catalog item shows the free stock on hand
+  (aggregated across warehouses from `StockBalance`) as an emerald "In stock: N" note so
+  requesters check the shelf before buying.
+- **Detail** `/requisitions/[id]` — meta grid (requester/department/cost center/needed-by/
+  project/created/estimated total), status badge, tabs: Details (lines), Approvals & Signatures
+  (placeholder until Phase 4), Attachments (upload/download/delete), Audit (trail from
+  `AuditLog`).
+- **Lifecycle** (`app/(portal)/requisitions/actions.ts`) — `createPr` (docnum
+  `HML-PR-YYYY-NNNN` via `lib/docnum` inside the same transaction as the insert), `updatePr`
+  (DRAFT only, owner only, replaces lines), `submitPr` (owner, ≥1 line), `recallPr`
+  (SUBMITTED + no approval started), `cancelPr` (DRAFT/SUBMITTED). All Zod-validated
+  (`lib/schemas/pr.ts`), RBAC-checked, audited (`lib/audit`), revalidated.
+- **`lib/workflow/transition.ts` (hard rule §22.2) — created and enforced.** Every status
+  change goes through one optimistic-guarded conditional UPDATE (`WHERE id AND status IN from…`,
+  count 0 ⇒ friendly stale error). Recall additionally re-checks `currentApprovalLevel = 0`
+  inside the guard, so a racing approval blocks a recall at the DB, not just at read time.
+- **Attachments** — `lib/storage` local-disk adapter (20 MB cap, uuid names, path-traversal
+  guard, deliberately swappable for S3/SharePoint later), `POST /api/v1/attachments` (multipart)
+  + `GET/DELETE /api/v1/attachments/[id]` (auth-gated), `Attachment` rows linked to the PR,
+  uploader-or-admin delete, wired into the detail tab.
+- **Seed** — `WH-MAIN` warehouse + 3 stock balances (gloves 120, HEPA 4, LED 25 — drives the
+  stock hint) and demo PR `HML-PR-2026-0001` (3 lines, SUBMITTED, idempotent).
+
+### 🔎 Verified
+`npm run check` clean; production build compiles all routes; in-browser: login → list →
+detail → **Recall → Draft → Submit → Submitted** through the guarded transitions; new-PR form
+shows the stock hint + auto price (screenshot in session log); `transition()` proven to block a
+wrong-from update and allow the right-from one against the live DB.
+
+### ⚠️ Decisions made without asking (§23)
+1. **Transition helper shape** — a tiny delegate-typed `transition(delegate, id, from, to,
+   {data, where})` returning a boolean, rather than a string-keyed model registry; Phase 4's
+   engine composes `data`/`where` for approval-level bumps.
+2. **Stock hint scope** — free stock = SUM(`StockBalance.qtyOnHand`) across all warehouses
+   (no reservation netting yet — reservations arrive with inventory in Phase 9); hidden when 0.
+3. **Attachment storage** — local disk under `STORAGE_DIR` (default `./storage`, gitignored)
+   behind the small adapter interface; SharePoint/S3 is a portal-integration decision, deferred.
+4. **Seeded stock quantities** are deliberately small (HEPA = 4 < PR qty 6) so the Phase 9
+   shortage/reservation flows will have a realistic demo case.
+
+### ⚠️ Known limitations
+- Approvals tab is a placeholder; `submitPr` does not yet generate approval steps or run the
+  §9 budget check — both land with the Phase 4 engine (next).
+- Action error messages are English-only strings surfaced by the client toast (i18n of server
+  errors is a follow-up noted for the polish phase).
+- Excel export exports the visible list (client-side), not a server-side full export.
+
+---
+
 ## Phase 2 — Master Data — ✅ COMPLETE
 
 **Summary.** CRUD for all master data — departments, cost centers, categories (tree + CAPEX

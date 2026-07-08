@@ -3,7 +3,11 @@
     "name": "Mua sắm Humiley",
     "tagline": "Mua sắm. Phê duyệt. Giao hàng."
   },
-  "locale": { "label": "Ngôn ngữ", "en": "English", "vi": "Tiếng Việt" },
+  "locale": {
+    "label": "Ngôn ngữ",
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
   "common": {
     "search": "Tìm kiếm",
     "new": "Tạo mới",
@@ -156,11 +160,32 @@
         "active": "Hoạt động",
         "capex": "Nhóm CAPEX"
       },
-      "departments": { "title": "Phòng ban", "subtitle": "Các phòng ban công ty", "new": "Thêm phòng ban" },
-      "costCenters": { "title": "Trung tâm chi phí", "subtitle": "Trung tâm chi phí theo phòng ban", "new": "Thêm trung tâm chi phí" },
-      "categories": { "title": "Nhóm hàng", "subtitle": "Nhóm hàng / chi phí", "new": "Thêm nhóm hàng" },
-      "uom": { "title": "Đơn vị tính", "subtitle": "Đơn vị dùng cho vật tư và chứng từ", "new": "Thêm đơn vị" },
-      "items": { "title": "Vật tư", "subtitle": "Danh mục vật tư", "new": "Thêm vật tư", "import": "Nhập từ Excel" }
+      "departments": {
+        "title": "Phòng ban",
+        "subtitle": "Các phòng ban công ty",
+        "new": "Thêm phòng ban"
+      },
+      "costCenters": {
+        "title": "Trung tâm chi phí",
+        "subtitle": "Trung tâm chi phí theo phòng ban",
+        "new": "Thêm trung tâm chi phí"
+      },
+      "categories": {
+        "title": "Nhóm hàng",
+        "subtitle": "Nhóm hàng / chi phí",
+        "new": "Thêm nhóm hàng"
+      },
+      "uom": {
+        "title": "Đơn vị tính",
+        "subtitle": "Đơn vị dùng cho vật tư và chứng từ",
+        "new": "Thêm đơn vị"
+      },
+      "items": {
+        "title": "Vật tư",
+        "subtitle": "Danh mục vật tư",
+        "new": "Thêm vật tư",
+        "import": "Nhập từ Excel"
+      }
     }
   },
   "vendors": {
@@ -183,5 +208,43 @@
       "categories": "Nhóm cung cấp (phân tách bằng dấu phẩy)",
       "rating": "Đánh giá"
     }
+  },
+  "pr": {
+    "title": "Yêu cầu mua hàng",
+    "subtitle": "Đề nghị mua hàng hóa, dịch vụ để phê duyệt",
+    "new": "Tạo yêu cầu",
+    "header": "Thông tin yêu cầu",
+    "department": "Phòng ban",
+    "costCenter": "Trung tâm chi phí",
+    "neededBy": "Cần trước ngày",
+    "projectCode": "Mã dự án",
+    "purpose": "Mục đích",
+    "lines": "Chi tiết hàng hóa",
+    "saveDraft": "Lưu nháp",
+    "submit": "Gửi duyệt",
+    "edit": "Sửa",
+    "recall": "Thu hồi",
+    "cancelPr": "Hủy",
+    "cancelConfirm": "Hủy yêu cầu này? Không thể hoàn tác.",
+    "number": "Số YC",
+    "requester": "Người yêu cầu",
+    "total": "Tổng ước tính",
+    "requestedOn": "Ngày tạo",
+    "tabDetails": "Chi tiết",
+    "tabApprovals": "Phê duyệt & Chữ ký",
+    "tabAttachments": "Tệp đính kèm",
+    "tabAudit": "Nhật ký",
+    "linesEmpty": "Chưa có dòng hàng.",
+    "item": "Vật tư",
+    "description": "Mô tả",
+    "uom": "ĐVT",
+    "qty": "SL",
+    "unitPrice": "Đơn giá",
+    "amount": "Thành tiền",
+    "approvalsPending": "Luồng phê duyệt sẽ được tạo khi gửi duyệt (xây dựng ở giai đoạn phê duyệt).",
+    "myRequisitions": "Yêu cầu của tôi",
+    "deptRequisitions": "Phòng ban",
+    "allRequisitions": "Tất cả",
+    "stockHint": "Tồn kho: {qty}"
   }
 }

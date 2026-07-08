@@ -104,6 +104,8 @@ async function main() {
   }
 
   await seedMasterData(deptByCode);
+  await seedDemoStock();
+  await seedDemoPr();
 
   console.log(`Seeded ${DEPARTMENTS.length} departments, ${USERS.length} users.`);
   console.log("Login: any email above · password Humiley@2026 (force change on first login).");
@@ -322,6 +324,89 @@ async function seedMasterData(deptByCode: Map<string, string>) {
   console.log(
     `Seeded ${UOMS.length} UoM, ${CATEGORIES.length} categories, ${COST_CENTERS.length} cost centers, ${ITEMS.length} items, ${VENDORS.length} vendors, ${budgetPlan.length} budgets (FY ${fiscalYear}).`,
   );
+}
+
+// ---- Phase 3: main warehouse + a little stock (drives the §5 free-stock hint) --
+async function seedDemoStock() {
+  const keeper = await db.user.findUnique({ where: { email: "warehouse@humiley.com" } });
+  const wh = await db.warehouse.upsert({
+    where: { code: "WH-MAIN" },
+    update: {},
+    create: {
+      code: "WH-MAIN",
+      nameEn: "Main Warehouse",
+      nameVn: "Kho chính",
+      address: "Lot B2, Long Hau IP, Long An",
+      keeperId: keeper?.id ?? null,
+    },
+  });
+  const onHand: Record<string, { qty: number; avg: number }> = {
+    "CONS-GLOVE-M": { qty: 120, avg: 42_000 },
+    "HVAC-HEPA-14": { qty: 4, avg: 2_650_000 },
+    "ELEC-LED-40": { qty: 25, avg: 300_000 },
+  };
+  for (const [code, s] of Object.entries(onHand)) {
+    const item = await db.item.findUnique({ where: { code } });
+    if (!item) continue;
+    // NULL lotId never matches a compound-unique upsert in Postgres — use findFirst/create.
+    const existing = await db.stockBalance.findFirst({
+      where: { warehouseId: wh.id, itemId: item.id, lotId: null },
+    });
+    if (existing) {
+      await db.stockBalance.update({ where: { id: existing.id }, data: { qtyOnHand: s.qty, avgCostVnd: s.avg } });
+    } else {
+      await db.stockBalance.create({ data: { warehouseId: wh.id, itemId: item.id, qtyOnHand: s.qty, avgCostVnd: s.avg } });
+    }
+  }
+}
+
+// ---- Phase 3: one demo requisition (SUBMITTED, 3 lines) ----------------------
+async function seedDemoPr() {
+  const requester = await db.user.findUnique({ where: { email: "req.eng@humiley.com" } });
+  const cc = await db.costCenter.findUnique({ where: { code: "CC-ENG" } });
+  if (!requester || !requester.departmentId || !cc) return;
+
+  const year = new Date().getFullYear();
+  const prNumber = `HML-PR-${year}-0001`;
+  if (await db.purchaseRequisition.findUnique({ where: { prNumber } })) return; // idempotent
+
+  const qtyByCode: Record<string, number> = {
+    "HVAC-HEPA-14": 6,
+    "CONS-GLOVE-M": 10,
+    "ELEC-LED-40": 8,
+  };
+  const items = await db.item.findMany({ where: { code: { in: Object.keys(qtyByCode) } } });
+  if (items.length < 3) return;
+
+  let total = 0;
+  const lines = items.map((it) => {
+    const qty = qtyByCode[it.code] ?? 1;
+    const price = Number(it.lastPriceVnd ?? 0);
+    total += qty * price;
+    return { itemId: it.id, uomId: it.uomId, qty, estUnitPriceVnd: price };
+  });
+
+  await db.purchaseRequisition.create({
+    data: {
+      prNumber,
+      requesterId: requester.id,
+      departmentId: requester.departmentId,
+      costCenterId: cc.id,
+      neededByDate: new Date(Date.now() + 14 * 86_400_000),
+      purpose: "Cleanroom HEPA filter replacement + consumables for Q3 maintenance",
+      status: "SUBMITTED",
+      totalEstimatedVnd: total,
+      lines: { create: lines },
+    },
+  });
+
+  // advance the PR sequence so the next app-created PR is 0002
+  await db.sequence.upsert({
+    where: { key_year: { key: "PR", year } },
+    update: { lastValue: 1 },
+    create: { key: "PR", year, lastValue: 1 },
+  });
+  console.log(`Seeded demo PR ${prNumber} (3 lines, SUBMITTED).`);
 }
 
 main()

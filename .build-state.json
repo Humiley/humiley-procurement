@@ -1,10 +1,10 @@
 {
-  "phase": 3,
+  "phase": 4,
   "phaseStatus": "NOT_STARTED",
-  "completedPhases": [1, 2],
-  "currentTask": "Phase 3 — Purchase Requisition module",
+  "completedPhases": [1, 2, 3],
+  "currentTask": "Phase 4 — Approval engine + e-signature core",
   "completedTasks": [],
-  "nextAction": "Phase 3 (§22.7 prompt 3): PR module per §5 — PR list/new/detail using DocListPage/DocDetailLayout/LineItemsEditor; docnum service (HML-PR-YYYY-NNNN via lib/docnum); attachments (lib/storage adapter); audit; budget stock-hint on lines (free-stock note). PR status DRAFT→SUBMITTED (approval engine is Phase 4). Extend seed with a demo PR. Run npm run check + npm run seed, verify, append Phase Report, commit phase-3.",
-  "lastCheckpointCommit": "phase-2",
-  "updatedAt": "2026-07-06T00:00:00+07:00"
+  "nextAction": "Phase 4 (§22.7 prompt 4): approval engine per §6 (ApprovalRule matching by entity/amount/dept; step generation on submit; approve/reject/return actions advancing currentApprovalLevel via lib/workflow/transition) + e-signature core per §19 (lib/esign/sign.ts hash chain, SignatureDialog password re-auth, no-self-approval + Exception table). Wire PR submit -> steps, approver inbox page (/approvals), in-app notifications + email (lib/notify, nodemailer dev transport). Seed: approval rules (PR: mgr <=50M, +director >50M). npm run check + verify in browser, append Phase Report, commit phase-4.",
+  "lastCheckpointCommit": "phase-3",
+  "updatedAt": "2026-07-08T00:00:00+07:00"
 }
