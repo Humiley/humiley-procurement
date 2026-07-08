@@ -161,6 +161,9 @@
     },
     "md": {
       "fields": {
+    "overBudgetPolicy": "Over-budget policy",
+    "policyWarn": "WARN — submit allowed, approvers see a banner",
+    "policyBlock": "BLOCK — over-budget submissions refused",
         "code": "Code",
         "nameEn": "Name (EN)",
         "nameVn": "Name (VN)",
@@ -232,6 +235,8 @@
     }
   },
   "pr": {
+    "overBudgetTitle": "Over budget — this requisition exceeds the remaining budget:",
+    "overBudgetLine": "remaining {remaining} ₫, this PR adds {requested} ₫",
     "title": "Purchase Requisitions",
     "subtitle": "Request goods and services for approval",
     "new": "New requisition",
@@ -311,6 +316,8 @@
     "markRead": "Mark read"
   },
   "po": {
+    "contractApplied": "Contract {ref} — contracted prices applied automatically",
+    "contractPrice": "Contract",
     "listTitle": "Purchase Orders",
     "newButton": "New PO",
     "newTitle": "New Purchase Order",
@@ -530,6 +537,35 @@
     "colMin": "Min",
     "colReorder": "Reorder qty"
   },
+  "contracts": {
+    "listTitle": "Contracts",
+    "newButton": "New Contract",
+    "newTitle": "New Framework Agreement",
+    "empty": "No contracts yet.",
+    "vendor": "Vendor",
+    "title": "Title",
+    "titlePh": "e.g. 2026 consumables framework agreement",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "value": "Contract value",
+    "alertDays": "Renewal alert (days)",
+    "validity": "Validity",
+    "priceList": "Contracted prices",
+    "priceListHint": "Optional — items priced here auto-fill on POs for this vendor; deviations are flagged.",
+    "pricePh": "Price (VND)",
+    "addPrice": "Add price",
+    "removeLine": "Remove",
+    "create": "Create contract",
+    "activate": "Activate",
+    "terminate": "Terminate",
+    "noPrices": "No contracted prices.",
+    "linkedPos": "Purchase orders under this contract",
+    "noPos": "No POs yet.",
+    "expiresIn": "expires in {days}d",
+    "colNo": "Contract No.",
+    "colPos": "POs",
+    "colStatus": "Status"
+  },
   "grn": {
     "listTitle": "Goods Receipts",
     "newButton": "New GRN",
@@ -607,6 +643,20 @@
     "signatureBlock": "Electronic signatures"
   },
   "budgets": {
+    "adminTitle": "Set budget (ADMIN)",
+    "costCenter": "Cost center",
+    "category": "Category",
+    "fiscalYear": "FY",
+    "amount": "Budget amount (VND)",
+    "saveButton": "Save budget",
+    "saved": "Budget saved.",
+    "colPr": "Requisition",
+    "colItem": "Item",
+    "colRequester": "Requester",
+    "colDate": "Date",
+    "colAmount": "Est. amount",
+    "colStatus": "Status",
+    "noLines": "No requisition lines resolve to this budget row.",
     "title": "Budgets — FY {fy}",
     "empty": "No budgets defined for this fiscal year.",
     "budget": "Budget",

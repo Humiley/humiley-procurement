@@ -29,6 +29,7 @@ export default async function DepartmentsPage() {
     nameVn: d.nameVn,
     managerId: d.managerId ?? "",
     managerName: d.manager?.name ?? "—",
+    overBudgetPolicy: d.overBudgetPolicy,
   }));
 
   const columns: MdColumnSpec[] = [
@@ -36,6 +37,7 @@ export default async function DepartmentsPage() {
     { key: "nameEn", header: f("nameEn"), sortable: true },
     { key: "nameVn", header: f("nameVn") },
     { key: "managerName", header: f("manager") },
+    { key: "overBudgetPolicy", header: f("overBudgetPolicy") },
   ];
 
   const fields: FieldDef[] = [
@@ -47,6 +49,16 @@ export default async function DepartmentsPage() {
       label: f("manager"),
       type: "select",
       options: users.map((u) => ({ value: u.id, label: u.name })),
+    },
+    {
+      key: "overBudgetPolicy",
+      label: f("overBudgetPolicy"),
+      type: "select",
+      required: true,
+      options: [
+        { value: "WARN", label: f("policyWarn") },
+        { value: "BLOCK", label: f("policyBlock") },
+      ],
     },
   ];
 

@@ -39,6 +39,17 @@ export async function createPo(input: PoFormPayload) {
 
   const { subtotal, vatAmount, total } = computeTotals(values.lines, values.vatPct);
 
+  // §9 contracts: an ACTIVE in-validity framework agreement auto-links; contracted-price
+  // deviations are flagged in the audit trail (and live on the PO detail).
+  const now = new Date();
+  const contract = await db.contract.findFirst({
+    where: { vendorId: vendor.id, status: "ACTIVE", startDate: { lte: now }, endDate: { gte: now } },
+  });
+  const contractPrices = (contract?.priceListJson ?? {}) as Record<string, string>;
+  const priceDeviations = values.lines
+    .filter((l) => l.itemId && contractPrices[l.itemId] && Number(l.unitPrice) !== Number(contractPrices[l.itemId]))
+    .map((l) => ({ itemId: l.itemId!, contractPrice: contractPrices[l.itemId!], poPrice: String(l.unitPrice) }));
+
   const po = await db.$transaction(async (tx) => {
     const poNumber = await nextDocNumber("PO", tx, { prefix: "PO" });
     const created = await tx.purchaseOrder.create({
@@ -46,6 +57,7 @@ export async function createPo(input: PoFormPayload) {
         poNumber,
         vendorId: vendor.id,
         prId: pr?.id ?? null,
+        contractId: contract?.id ?? null,
         quoteId: values.quoteId ?? null,
         currency: values.currency.toUpperCase(),
         fxRate: new Prisma.Decimal(values.fxRate),
@@ -86,7 +98,7 @@ export async function createPo(input: PoFormPayload) {
     action: "PO_CREATE",
     entityType: "PurchaseOrder",
     entityId: po.id,
-    after: { poNumber: po.poNumber, vendor: vendor.code, prId: pr?.id ?? null, total: String(total) },
+    after: { poNumber: po.poNumber, vendor: vendor.code, prId: pr?.id ?? null, total: String(total) , contractId: contract?.id ?? null, priceDeviations },
   });
   revalidatePath("/purchase-orders");
   if (pr) revalidatePath(`/requisitions/${pr.id}`);

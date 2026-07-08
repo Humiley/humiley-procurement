@@ -273,13 +273,19 @@ model User {
   @@index([isActive])
 }
 
+enum BudgetPolicy {
+  WARN
+  BLOCK
+}
+
 model Department {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  nameEn    String
-  nameVn    String
-  managerId String?  @unique
-  createdAt DateTime @default(now())
+  id               String       @id @default(cuid())
+  code             String       @unique
+  nameEn           String
+  nameVn           String
+  managerId        String?      @unique
+  overBudgetPolicy BudgetPolicy @default(WARN)
+  createdAt        DateTime     @default(now())
 
   manager         User?                 @relation("DeptManager", fields: [managerId], references: [id])
   members         User[]                @relation("DeptMembers")

@@ -14,6 +14,7 @@ import { PrAttachments, type PrAttachment } from "@/components/pr/PrAttachments"
 import { PrDetailActions } from "@/components/pr/PrDetailActions";
 import { DecideInline } from "@/components/approvals/DecideInline";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
+import { checkPrBudget } from "@/lib/budget/check";
 
 export default async function RequisitionDetailPage({ params }: { params: { id: string } }) {
   const user = await requireUser();
@@ -32,6 +33,11 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
     },
   });
   if (!pr) notFound();
+
+  // §9: live over-budget banner while the PR is in flight (WARN policy shows red, approvers see it)
+  const overBudget = ["DRAFT", "SUBMITTED"].includes(pr.status)
+    ? (await checkPrBudget(pr.id)).filter((r) => r.over)
+    : [];
 
   const isOwner = pr.requesterId === user.id;
   const privileged = hasAnyRole(user, ["ADMIN", "PURCHASER", "DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]);
@@ -208,7 +214,26 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
       statusSlot={
         <StatusBadge status={pr.status} label={st.has(pr.status) ? st(pr.status) : pr.status} />
       }
-      metaSlot={meta}
+      metaSlot={
+        <>
+          {overBudget.length > 0 ? (
+            <div className="mb-3 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+              <b>{t("overBudgetTitle")}</b>
+              <ul className="mt-1 list-inside list-disc">
+                {overBudget.map((r) => (
+                  <li key={r.budgetId}>
+                    {r.costCenter} × {r.category}: {t("overBudgetLine", {
+                      remaining: Number(r.remainingVnd).toLocaleString("en-US"),
+                      requested: Number(r.newCommitVnd).toLocaleString("en-US"),
+                    })}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {meta}
+        </>
+      }
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {pr.status === "APPROVED" && hasAnyRole(user, ["PURCHASER", "ADMIN"]) ? (

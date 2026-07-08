@@ -638,6 +638,30 @@ async function seedDemoPr() {
       console.log(`Seeded ${po2Number} (SENT, 10 pcs @ 1,000,000) — ready for the §10b GRN→stock→issue demo.`);
     }
   }
+
+  // Phase 11: an ACTIVE framework agreement expiring inside its alert window (drives §9
+  // contracted-price auto-fill on POs + the renewal notification).
+  if (!(await db.contract.findUnique({ where: { contractNumber: "HML-CTR-2026-0001" } }))) {
+    const vendorC = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
+    const bolt = await db.item.findUnique({ where: { code: "CONS-BOLT-M8" } });
+    if (vendorC && bolt) {
+      await db.contract.create({
+        data: {
+          contractNumber: "HML-CTR-2026-0001",
+          vendorId: vendorC.id,
+          title: "2026 consumables framework agreement / Hợp đồng nguyên tắc vật tư tiêu hao 2026",
+          startDate: new Date(Date.now() - 180 * 24 * 3600 * 1000),
+          endDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+          valueVnd: 200_000_000,
+          renewalAlertDays: 60,
+          priceListJson: { [bolt.id]: "280000" },
+          status: "ACTIVE",
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "CTR", year: 2026 } }, update: { lastValue: 1 }, create: { key: "CTR", year: 2026, lastValue: 1 } });
+      console.log("Seeded HML-CTR-2026-0001 (ACTIVE, expires in 30d < 60d alert) — CONS-BOLT-M8 @ 280,000.");
+    }
+  }
 }
 
 main()

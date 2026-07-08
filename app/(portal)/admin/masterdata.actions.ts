@@ -33,6 +33,7 @@ export async function createDepartment(values: FormValues) {
         nameEn: data.nameEn,
         nameVn: data.nameVn,
         managerId: data.managerId ?? null,
+        overBudgetPolicy: data.overBudgetPolicy,
       },
     });
     await audit({ userId: admin.id, action: "DEPT_CREATE", entityType: "Department", entityId: row.id, after: data });
@@ -54,6 +55,7 @@ export async function updateDepartment(id: string, values: FormValues) {
         nameEn: data.nameEn,
         nameVn: data.nameVn,
         managerId: data.managerId ?? null,
+        overBudgetPolicy: data.overBudgetPolicy,
       },
     });
     await audit({ userId: admin.id, action: "DEPT_UPDATE", entityType: "Department", entityId: id, after: data });

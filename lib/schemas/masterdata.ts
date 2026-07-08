@@ -20,6 +20,7 @@ export const departmentSchema = z.object({
   nameEn: reqText,
   nameVn: reqText,
   managerId: optId,
+  overBudgetPolicy: z.enum(["WARN", "BLOCK"]).default("WARN"),
 });
 
 export const costCenterSchema = z.object({

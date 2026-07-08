@@ -1,5 +1,5 @@
 {
-  "phase": 11,
+  "phase": 12,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -11,11 +11,12 @@
     7,
     8,
     9,
-    10
+    10,
+    11
   ],
   "currentTask": "Phase 9 — Inventory core per §10b",
   "completedTasks": [],
-  "nextAction": "Phase 11 (§22.7 prompt 11): budget engine completion + contracts per §9 + §7 — budget module: admin CRUD for budget rows (costCenter × category × FY, amountVnd), budget page drill-down (committed/spent/remaining per row with linked documents), WARN/BLOCK gating on PR submit per §15 setting (warn when commit would exceed remaining, BLOCK when setting says so), deferred Phase-8 hooks: REIMBURSEMENT + non-PO ADVANCE payment requests hit budget spentVnd on PAID (costCenter × category via expense lines / fallback). Contracts per §7: contract register (vendor, type, validity, value, renewal alert days), link PO to contract, price auto-fill from contract items on PO creation, renewal notifications. npm run check + seed + browser E2E, Phase Report, commit phase-11.",
-  "lastCheckpointCommit": "phase-10",
+  "nextAction": "Phase 12 (§22.7 prompt 12): dashboards + reports + xlsx per §10-G — role-aware /dashboard (requester: my PRs by status + recent activity; purchaser/director: pending approvals, open POs, spend MTD/YTD, top-10 vendors by spend, PR→PO cycle time, savings awarded-vs-highest, deliveries due this week, expiring contracts; charts with Recharts: monthly spend trend, spend by category donut, by department bar). /reports index + report pages, ALL exportable to xlsx via exceljs through lib/kpi: spend by vendor/category/department/project, PR register, PO register, GRN register, invoice aging, vendor performance, budget vs actual, approval cycle time; plus payment aging + outstanding advances + inventory value + stock card export (deferred items). Include xlsx budget import (deferred Phase 11) + stock-count xlsx entry (deferred Phase 10) if cheap, else log. npm run check + seed + browser E2E (dashboard renders per role, one report filters + downloads xlsx and the file parses), Phase Report, commit phase-12.",
+  "lastCheckpointCommit": "phase-11",
   "updatedAt": "2026-07-09T02:00:00+07:00"
 }

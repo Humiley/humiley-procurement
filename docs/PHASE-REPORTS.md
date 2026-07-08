@@ -21,6 +21,74 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 11 — Budget Engine Completion + Contracts (§9) — ✅ COMPLETE
+
+**Summary.** The §9 loop closed on both fronts. **Budget engine:** ADMINs now set budget rows
+(costCenter × category × FY) straight on `/budgets`; every row drills into `/budgets/[id]` with the
+four-figure ledger (budget / spent / committed / remaining) and every PR line that resolves to it.
+The **pre-submit gate** is live: on PR submit the projected commitment is checked per budget row and
+the requester department's `overBudgetPolicy` decides — **WARN** lets the submit through while the
+PR detail carries a red over-budget banner (visible to every approver until decided), **BLOCK**
+refuses the submit with the offending rows spelled out. Departments carry the policy as a new column
+managed on the admin screen. **Contracts:** the §9 framework-agreement register is live — vendor,
+validity, value, renewal-alert days and an optional contracted price list per item. Creating a PO
+for a vendor with an ACTIVE in-validity contract auto-links the contract, **auto-fills contracted
+prices** on item lines (emerald hint), and **flags edits** (hint flips red + the deviation lands in
+the PO_CREATE audit entry). Renewal alerts notify PURCHASER + DIRECTOR once per breach when an
+active contract enters its alert window, and past-end contracts auto-expire.
+
+### Built
+- migration `dept_over_budget_policy` (enum BudgetPolicy WARN|BLOCK on Department, default WARN) ·
+  lib/budget/check.ts (checkPrBudget — explicit budgetId else costCenter×category×FY, projected
+  totals per row) · submitPr gate (BLOCK throws with detail; WARN passes) · PR-detail over-budget
+  banner (live on DRAFT/SUBMITTED) · budgets/actions.ts upsertBudget + BudgetUpsertForm (ADMIN,
+  on /budgets) · /budgets/[id] drill-down (ledger KPIs + resolved PR lines) · departments admin:
+  overBudgetPolicy field (schema+actions+page).
+- lib/schemas/contract.ts · contracts/actions.ts (createContract HML-CTR docnum + price list JSON /
+  activate / terminate / checkContractRenewals with auto-EXPIRED sweep + unread-deduped alerts) ·
+  ContractForm + ContractDetailActions · pages /contracts (register, expiring badge, renewal check
+  on load) /contracts/new /contracts/[id] (price list + linked POs) · createPo: ACTIVE-contract
+  auto-link + priceDeviations audit · PoForm/new page: contract price prefill + per-line hint ·
+  contracts/budgets/po/pr/admin i18n EN/VN · seed: HML-CTR-2026-0001 (ACTIVE, ends in 30d < 60d
+  alert, CONS-BOLT-M8 @ 280,000).
+
+### E2E evidence (browser, fresh seed)
+- /contracts load fired renewal alerts → notifications to purchaser + both directors ("expires in
+  30 day(s)"); register shows the amber "expires in 30d" badge on the ACTIVE row.
+- PO from PR-0002 for V-CLEAN01: banner "Contract HML-CTR-2026-0001 — contracted prices applied
+  automatically"; bolt line price auto-filled 280,000 with emerald "Contract: 280,000" hint; editing
+  to 300,000 flipped the hint red; created **HML-PO-2026-0003 linked to the contract** with audit
+  `priceDeviations: [{poPrice 300000, contractPrice 280000}]`.
+- ADMIN set CC-ENG × CONS FY2026 to 1,000,000 ₫ via the /budgets form (row confirmed in DB).
+- **BLOCK proven:** with ENG policy BLOCK, submitting a 30M bolt PR was refused: "Over budget —
+  submission blocked by department policy: CC-ENG×CONS (remaining 1,000,000 ₫, requested
+  30,000,000 ₫)" — PR stayed DRAFT.
+- **WARN proven:** policy back to WARN → same PR submitted successfully (SUBMITTED) and the red
+  over-budget banner stays on the detail for approvers.
+- /budgets/[id] drill-down: BUDGET 1,000,000 / SPENT 0 / COMMITTED 0 / REMAINING 1,000,000 + all
+  four CONS-resolving PR lines with statuses.
+
+### §23 decisions (spec didn't specify — decided and logged)
+1. **Budget entry is a form, not xlsx** — §9 allows "xlsx import or form"; the import lands with the
+   exceljs toolchain in Phase 12 (reports/exports) so the dependency arrives once.
+2. **The gate runs at submit, banner at render** — no stored warn-state; the banner recomputes live
+   so approvers always see the current ledger, not a stale snapshot.
+3. **Unbudgeted lines never block** (no matching budget row ⇒ skip), consistent with the §9
+   best-effort ledger from Phase 7.
+4. **REIMBURSEMENT / non-PO ADVANCE payment requests do NOT hit the Budget ledger** — the ledger is
+   keyed costCenter × item-category and payment-request lines carry no category. Their spend shows
+   in the Phase-12 spend-by-cost-center reports instead (deferred from Phase 8, now resolved as a
+   reporting concern, not a ledger hack).
+5. **Renewal check runs on register load** (deduped on unread notifications), same pattern as the
+   reorder check; a nightly sweep belongs to the API/scheduling phase.
+6. **Contract price deviations are flagged, not blocked** — §9 says "price edits are flagged"; the
+   flag lives in the form hint + PO_CREATE audit (`priceDeviations`), leaving commercial judgment
+   with the purchaser.
+7. **One ACTIVE contract per vendor is assumed** (findFirst by validity); multiple concurrent
+   frameworks per vendor would need a picker — out of v1 scope.
+
+---
+
 ## Phase 10 — Inventory Extended (§10b) — ✅ COMPLETE
 
 **Summary.** The stock layer is now operationally complete. **Transfers** (Chuyển kho) move goods

@@ -115,7 +115,18 @@ export async function submitPr(id: string) {
   if (pr.status !== "DRAFT") throw new Error("Only a draft requisition can be submitted.");
   if (pr._count.lines === 0) throw new Error("Add at least one line before submitting.");
 
-  // Budget check (§9) is wired in a later phase.
+  // §9 budget gate: WARN lets the submit through (approvers see the red banner on the PR);
+  // BLOCK refuses the submit outright per the requester department's policy.
+  const { checkPrBudget } = await import("@/lib/budget/check");
+  const overRows = (await checkPrBudget(id)).filter((r) => r.over);
+  if (overRows.length) {
+    const dept = await db.department.findUnique({ where: { id: pr.departmentId }, select: { overBudgetPolicy: true } });
+    if (dept?.overBudgetPolicy === "BLOCK") {
+      const detail = overRows.map((r) => `${r.costCenter}×${r.category} (remaining ${Number(r.remainingVnd).toLocaleString("en-US")} ₫, requested ${Number(r.newCommitVnd).toLocaleString("en-US")} ₫)`).join("; ");
+      throw new Error(`Over budget — submission blocked by department policy: ${detail}`);
+    }
+  }
+
   if (!(await transition(db.purchaseRequisition, id, "DRAFT", "SUBMITTED"))) throw staleError();
   // §6: build the sequential approval chain from the matrix and hand it to level 1.
   try {

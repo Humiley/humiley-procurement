@@ -161,6 +161,9 @@
     },
     "md": {
       "fields": {
+    "overBudgetPolicy": "Chính sách vượt ngân sách",
+    "policyWarn": "CẢNH BÁO — vẫn gửi được, người duyệt thấy cảnh báo",
+    "policyBlock": "CHẶN — từ chối gửi phiếu vượt ngân sách",
         "code": "Mã",
         "nameEn": "Tên (EN)",
         "nameVn": "Tên (VN)",
@@ -232,6 +235,8 @@
     }
   },
   "pr": {
+    "overBudgetTitle": "Vượt ngân sách — phiếu này vượt ngân sách còn lại:",
+    "overBudgetLine": "còn lại {remaining} ₫, phiếu này thêm {requested} ₫",
     "title": "Yêu cầu mua hàng",
     "subtitle": "Đề nghị mua hàng hóa, dịch vụ để phê duyệt",
     "new": "Tạo yêu cầu",
@@ -311,6 +316,8 @@
     "markRead": "Đã đọc"
   },
   "po": {
+    "contractApplied": "Hợp đồng {ref} — giá hợp đồng đã tự động áp dụng",
+    "contractPrice": "HĐ",
     "listTitle": "Đơn đặt hàng",
     "newButton": "Tạo PO",
     "newTitle": "Tạo đơn đặt hàng",
@@ -530,6 +537,35 @@
     "colMin": "Tối thiểu",
     "colReorder": "SL đặt lại"
   },
+  "contracts": {
+    "listTitle": "Hợp đồng",
+    "newButton": "Tạo hợp đồng",
+    "newTitle": "Hợp đồng nguyên tắc mới",
+    "empty": "Chưa có hợp đồng nào.",
+    "vendor": "Nhà cung cấp",
+    "title": "Tiêu đề",
+    "titlePh": "VD: Hợp đồng nguyên tắc vật tư tiêu hao 2026",
+    "startDate": "Ngày bắt đầu",
+    "endDate": "Ngày kết thúc",
+    "value": "Giá trị hợp đồng",
+    "alertDays": "Cảnh báo gia hạn (ngày)",
+    "validity": "Hiệu lực",
+    "priceList": "Giá theo hợp đồng",
+    "priceListHint": "Tùy chọn — vật tư có giá ở đây sẽ tự điền vào PO của NCC này; chênh lệch sẽ được đánh dấu.",
+    "pricePh": "Giá (VND)",
+    "addPrice": "Thêm giá",
+    "removeLine": "Xóa",
+    "create": "Tạo hợp đồng",
+    "activate": "Kích hoạt",
+    "terminate": "Chấm dứt",
+    "noPrices": "Chưa có giá theo hợp đồng.",
+    "linkedPos": "PO thuộc hợp đồng này",
+    "noPos": "Chưa có PO.",
+    "expiresIn": "hết hạn sau {days} ngày",
+    "colNo": "Số hợp đồng",
+    "colPos": "PO",
+    "colStatus": "Trạng thái"
+  },
   "grn": {
     "listTitle": "Phiếu nhập kho",
     "newButton": "Tạo GRN",
@@ -607,6 +643,20 @@
     "signatureBlock": "Chữ ký điện tử"
   },
   "budgets": {
+    "adminTitle": "Thiết lập ngân sách (ADMIN)",
+    "costCenter": "Trung tâm chi phí",
+    "category": "Nhóm hàng",
+    "fiscalYear": "Năm",
+    "amount": "Ngân sách (VND)",
+    "saveButton": "Lưu ngân sách",
+    "saved": "Đã lưu ngân sách.",
+    "colPr": "Phiếu yêu cầu",
+    "colItem": "Vật tư",
+    "colRequester": "Người yêu cầu",
+    "colDate": "Ngày",
+    "colAmount": "Giá trị ước tính",
+    "colStatus": "Trạng thái",
+    "noLines": "Không có dòng phiếu nào thuộc ngân sách này.",
     "title": "Ngân sách — Năm {fy}",
     "empty": "Chưa có ngân sách cho năm tài chính này.",
     "budget": "Ngân sách",

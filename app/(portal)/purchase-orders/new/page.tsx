@@ -1,16 +1,22 @@
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
-import { PoForm, type PoFormLine, type PoFormOpt } from "@/components/po/PoForm";
+import { PoForm, type PoFormLine, type PoFormOpt, type PoVendorContract } from "@/components/po/PoForm";
 
 /** §8: new PO — standalone, or prefilled from an APPROVED PR via ?fromPr=<id>. PURCHASER/ADMIN. */
 export default async function NewPoPage({ searchParams }: { searchParams: { fromPr?: string } }) {
   await requireRoles("PURCHASER", "ADMIN");
 
-  const [vendors, uoms] = await Promise.all([
+  const now = new Date();
+  const [vendors, uoms, activeContracts] = await Promise.all([
     db.vendor.findMany({ where: { status: "APPROVED" }, orderBy: { code: "asc" } }),
     db.uom.findMany({ orderBy: { code: "asc" } }),
+    db.contract.findMany({ where: { status: "ACTIVE", startDate: { lte: now }, endDate: { gte: now } } }),
   ]);
+  const contracts: Record<string, PoVendorContract> = {};
+  for (const c of activeContracts) {
+    contracts[c.vendorId] = { contractNumber: c.contractNumber, prices: (c.priceListJson ?? {}) as Record<string, string> };
+  }
 
   let fromPr: { id: string; label: string } | null = null;
   let initialLines: PoFormLine[] = [];
@@ -35,5 +41,5 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
   const vendorOpts: PoFormOpt[] = vendors.map((v) => ({ id: v.id, label: `${v.code} · ${v.nameEn}` }));
   const uomOpts: PoFormOpt[] = uoms.map((u) => ({ id: u.id, label: u.code }));
 
-  return <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} />;
+  return <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} contracts={contracts} />;
 }

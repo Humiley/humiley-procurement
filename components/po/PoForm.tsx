@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPo } from "@/app/(portal)/purchase-orders/actions";
 import { INCOTERMS_2020, VAT_RATES } from "@/lib/schemas/po";
 
 export type PoFormOpt = { id: string; label: string };
+export type PoVendorContract = { contractNumber: string; prices: Record<string, string> };
 export type PoFormLine = {
   prLineId?: string | null;
   itemId?: string | null;
@@ -22,11 +23,13 @@ export function PoForm({
   uoms,
   fromPr,
   initialLines,
+  contracts = {},
 }: {
   vendors: PoFormOpt[];
   uoms: PoFormOpt[];
   fromPr?: { id: string; label: string } | null;
   initialLines: PoFormLine[];
+  contracts?: Record<string, PoVendorContract>;
 }) {
   const t = useTranslations("po");
   const router = useRouter();
@@ -45,6 +48,14 @@ export function PoForm({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // §9: an ACTIVE framework agreement auto-fills contracted prices; edits are flagged inline.
+  const activeContract = contracts[vendorId];
+  useEffect(() => {
+    if (!activeContract) return;
+    setLines((ls) => ls.map((l) => (l.itemId && activeContract.prices[l.itemId] ? { ...l, unitPrice: activeContract.prices[l.itemId] } : l)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendorId]);
 
   const totals = useMemo(() => {
     const sub = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
@@ -88,6 +99,9 @@ export function PoForm({
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {fromPr ? (
         <p className="rounded-lg bg-navy/5 px-3 py-2 text-sm text-navy">{t("fromPr", { ref: fromPr.label })}</p>
+      ) : null}
+      {activeContract ? (
+        <p className="rounded-lg bg-emerald/10 px-3 py-2 text-sm text-emerald">{t("contractApplied", { ref: activeContract.contractNumber })}</p>
       ) : null}
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
@@ -177,6 +191,11 @@ export function PoForm({
                 </td>
                 <td className="px-2 py-1.5">
                   <input className={`${field} text-right`} value={l.unitPrice} onChange={(e) => setLine(i, { unitPrice: e.target.value })} />
+                  {activeContract && l.itemId && activeContract.prices[l.itemId] ? (
+                    <span className={`mt-0.5 block text-right text-[10px] font-semibold ${Number(l.unitPrice) === Number(activeContract.prices[l.itemId]) ? "text-emerald" : "text-danger"}`}>
+                      {t("contractPrice")}: {Number(activeContract.prices[l.itemId]).toLocaleString("en-US")}
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-3 py-1.5 text-right font-medium">{fmt((Number(l.qty) || 0) * (Number(l.unitPrice) || 0))}</td>
                 <td className="px-2 py-1.5">
