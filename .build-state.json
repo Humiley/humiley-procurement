@@ -1,10 +1,15 @@
 {
-  "phase": 4,
+  "phase": 5,
   "phaseStatus": "NOT_STARTED",
-  "completedPhases": [1, 2, 3],
-  "currentTask": "Phase 4 — Approval engine + e-signature core",
+  "completedPhases": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "currentTask": "Phase 5 \u2014 PO module per \u00a78",
   "completedTasks": [],
-  "nextAction": "Phase 4 (§22.7 prompt 4): approval engine per §6 (ApprovalRule matching by entity/amount/dept; step generation on submit; approve/reject/return actions advancing currentApprovalLevel via lib/workflow/transition) + e-signature core per §19 (lib/esign/sign.ts hash chain, SignatureDialog password re-auth, no-self-approval + Exception table). Wire PR submit -> steps, approver inbox page (/approvals), in-app notifications + email (lib/notify, nodemailer dev transport). Seed: approval rules (PR: mgr <=50M, +director >50M). npm run check + verify in browser, append Phase Report, commit phase-4.",
-  "lastCheckpointCommit": "phase-3",
-  "updatedAt": "2026-07-08T00:00:00+07:00"
+  "nextAction": "Phase 5 (\u00a722.7 prompt 5): PO module per \u00a78 \u2014 PO create from approved PR (docnum, lines, vendor), PO approval via the Phase-4 engine (entityType PO \u2014 seed PO matrix bands), brand PDF per \u00a710/\u00a722.4 fonts, vendor approval flow through the engine, Incoterms field. npm run check + browser verify, Phase Report, commit phase-5.",
+  "lastCheckpointCommit": "phase-4",
+  "updatedAt": "2026-07-08T19:00:00+07:00"
 }

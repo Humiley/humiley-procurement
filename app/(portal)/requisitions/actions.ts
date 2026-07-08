@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
+import { createSteps } from "@/lib/workflow/engine";
 import { prCreateSchema, type PrCreateInput, type PrFormPayload } from "@/lib/schemas/pr";
 
 function lineTotals(lines: PrCreateInput["lines"]) {
@@ -114,8 +115,29 @@ export async function submitPr(id: string) {
   if (pr.status !== "DRAFT") throw new Error("Only a draft requisition can be submitted.");
   if (pr._count.lines === 0) throw new Error("Add at least one line before submitting.");
 
-  // Budget check (§9) and approval-step generation (§6) are wired in later phases.
+  // Budget check (§9) is wired in a later phase.
   if (!(await transition(db.purchaseRequisition, id, "DRAFT", "SUBMITTED"))) throw staleError();
+  // §6: build the sequential approval chain from the matrix and hand it to level 1.
+  try {
+    const full = await db.purchaseRequisition.findUniqueOrThrow({ where: { id } });
+    const steps = await createSteps({
+      entityType: "PR",
+      entityId: id,
+      amountVnd: Number(full.totalEstimatedVnd),
+      departmentId: full.departmentId,
+      requesterId: full.requesterId,
+      link: `/requisitions/${id}`,
+      refLabel: full.prNumber,
+    });
+    await db.purchaseRequisition.update({
+      where: { id },
+      data: { currentApprovalLevel: steps[0]?.level ?? 1 },
+    });
+  } catch (e) {
+    // No matrix band / no approver — roll the submit back so the PR is not stranded.
+    await transition(db.purchaseRequisition, id, "SUBMITTED", "DRAFT");
+    throw e;
+  }
   await audit({
     userId: user.id,
     action: "PR_SUBMIT",
@@ -134,11 +156,18 @@ export async function recallPr(id: string) {
   const pr = await db.purchaseRequisition.findUnique({ where: { id } });
   if (!pr) throw new Error("Requisition not found.");
   if (pr.requesterId !== user.id) throw new Error("You can only recall your own requisition.");
-  if (pr.status !== "SUBMITTED" || pr.currentApprovalLevel > 0) {
+  // Recallable until an approver has ACTED: steps are created at submit (level 1 active), so the
+  // guard is "no step decided yet", not the approval level.
+  const decided = await db.approvalStep.count({
+    where: { entityType: "PR", entityId: id, status: { not: "PENDING" } },
+  });
+  if (pr.status !== "SUBMITTED" || decided > 0) {
     throw new Error("This requisition can no longer be recalled — a review has already started.");
   }
-  // Optimistic guard also re-checks the approval level, so a racing approval blocks the recall.
-  if (!(await transition(db.purchaseRequisition, id, "SUBMITTED", "DRAFT", { where: { currentApprovalLevel: 0 } }))) throw staleError();
+  if (!(await transition(db.purchaseRequisition, id, "SUBMITTED", "DRAFT"))) throw staleError();
+  // A racing approval loses: its step row was deleted, decideStep will find nothing pending.
+  await db.approvalStep.deleteMany({ where: { entityType: "PR", entityId: id, status: "PENDING" } });
+  await db.purchaseRequisition.update({ where: { id }, data: { currentApprovalLevel: 0 } });
   await audit({
     userId: user.id,
     action: "PR_RECALL",

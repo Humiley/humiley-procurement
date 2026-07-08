@@ -29,7 +29,8 @@ type SeedUser = {
 
 const USERS: SeedUser[] = [
   { email: "admin@humiley.com", name: "System Administrator", roles: ["ADMIN"], dept: "ADM" },
-  { email: "director@humiley.com", name: "Managing Director", roles: ["DIRECTOR"], dept: "ADM" },
+  { email: "director@humiley.com", name: "Managing Director", roles: ["DIRECTOR"], dept: "ADM", isChief: true },
+  { email: "director.fin@humiley.com", name: "Finance Director", roles: ["DIRECTOR"], dept: "FIN" },
   {
     email: "mgr.eng@humiley.com",
     name: "Engineering Manager",
@@ -106,6 +107,23 @@ async function main() {
   await seedMasterData(deptByCode);
   await seedDemoStock();
   await seedDemoPr();
+
+  // §6 default approval matrix for PRs — admin-configurable bands.
+  //   < 20,000,000 VND            -> L1 (Department Manager)
+  //   20,000,000 – 200,000,000    -> L1 + L2 (Director)
+  //   > 200,000,000               -> L1 + L2 + L3 (Managing Director)
+  await db.approvalMatrix.deleteMany({ where: { entityType: "PR" } });
+  await db.approvalMatrix.createMany({
+    data: [
+      { entityType: "PR", minAmountVnd: 0, maxAmountVnd: 19_999_999, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PR", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PR", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 2, approverRole: "DIRECTOR" },
+      { entityType: "PR", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PR", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 2, approverRole: "DIRECTOR" },
+      { entityType: "PR", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
+    ],
+  });
+  console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3).");
 
   console.log(`Seeded ${DEPARTMENTS.length} departments, ${USERS.length} users.`);
   console.log("Login: any email above · password Humiley@2026 (force change on first login).");
@@ -406,7 +424,22 @@ async function seedDemoPr() {
     update: { lastValue: 1 },
     create: { key: "PR", year, lastValue: 1 },
   });
-  console.log(`Seeded demo PR ${prNumber} (3 lines, SUBMITTED).`);
+  // Route the demo PR through the §6 matrix (20.81M -> L1 + L2) so the approval queue has data.
+  const demoPr = await db.purchaseRequisition.findUnique({ where: { prNumber } });
+  const mgrEng = await db.user.findUnique({ where: { email: "mgr.eng@humiley.com" } });
+  const dirFin = await db.user.findUnique({ where: { email: "director.fin@humiley.com" } });
+  if (demoPr && mgrEng && dirFin) {
+    await db.approvalStep.deleteMany({ where: { entityType: "PR", entityId: demoPr.id } });
+    const sla = (d: number) => new Date(Date.now() + d * 24 * 3600 * 1000);
+    await db.approvalStep.createMany({
+      data: [
+        { entityType: "PR", entityId: demoPr.id, level: 1, approverId: mgrEng.id, status: "PENDING", slaDueAt: sla(2) },
+        { entityType: "PR", entityId: demoPr.id, level: 2, approverId: dirFin.id, status: "PENDING", slaDueAt: sla(2) },
+      ],
+    });
+    await db.purchaseRequisition.update({ where: { id: demoPr.id }, data: { currentApprovalLevel: 1 } });
+  }
+  console.log(`Seeded demo PR ${prNumber} (3 lines, SUBMITTED, approval steps L1+L2).`);
 }
 
 main()

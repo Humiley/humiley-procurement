@@ -21,6 +21,83 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 4 — Approval Engine + E-Signature Core — ✅ COMPLETE
+
+**Summary.** The §6 approval workflow and §19 Part 11-aligned e-signature core are live and wired
+into the PR lifecycle. Submitting a PR builds a sequential approval chain from the admin-configurable
+ApprovalMatrix; every decision (Approve / Return / Reject) executes as an electronic signature with
+password re-auth, snapshot hashing and a tamper-evident hash chain; approvers work from a
+"Waiting for me" queue or inline on the PR detail page; in-app + email notifications fire at every
+hand-off. E2E-verified in the browser end to end.
+
+### Built
+- **lib/esign/sign.ts** — `signRecord` (bcrypt password re-auth; SignatureFailure on wrong password;
+  3 failures / 15 min ⇒ 15-min account lock + ADMIN alert; SHA-256 `recordSnapshotHash` of the
+  canonical document JSON; `prevSignatureHash` chain per entity), `canonicalJson`, `signatureHash`,
+  `verifyChain` (re-computes a chain; nightly job hook for the governance phase).
+- **lib/workflow/engine.ts** — `createSteps` (matrix band match by entityType+amount, dept-scoped
+  row preference, approver resolution: DEPT_MANAGER → the document department's manager first;
+  DIRECTOR level 2 → non-chief director, level 3 → the chief/MD; **no-self-approval** skips the
+  requester to the next eligible approver + audit entry; SLA due = +2 business days),
+  `applyDecision` (sequential advance / reject / return; deletes not-yet-actioned later steps;
+  notifies next approver or requester), `pendingStepsFor` (only the lowest pending level is
+  actionable), `LEVEL_LABELS`.
+- **lib/notify.ts** — Notification rows (bilingual EN/VN) + nodemailer email (SMTP_* from .env;
+  console dev-transport when unset), `notifyRole` for ADMIN alerts, `unreadCount`.
+- **/approvals** — the §6 queue: amount, requester, dept, level, age + SLA-overdue flag;
+  Approve / Return / Reject through the SignatureDialog ceremony.
+- **/notifications** — bilingual inbox behind the topbar bell; mark-read / mark-all-read.
+- **PR wiring** — `submitPr` computes the chain and activates level 1 (rolls back to DRAFT if no
+  matrix band/approver); new `decidePr` action (sign → decide → transition SUBMITTED→APPROVED/
+  REJECTED/DRAFT with optimistic guards → audit incl. signature id); `recallPr` reworked: recallable
+  until the first decision (steps now exist from submit); PR detail shows the live ApprovalTimeline,
+  the signature block (name · meaning · time · reason · hash chain link) and a "waiting for YOUR
+  decision" bar for the active approver.
+- **Seed** — §6 default matrix (PR: <20M ⇒ L1; 20–200M ⇒ L1+L2; >200M ⇒ L1+L2+L3), new
+  `director.fin@humiley.com` (Finance Director, L2), `director@humiley.com` marked chief (MD, L3);
+  demo PR now carries its L1+L2 steps so the queue has data out of the box.
+- i18n: full `approvals` + `notifications` namespaces (EN/VN) + `pr.signatureBlock`.
+
+### E2E evidence (browser, fresh seed)
+- 50,000,000 ₫ PR submitted by req.eng → steps L1 mgr.eng + L2 director.fin, level 1 active,
+  SLA 2 business days, mgr.eng notified. **§6 acceptance:** L1 approval alone left the PR
+  SUBMITTED (not approved).
+- Wrong password in the dialog → "Password is incorrect. This attempt has been recorded." +
+  SignatureFailure row. Correct password → step 1 APPROVED, snapshotHash stored, level → 2,
+  director.fin notified.
+- Director approval → PR **APPROVED**, requester notified; signature #2 carries the hash of
+  signature #1 (chain verified in DB).
+
+### ⚠️ Decisions made without asking (§23)
+1. **L2 vs L3 director resolution** — the Role enum has one DIRECTOR value; §6 needs Director (L2)
+   and Managing Director (L3). Resolution: matrix rows keep role DIRECTOR; the engine prefers a
+   non-chief director at L2 and the `isChief` director (MD) at L3. Seeded a second director
+   (Finance Director) so the two levels are distinct people.
+2. **Signature failure lockout counter** — counted from SignatureFailure rows in the last 15 min
+   (3 ⇒ lock), independent of the login `failedLogins` counter, so signing failures can't be
+   reset by a successful login.
+3. **Hash chain shape** — the schema stores `recordSnapshotHash` + `prevSignatureHash` only, so the
+   chain links via `signatureHash(prevRow)` = SHA-256 over the previous row's canonical core fields
+   (incl. its own prevSignatureHash); `signedAt` is written explicitly so re-hashing at verify time
+   is deterministic.
+4. **Reject/Return step disposal** — ApprovalStepStatus has no CANCELLED; not-yet-actioned later
+   steps are deleted (the decided step keeps the full history; a resubmit builds a fresh chain).
+5. **Delegation & SLA escalation deferred** — `delegatedFromId` exists on ApprovalStep, and slaDueAt
+   is stamped; the delegation date-range model + reminder/escalation job belong to the governance
+   phase (§15) with the nightly chain-integrity job.
+6. **Boundary semantics** — bands seeded as integers: ≤19,999,999 / 20,000,000–200,000,000 /
+   ≥200,000,001 (VND has no minor units in practice).
+
+### ⚠️ Known limitations
+- No-self-approval verified by code path + audit hook, not E2E (requires a manager-authored PR;
+  covered when Playwright OQ pack lands in the validation phase).
+- Daily digest email + SLA reminder/escalation (§6) and the nightly chain-integrity job (§19) are
+  scheduled-job features — deferred to the governance phase alongside delegation.
+- Approval matrix admin CRUD UI not yet built (seeded defaults; admin edits via DB/seed for now) —
+  planned with the admin area completion.
+
+---
+
 ## Phase 3 — Purchase Requisitions — ✅ COMPLETE
 
 **Summary.** The PR module per §5: list, create/edit, detail, lifecycle actions, attachments,

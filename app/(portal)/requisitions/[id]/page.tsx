@@ -12,6 +12,8 @@ import { VndDisplay } from "@/components/shared/VndDisplay";
 import { ApprovalTimeline } from "@/components/shared/ApprovalTimeline";
 import { PrAttachments, type PrAttachment } from "@/components/pr/PrAttachments";
 import { PrDetailActions } from "@/components/pr/PrDetailActions";
+import { DecideInline } from "@/components/approvals/DecideInline";
+import { LEVEL_LABELS } from "@/lib/workflow/engine";
 
 export default async function RequisitionDetailPage({ params }: { params: { id: string } }) {
   const user = await requireUser();
@@ -35,7 +37,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
   const privileged = hasAnyRole(user, ["ADMIN", "PURCHASER", "DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]);
   if (!isOwner && !privileged) notFound();
 
-  const [attachments, audits] = await Promise.all([
+  const [attachments, audits, steps, signatures] = await Promise.all([
     db.attachment.findMany({
       where: { entityType: "PurchaseRequisition", entityId: pr.id },
       orderBy: { createdAt: "desc" },
@@ -44,6 +46,15 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
       where: { entityType: "PurchaseRequisition", entityId: pr.id },
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true } } },
+    }),
+    db.approvalStep.findMany({
+      where: { entityType: "PR", entityId: pr.id },
+      orderBy: { level: "asc" },
+      include: { approver: { select: { name: true } } },
+    }),
+    db.electronicSignature.findMany({
+      where: { entityType: "PurchaseRequisition", entityId: pr.id },
+      orderBy: { signedAt: "asc" },
     }),
   ]);
 
@@ -128,11 +139,48 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
     </div>
   );
 
+  const timelineSteps = steps.map((s) => ({
+    level: s.level,
+    roleLabel: LEVEL_LABELS[s.level] || `Level ${s.level}`,
+    approverName: s.approver.name,
+    status: s.status,
+    actedAt: s.decidedAt,
+    slaDueAt: s.slaDueAt,
+    comment: s.comment,
+  }));
+  const activeStep = steps.find(
+    (s) => s.status === "PENDING" && !steps.some((o) => o.status === "PENDING" && o.level < s.level),
+  );
+  const myTurn = pr.status === "SUBMITTED" && activeStep?.approverId === user.id;
+
   const approvalsTab =
-    pr.status === "DRAFT" ? (
+    pr.status === "DRAFT" && steps.length === 0 ? (
       <p className="text-sm text-grey">{t("approvalsPending")}</p>
     ) : (
-      <ApprovalTimeline steps={[]} />
+      <div>
+        <ApprovalTimeline steps={timelineSteps} />
+        {myTurn ? <DecideInline prId={pr.id} prNumber={pr.prNumber} /> : null}
+        {signatures.length > 0 ? (
+          <div className="mt-6">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
+            <ul className="space-y-1.5">
+              {signatures.map((s) => (
+                <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+                  <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
+                  <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
+                  <span className="text-grey" title={s.signedAt.toISOString()}>
+                    {formatVnDateTime(s.signedAt)}
+                  </span>
+                  {s.reason ? <span className="ml-1.5 text-grey">— {s.reason}</span> : null}
+                  <span className="mt-0.5 block truncate font-mono text-[10px] text-grey/70" title={s.recordSnapshotHash}>
+                    #{s.recordSnapshotHash.slice(0, 16)}… {s.prevSignatureHash ? "⛓" : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
     );
 
   const auditTab =
@@ -166,7 +214,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
           id={pr.id}
           status={pr.status}
           isOwner={isOwner}
-          canRecall={pr.status === "SUBMITTED" && pr.currentApprovalLevel === 0}
+          canRecall={pr.status === "SUBMITTED" && steps.every((s) => s.status === "PENDING")}
         />
       }
       tabs={[

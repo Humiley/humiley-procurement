@@ -245,6 +245,37 @@
     "myRequisitions": "Yêu cầu của tôi",
     "deptRequisitions": "Phòng ban",
     "allRequisitions": "Tất cả",
-    "stockHint": "Tồn kho: {qty}"
+    "stockHint": "Tồn kho: {qty}",
+    "signatureBlock": "Chữ ký điện tử"
+  },
+  "approvals": {
+    "title": "Chờ tôi duyệt",
+    "empty": "Không có chứng từ nào đang chờ bạn phê duyệt.",
+    "colRef": "Số",
+    "colPurpose": "Mục đích",
+    "colRequester": "Người yêu cầu",
+    "colDept": "Phòng ban",
+    "colAmount": "Số tiền",
+    "colLevel": "Cấp",
+    "colAge": "Số ngày",
+    "approve": "Phê duyệt",
+    "return": "Trả lại",
+    "reject": "Từ chối",
+    "signTitle": "Chữ ký điện tử",
+    "signSubmit": "Ký & gửi quyết định",
+    "decided": "Đã ghi nhận quyết định cho {ref}.",
+    "overdue": "Quá hạn — SLA là {due}",
+    "yourTurn": "Chứng từ này đang chờ quyết định của BẠN.",
+    "meaning": {
+      "APPROVED": "Phê duyệt — tôi chấp thuận chứng từ này",
+      "REJECTED": "Từ chối — bắt buộc nêu lý do",
+      "RETURNED": "Trả lại để chỉnh sửa — bắt buộc nêu lý do"
+    }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "markAll": "Đánh dấu đã đọc tất cả",
+    "empty": "Chưa có thông báo nào.",
+    "markRead": "Đã đọc"
   }
 }

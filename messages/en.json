@@ -245,6 +245,37 @@
     "myRequisitions": "My requisitions",
     "deptRequisitions": "Department",
     "allRequisitions": "All",
-    "stockHint": "In stock: {qty}"
+    "stockHint": "In stock: {qty}",
+    "signatureBlock": "Electronic signatures"
+  },
+  "approvals": {
+    "title": "Waiting for me",
+    "empty": "Nothing is waiting for your approval.",
+    "colRef": "No.",
+    "colPurpose": "Purpose",
+    "colRequester": "Requester",
+    "colDept": "Dept",
+    "colAmount": "Amount",
+    "colLevel": "Level",
+    "colAge": "Age",
+    "approve": "Approve",
+    "return": "Return",
+    "reject": "Reject",
+    "signTitle": "Electronic signature",
+    "signSubmit": "Sign & submit decision",
+    "decided": "Decision recorded for {ref}.",
+    "overdue": "Overdue — SLA was {due}",
+    "yourTurn": "This document is waiting for YOUR decision.",
+    "meaning": {
+      "APPROVED": "Approved — I authorize this document",
+      "REJECTED": "Rejected — reason required",
+      "RETURNED": "Returned for revision — reason required"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAll": "Mark all read",
+    "empty": "No notifications yet.",
+    "markRead": "Mark read"
   }
 }
