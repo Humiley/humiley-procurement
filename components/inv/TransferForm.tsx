@@ -22,7 +22,8 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onHand = (itemId: string) => stock.find((s) => s.warehouseId === fromId && s.itemId === itemId)?.onHand ?? "0";
+  const onHand = (itemId: string) =>
+    String(stock.filter((s) => s.warehouseId === fromId && s.itemId === itemId).reduce((sum, s) => sum + Number(s.onHand), 0));
 
   async function submit() {
     setError(null);

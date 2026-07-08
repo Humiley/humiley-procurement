@@ -138,7 +138,10 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = giExecuteSchema.parse(params.payload);
 
-  const gi = await db.goodsIssue.findUnique({ where: { id: values.issueId }, include: { lines: true } });
+  const gi = await db.goodsIssue.findUnique({
+    where: { id: values.issueId },
+    include: { lines: { include: { item: { select: { isLotTracked: true } } } } },
+  });
   if (!gi) throw new Error("Goods issue not found.");
   if (gi.status !== "APPROVED") throw new Error("Only an approved goods issue can be executed.");
   const lineById = new Map(gi.lines.map((l) => [l.id, l]));
@@ -150,16 +153,46 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
     if (new D(l.qtyIssued).greaterThan(gl.qtyRequested)) throw new Error("Cannot issue more than requested.");
   }
   // pre-check stock BEFORE signing so a refused issue leaves no orphan ISSUED signature
-  // (the FOR-UPDATE guard inside postMovement stays the authoritative race-safe check)
+  // (the FOR-UPDATE guard inside postMovement stays the authoritative race-safe check).
+  // §21 FEFO: lot-tracked items consume non-expired lots earliest-expiry-first; expired lots
+  // are blocked from issue entirely.
+  const today = new Date(new Date().toDateString());
   const balances = await db.stockBalance.findMany({
-    where: { warehouseId: gi.warehouseId, itemId: { in: issuing.map((l) => lineById.get(l.lineId)!.itemId) } },
+    where: { warehouseId: gi.warehouseId, itemId: { in: issuing.map((l) => lineById.get(l.lineId)!.itemId) }, qtyOnHand: { gt: 0 } },
+    include: { lot: { select: { id: true, lotNumber: true, expiryDate: true } } },
   });
-  const onHandByItem = new Map(balances.map((b) => [b.itemId, b.qtyOnHand]));
+  const fefoPlan = new Map<string, { lotId: string | null; qty: Prisma.Decimal }[]>();
   for (const l of issuing) {
     const gl = lineById.get(l.lineId)!;
-    const onHand = new D(onHandByItem.get(gl.itemId) ?? 0);
-    if (new D(l.qtyIssued).greaterThan(onHand)) {
-      throw new Error(`Insufficient stock: ${onHand.toString()} on hand, ${new D(l.qtyIssued).toString()} requested.`);
+    let need = new D(l.qtyIssued);
+    if (gl.item.isLotTracked) {
+      const lots = balances
+        .filter((b) => b.itemId === gl.itemId && b.lotId && !(b.lot?.expiryDate && b.lot.expiryDate < today))
+        .sort((x, y) => {
+          const ex = x.lot?.expiryDate?.getTime() ?? Infinity;
+          const ey = y.lot?.expiryDate?.getTime() ?? Infinity;
+          return ex - ey;
+        });
+      const plan: { lotId: string | null; qty: Prisma.Decimal }[] = [];
+      for (const b of lots) {
+        if (need.lessThanOrEqualTo(0)) break;
+        const take = D.min(need, new D(b.qtyOnHand));
+        plan.push({ lotId: b.lotId, qty: take });
+        need = need.minus(take);
+      }
+      if (need.greaterThan(0)) {
+        const avail = lots.reduce((s2, b) => s2.plus(b.qtyOnHand), new D(0));
+        throw new Error(`Insufficient non-expired lot stock: ${avail.toString()} available, ${new D(l.qtyIssued).toString()} requested.`);
+      }
+      fefoPlan.set(l.lineId, plan);
+    } else {
+      const onHand = balances
+        .filter((b) => b.itemId === gl.itemId && !b.lotId)
+        .reduce((s2, b) => s2.plus(b.qtyOnHand), new D(0));
+      if (need.greaterThan(onHand)) {
+        throw new Error(`Insufficient stock: ${onHand.toString()} on hand, ${need.toString()} requested.`);
+      }
+      fefoPlan.set(l.lineId, [{ lotId: null, qty: need }]);
     }
   }
 
@@ -182,20 +215,24 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
     await db.$transaction(async (tx) => {
       for (const l of issuing) {
         const gl = lineById.get(l.lineId)!;
-        await postMovement(
-          {
-            type: "ISSUE_OUT",
-            warehouseId: gi.warehouseId,
-            itemId: gl.itemId,
-            qty: l.qtyIssued,
-            refEntityType: "GoodsIssue",
-            refEntityId: gi.id,
-            note: gi.issueNumber,
-            createdById: user.id,
-          },
-          tx,
-        );
-        await tx.goodsIssueLine.update({ where: { id: l.lineId }, data: { qtyIssued: new D(l.qtyIssued) } });
+        for (const part of fefoPlan.get(l.lineId)!) {
+          await postMovement(
+            {
+              type: "ISSUE_OUT",
+              warehouseId: gi.warehouseId,
+              itemId: gl.itemId,
+              lotId: part.lotId,
+              qty: part.qty,
+              refEntityType: "GoodsIssue",
+              refEntityId: gi.id,
+              note: gi.issueNumber,
+              createdById: user.id,
+            },
+            tx,
+          );
+        }
+        const single = fefoPlan.get(l.lineId)!.length === 1 ? fefoPlan.get(l.lineId)![0].lotId : null;
+        await tx.goodsIssueLine.update({ where: { id: l.lineId }, data: { qtyIssued: new D(l.qtyIssued), lotId: single } });
       }
       await tx.goodsIssue.update({ where: { id: gi.id }, data: { status: "ISSUED", issuedById: user.id, issuedAt: new Date() } });
     });

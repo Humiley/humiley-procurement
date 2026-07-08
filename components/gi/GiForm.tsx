@@ -35,7 +35,7 @@ export function GiForm({
   const [error, setError] = useState<string | null>(null);
 
   const onHand = (itemId: string) =>
-    stock.find((s) => s.warehouseId === warehouseId && s.itemId === itemId)?.onHand ?? "0";
+    String(stock.filter((s) => s.warehouseId === warehouseId && s.itemId === itemId).reduce((sum, s) => sum + Number(s.onHand), 0));
 
   async function submit() {
     setError(null);

@@ -383,7 +383,7 @@ async function seedDemoStock() {
   });
   const onHand: Record<string, { qty: number; avg: number }> = {
     "CONS-GLOVE-M": { qty: 120, avg: 42_000 },
-    "HVAC-HEPA-14": { qty: 4, avg: 2_650_000 },
+    "ELEC-MCB-32": { qty: 12, avg: 640_000 },   // lot-tracked items get stock via GRN+lot, never as no-lot seed
     "ELEC-LED-40": { qty: 25, avg: 300_000 },
   };
   for (const [code, s] of Object.entries(onHand)) {
@@ -660,6 +660,39 @@ async function seedDemoPr() {
       });
       await db.sequence.upsert({ where: { key_year: { key: "CTR", year: 2026 } }, update: { lastValue: 1 }, create: { key: "CTR", year: 2026, lastValue: 1 } });
       console.log("Seeded HML-CTR-2026-0001 (ACTIVE, expires in 30d < 60d alert) — CONS-BOLT-M8 @ 280,000.");
+    }
+  }
+
+  // Phase 13: a SENT PO for a LOT-TRACKED item so the §21 receive-with-lot → label → FEFO →
+  // trace chain is demoable immediately.
+  const po3Number = "HML-PO-2026-0003";
+  if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po3Number } }))) {
+    const hepa = await db.item.findFirst({ where: { code: "HVAC-HEPA-14" } });
+    const vendor3 = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
+    const purchaser3 = await db.user.findUnique({ where: { email: "purchaser@humiley.com" } });
+    if (hepa && vendor3 && purchaser3) {
+      await db.purchaseOrder.create({
+        data: {
+          poNumber: po3Number,
+          vendorId: vendor3.id,
+          currency: "VND",
+          paymentTerms: "30 days after delivery",
+          incoterm: "DAP",
+          incotermPlace: "Nhà máy Long Thành, Đồng Nai",
+          expectedDate: new Date(Date.now() + 6 * 24 * 3600 * 1000),
+          status: "SENT",
+          subtotal: 16_800_000,
+          vatPct: 10,
+          vatAmount: 1_680_000,
+          total: 18_480_000,
+          createdById: purchaser3.id,
+          lines: {
+            create: [{ itemId: hepa.id, description: `${hepa.code} · ${hepa.nameEn}`, uomId: hepa.uomId, qty: 6, unitPrice: 2_800_000, amount: 16_800_000 }],
+          },
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 3 }, create: { key: "PO", year: 2026, lastValue: 3 } });
+      console.log(`Seeded ${po3Number} (SENT, 6 pcs lot-tracked HVAC-HEPA-14 @ 2,800,000) — drives the §21 demo.`);
     }
   }
 }

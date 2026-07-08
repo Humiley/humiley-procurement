@@ -1,5 +1,5 @@
 {
-  "phase": 13,
+  "phase": 14,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -13,11 +13,12 @@
     9,
     10,
     11,
-    12
+    12,
+    13
   ],
   "currentTask": "Phase 9 — Inventory core per §10b",
   "completedTasks": [],
-  "nextAction": "Phase 13 (§22.7 prompt 13): barcode & traceability per §21 — lot capture on GRN (lot number + expiry for lot-tracked items, Lot model), barcode generation (Code128/QR data model already in schema: Barcode/Lot), label generation + printing (/inventory/labels batch print page, browser print CSS), /scan hub (mobile-first PWA page: manual code entry v1 + camera scan if cheap via getUserMedia BarcodeDetector), scan-driven lookups (scan a lot/item code → balance + movements + trace links), FEFO suggestion on goods-issue execution for lot-tracked items (earliest expiry first), /trace/[lotId] forward/backward trace (GRN→PO/vendor backward; issues/transfers/counts forward). npm run check + seed (a lot-tracked item receipt with lots) + browser E2E (receive with lots, labels render, scan lookup finds the lot, trace shows chain), Phase Report, commit phase-13.",
-  "lastCheckpointCommit": "phase-12",
+  "nextAction": "Phase 14 (§22.7 prompt 14): trade compliance per §20 — Incoterms 2020 reference book (/reference/incoterms: the 11 terms, risk/cost transfer, VN import notes, bilingual), HS-code register (/reference/hs-codes + [id]: HS code, description, duty rates MFN/FTA, required C/O forms e.g. Form E/D/AK, VAT; admin CRUD; link Item.hsCodeId), landed-cost estimator (/trade/estimator: item/HS lookup → CIF value + duty + VAT + fees → landed unit cost, uses fx rates from lib/fx), shipment/customs docs on the PO (C/O form, B/L, customs declaration fields or attachments per §20 scope in schema), and the §20 quote-comparison landed-cost row if the RFQ comparison exists. Check schema models (HsCode, Incoterm data, Item.hsCode) first — build what the schema already carries. npm run check + seed + browser E2E, Phase Report, commit phase-14.",
+  "lastCheckpointCommit": "phase-13",
   "updatedAt": "2026-07-09T02:00:00+07:00"
 }

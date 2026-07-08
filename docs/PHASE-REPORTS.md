@@ -21,6 +21,70 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 13 — Barcode & Traceability (§21) — ✅ COMPLETE
+
+**Summary.** The warehouse is now scannable end to end. **Lot capture at GRN acceptance**: for
+lot-tracked items the QC form takes a lot number (blank ⇒ auto `LOT-YYMMDD-####` off the shared
+gap-free sequence) + expiry; acceptance creates the `Lot`, stores it on the GRN line, mints the
+QR **lot barcode** (`LOT:<number>`) and the item's CODE128 barcode, and posts `GRN_IN` **per lot**
+— stock balances are lot-keyed from birth. **Labels**: `/inventory/labels?grn=` batch-renders
+50×30 mm Zebra-sized labels (bwip-js server-side QR data-URIs + lot / item / EXP / GRN text) with
+one-click browser print; the GRN detail links straight to it. **Scan hub** (`/scan`, mobile-first):
+one field resolves anything — any HML document number opens its page, an item code shows per-
+warehouse stock + lots, a lot number (or `LOT:` QR payload) shows expiry, origin chain, balances,
+recent movements and a trace link; camera scanning is progressive (BarcodeDetector where the
+browser has it, keyboard-wedge scanners just type). **FEFO enforced at issue**: executing a goods
+issue for a lot-tracked item auto-consumes non-expired lots earliest-expiry-first (splitting across
+lots when needed, one `ISSUE_OUT` per lot), refuses expired lots, and the pre-sign guard now speaks
+lot language ("insufficient non-expired lot stock"). **Traceability** (`/trace/[lotId]`): backward
+timeline lot → GRN → PO → (PR) → vendor with current stock, and forward ledger of every movement —
+issues resolve to their goods issue with cost center / department / project / requester.
+
+### Built
+- lib/barcode/index.ts (nextLotNumber · ensureItemBarcode · createLotBarcode · barcodeDataUri via
+  bwip-js · resolveScan for 9 document families + lots + items) + types/bwip-js.d.ts (its export
+  conditions don't match "bundler" resolution) · GRN: accept schema +lotNumber/expiryDate,
+  acceptGrn lot upsert + barcodes + lot-keyed GRN_IN, QC form lot/expiry columns, detail lot column
+  + print-labels link · FEFO in executeGoodsIssue (plan per line: non-expired lots by expiry asc,
+  split, expired blocked; no-lot items unchanged) · /inventory/labels + PrintButton ·
+  /scan (ScanHub client + scanLookup action) · /trace/[lotId] · on-hand hints in GI/Transfer forms
+  + GI exec panel now SUM lot rows · labels/scan/trace/grn i18n EN/VN · seed: HML-PO-2026-0003
+  (SENT, 6 pcs lot-tracked HVAC-HEPA-14 @ 2.8M); lot-tracked items no longer seed no-lot balances.
+
+### E2E evidence (browser, fresh seed)
+- Received PO-0003 in two GRNs: GRN-0001 accept 3 → **auto lot LOT-260709-0001, EXP 30/09/2026**;
+  GRN-0002 accept 3 → **LOT-260709-0002, EXP 15/08/2026**. Both minted QR lot barcodes + the item
+  CODE128 (verified rows in Barcode); balances lot-keyed 3 + 3; PO auto-RECEIVED.
+- Labels page for GRN-0002 rendered a 50×30 mm label with a live QR PNG data-URI (126×126),
+  lot number, item code/name, **EXP 15/08/2026**, GRN reference.
+- **FEFO proven:** issuing 4 pcs (request → mgr approval → warehouse ISSUED signature) consumed
+  **3 × LOT-260709-0002 (earlier expiry) then 1 × LOT-260709-0001** — two ISSUE_OUT movements,
+  balances now 2 / 0.
+- Scan hub: `LOT-260709-0001` → panel with EXP, GRN-0001 · PO-0003 · V-CLEAN01 chain, balance,
+  2 movements, trace link; `HML-PO-2026-0003` → routed straight to the PO page.
+- /trace of the consumed lot: backward chain lot → GRN-0002 → PO-0003 → V-CLEAN01, "fully
+  consumed" state, forward ledger GRN_IN → ISSUE_OUT with **HML-GI-2026-0001 → CC-ENG** context.
+
+### §23 decisions (spec didn't specify or v1-scoped — decided and logged)
+1. **FEFO is automatic, not override-able in v1** — the spec's "override FEFO with reason ⇒
+   exception" needs per-lot manual picking UI; deferred with scan-driven GRN/issue/transfer/count
+   flows (the §21 scan-first workflows) to the polish/e2e phase backlog. Every movement still
+   carries its lotId so the audit answers "which lot went where".
+2. **Camera scanning uses the native BarcodeDetector** where available instead of shipping
+   @zxing/browser — keyboard-wedge scanners (the §21 primary hardware) type into the focused field
+   and submit on Enter, which the hub is built around.
+3. **Auto lot numbers are LOT-YYMMDD-#### with a yearly gap-free counter** (dated per acceptance
+   day, sequence per year) — spec format honored, no per-day counter table needed.
+4. **Vendor lot numbers**: entering the vendor's number in the lot field stores it verbatim
+   (upsert on itemId+lotNumber merges repeat receipts of the same vendor lot).
+5. **Legacy no-lot stock of lot-tracked items is unreachable by FEFO** — seeds no longer create
+   it; real deployments must migrate such stock into lots (documented here, enforced at GRN).
+6. **Document QR on PDFs** deferred to the trade/compliance phase where the PDF set is finalized.
+7. Expiry dates store local-midnight timestamps; all display goes through formatVnDate (renders
+   the entered date correctly; raw UTC ::date in SQL shows the prior day — display only via app).
+
+---
+
 ## Phase 12 — Dashboards, Reports & xlsx (§10-G) — ✅ COMPLETE
 
 **Summary.** The portal now explains itself. **/dashboard is role-aware**: every user gets their

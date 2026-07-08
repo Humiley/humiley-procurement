@@ -664,7 +664,48 @@
       "value": "Giá trị (₫)"
     }
   },
+  "labels": {
+    "title": "Nhãn lô hàng",
+    "back": "Tồn kho",
+    "print": "In nhãn",
+    "empty": "Không có lô để in — mở từ phiếu nhập có vật tư theo dõi lô."
+  },
+  "scan": {
+    "title": "Quét mã",
+    "hint": "Quét hoặc nhập bất kỳ: số chứng từ sẽ mở chứng từ; mã vật tư hoặc nhãn lô hiển thị tồn kho và lịch sử.",
+    "placeholder": "HML-PO-2026-0001 · HVAC-HEPA-14 · LOT-260709-0001…",
+    "lookup": "Tra cứu",
+    "camera": "Quét bằng camera",
+    "notFound": "Không tìm thấy \"{code}\".",
+    "trace": "Truy xuất",
+    "onHand": "Tồn kho",
+    "noStock": "Không có tồn kho.",
+    "recentMovements": "Giao dịch gần đây",
+    "lotTracked": "Theo dõi lô",
+    "lots": "Lô đang tồn"
+  },
+  "trace": {
+    "title": "Truy xuất nguồn gốc lô",
+    "backToScan": "Quét mã",
+    "backward": "Truy ngược — nguồn gốc",
+    "forward": "Truy xuôi — đã đi đâu",
+    "currentStock": "Tồn hiện tại",
+    "fullyConsumed": "Đã dùng hết — không còn tồn.",
+    "noMovements": "Chưa có giao dịch.",
+    "step": {
+      "lot": "Lô",
+      "item": "Vật tư",
+      "grn": "Phiếu nhập",
+      "po": "Đơn hàng",
+      "pr": "Phiếu yêu cầu",
+      "vendor": "Nhà cung cấp"
+    }
+  },
   "grn": {
+    "lot": "Lô",
+    "expiry": "Hạn dùng",
+    "lotAutoPh": "tự động",
+    "printLabels": "In nhãn lô",
     "listTitle": "Phiếu nhập kho",
     "newButton": "Tạo GRN",
     "newTitle": "Nhận hàng (GRN)",

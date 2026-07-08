@@ -10,6 +10,7 @@ import { transition, staleError } from "@/lib/workflow/transition";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { grnCreateSchema, grnAcceptSchema, type GrnCreatePayload, type GrnAcceptPayload } from "@/lib/schemas/grn";
 import { postMovement } from "@/lib/stock/post-movement";
+import { nextLotNumber, ensureItemBarcode, createLotBarcode } from "@/lib/barcode";
 
 const D = Prisma.Decimal;
 
@@ -68,7 +69,7 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
 
   const grn = await db.goodsReceipt.findUnique({
     where: { id: values.grnId },
-    include: { lines: { include: { poLine: { include: { item: { select: { id: true } } } } } }, po: { include: { lines: true } } },
+    include: { lines: { include: { poLine: { include: { item: { select: { id: true, code: true, isLotTracked: true } } } } } }, po: { include: { lines: true } } },
   });
   if (!grn) throw new Error("GRN not found.");
   if (grn.status !== "QC_PENDING") throw new Error("Only a QC-pending GRN can be accepted.");
@@ -125,11 +126,33 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
         // §10b: accepted catalog items enter stock at the PO price (moving-average IN);
         // rejected quantities never enter stock. Free-text lines carry no item → no stock.
         if (gl.poLine.itemId) {
+          // §21: lot-tracked items get a Lot (+ QR label barcode) at acceptance
+          let lotId: string | null = null;
+          if (gl.poLine.item?.isLotTracked) {
+            const lotNumber = (l.lotNumber || "").trim() || (await nextLotNumber(tx));
+            const lot = await tx.lot.upsert({
+              where: { itemId_lotNumber: { itemId: gl.poLine.itemId, lotNumber } },
+              update: {},
+              create: {
+                itemId: gl.poLine.itemId,
+                lotNumber,
+                expiryDate: l.expiryDate ? new Date(l.expiryDate + "T00:00:00") : null,
+                vendorId: grn.po.vendorId,
+                grnId: grn.id,
+              },
+            });
+            lotId = lot.id;
+            await tx.grnLine.update({ where: { id: gl.id }, data: { lotId } });
+            const hasBarcode = await tx.barcode.findFirst({ where: { type: "LOT", lotId } });
+            if (!hasBarcode) await createLotBarcode(tx, lotId, lotNumber, gl.poLine.itemId);
+            await ensureItemBarcode(tx, gl.poLine.itemId, gl.poLine.item.code);
+          }
           await postMovement(
             {
               type: "GRN_IN",
               warehouseId: grn.warehouseId,
               itemId: gl.poLine.itemId,
+              lotId,
               qty: l.qtyAccepted,
               unitCostVnd: gl.poLine.unitPrice,
               refEntityType: "GoodsReceipt",

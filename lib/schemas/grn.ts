@@ -24,6 +24,9 @@ export const grnAcceptSchema = z.object({
       qtyAccepted: decStr,
       qtyRejected: decStr,
       rejectReason: z.string().trim().optional().nullable(),
+      // §21: lot-tracked items capture a lot at acceptance (blank lotNumber ⇒ auto LOT-YYMMDD-####)
+      lotNumber: z.string().trim().optional().nullable(),
+      expiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable().or(z.literal("")),
     }),
   ),
 });

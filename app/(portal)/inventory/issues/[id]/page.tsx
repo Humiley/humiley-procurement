@@ -38,7 +38,11 @@ export default async function GoodsIssueDetailPage({ params }: { params: { id: s
     db.electronicSignature.findMany({ where: { entityType: "GoodsIssue", entityId: gi.id }, orderBy: { signedAt: "asc" } }),
     db.stockBalance.findMany({ where: { warehouseId: gi.warehouseId, itemId: { in: gi.lines.map((l) => l.itemId) } } }),
   ]);
-  const onHand = new Map(balances.map((b) => [b.itemId, decToString(b.qtyOnHand, 4)]));
+  const onHand = new Map<string, string>();
+  for (const b of balances) {
+    const prev = Number(onHand.get(b.itemId) ?? 0);
+    onHand.set(b.itemId, String(prev + Number(decToString(b.qtyOnHand, 4) ?? 0)));
+  }
 
   const timelineSteps = steps.map((s) => ({
     level: s.level,

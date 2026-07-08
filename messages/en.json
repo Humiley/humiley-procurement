@@ -664,7 +664,48 @@
       "value": "Value (₫)"
     }
   },
+  "labels": {
+    "title": "Lot Labels",
+    "back": "Inventory",
+    "print": "Print labels",
+    "empty": "No lots to print — pass ?grn=<id> from a GRN with lot-tracked lines."
+  },
+  "scan": {
+    "title": "Scan Hub",
+    "hint": "Scan or type anything: a document number opens it; an item code or lot label shows stock and history.",
+    "placeholder": "HML-PO-2026-0001 · HVAC-HEPA-14 · LOT-260709-0001…",
+    "lookup": "Look up",
+    "camera": "Camera scan",
+    "notFound": "Nothing matches \"{code}\".",
+    "trace": "Trace",
+    "onHand": "On hand",
+    "noStock": "No stock on hand.",
+    "recentMovements": "Recent movements",
+    "lotTracked": "Lot-tracked",
+    "lots": "Lots in stock"
+  },
+  "trace": {
+    "title": "Lot Traceability",
+    "backToScan": "Scan Hub",
+    "backward": "Backward — where it came from",
+    "forward": "Forward — where it went",
+    "currentStock": "Current stock",
+    "fullyConsumed": "Fully consumed — nothing on hand.",
+    "noMovements": "No movements yet.",
+    "step": {
+      "lot": "Lot",
+      "item": "Item",
+      "grn": "Goods receipt",
+      "po": "Purchase order",
+      "pr": "Requisition",
+      "vendor": "Vendor"
+    }
+  },
   "grn": {
+    "lot": "Lot",
+    "expiry": "Expiry",
+    "lotAutoPh": "auto",
+    "printLabels": "Print lot labels",
     "listTitle": "Goods Receipts",
     "newButton": "New GRN",
     "newTitle": "Receive Goods (GRN)",
