@@ -10,6 +10,7 @@ import { VndDisplay } from "@/components/shared/VndDisplay";
 import { ApprovalTimeline } from "@/components/shared/ApprovalTimeline";
 import { DecideInline } from "@/components/approvals/DecideInline";
 import { PoDetailActions } from "@/components/po/PoDetailActions";
+import { ShipmentDocsPanel, type ShipDocRow, type CooOpt } from "@/components/trade/ShipmentDocsPanel";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
 
 export default async function PoDetailPage({ params }: { params: { id: string } }) {
@@ -32,7 +33,7 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
   const canSee = canManage || hasAnyRole(user, ["DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]) || po.createdById === user.id;
   if (!canSee) notFound();
 
-  const [steps, signatures, audits] = await Promise.all([
+  const [steps, signatures, audits, shipDocs, cooForms] = await Promise.all([
     db.approvalStep.findMany({
       where: { entityType: "PO", entityId: po.id },
       orderBy: { level: "asc" },
@@ -47,7 +48,23 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true } } },
     }),
+    db.shipmentDoc.findMany({ where: { poId: po.id }, orderBy: { id: "asc" }, include: { cooFormType: { select: { code: true } } } }),
+    db.cooFormType.findMany({ orderBy: { code: "asc" } }),
   ]);
+  const shipDocRows: ShipDocRow[] = shipDocs.map((d) => ({
+    id: d.id,
+    type: d.type,
+    status: d.status,
+    docNumber: d.docNumber,
+    issueDate: d.issueDate
+      ? `${d.issueDate.getFullYear()}-${String(d.issueDate.getMonth() + 1).padStart(2, "0")}-${String(d.issueDate.getDate()).padStart(2, "0")}`
+      : null,
+    formCode: d.cooFormType?.code ?? null,
+  }));
+  const cooOpts: CooOpt[] = cooForms.map((c) => ({ id: c.id, label: `${c.code.replace("_", " ")} — ${c.agreementName}` }));
+  const shipDocsTab = (
+    <ShipmentDocsPanel poId={po.id} docs={shipDocRows} cooForms={cooOpts} canAct={canManage} />
+  );
 
   const meta = (
     <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
@@ -167,6 +184,7 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
       tabs={[
         { key: "lines", label: t("tabLines"), content: linesTab, count: po.lines.length },
         { key: "approvals", label: t("tabApprovals"), content: approvalsTab },
+        { key: "shipdocs", label: t("tabShipDocs"), content: shipDocsTab, count: shipDocRows.length },
         { key: "audit", label: t("tabAudit"), content: auditTab },
       ]}
     />

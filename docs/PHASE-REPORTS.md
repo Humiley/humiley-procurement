@@ -21,6 +21,63 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 14 — Trade Compliance (§20) — ✅ COMPLETE
+
+**Summary.** Import purchasing now carries its compliance brain. The **Incoterms 2020 book**
+(/reference/incoterms) renders all 11 terms as a responsibility matrix (export clearance, main
+carriage, insurance, import clearance, duties — buyer vs seller) plus bilingual per-term cards
+with risk-transfer points and VN-specific buyer notes (structured data in lib/trade/incoterms.ts,
+not free text). The **HS-code register** (/reference/hs-codes + detail) holds the codes Humiley
+imports with MFN duty, import VAT, customs UoM, regulation notes (MEPS/MOIT warnings) and the
+full **duty × C/O form matrix** (Form E/D/AK/VK/AJ/AANZ/EUR.1/CPTPP/S with preferential rates and
+origin-country lists); items link via ItemTrade (HS + default origin + import-license flag). The
+**landed-cost estimator** (/trade/estimator) is the §20 "instant answer": autocomplete across
+items and HS codes → commercial inputs (price, currency with auto FX from FxRate, qty, freight,
+handling, origin) → a duty-comparison card of every route with the cheapest highlighted emerald
+and origin-impossible forms greyed; every run persists a LandedCostEstimate. **Shipment documents**:
+each PO gets an Import-docs tab — pick the expected C/O form and the checklist generates (C/O +
+B/L + commercial invoice + packing list + customs declaration, + import license when a line item
+requires it); documents move PENDING → RECEIVED (number + issue date) → **VERIFIED under a §19
+purchaser signature**, and the PO stores its C/O form.
+
+### Built
+- lib/trade/incoterms.ts (11-term structured book) + /reference/incoterms · lib/fx (latest
+  MANUAL FxRate per currency) · lib/trade/landed.ts (customs value → duty → VAT → landed unit,
+  route per C/O form) · /reference/hs-codes + [id] (register, duty matrix, linked items) ·
+  /trade/estimator (search + estimate actions, Estimator client, saves LandedCostEstimate) ·
+  purchase-orders/shipment.actions.ts (generate / receive / VERIFIED-sign) + ShipmentDocsPanel +
+  PO detail "Import docs" tab (+ po.cooFormTypeId) · seed: 9 C/O forms, 12 HS codes, 39 duty
+  rows, 8 ItemTrade links, 5 FX rates · incoterms/hs/estimator/shipdocs i18n EN/VN.
+
+### E2E evidence (browser, fresh seed)
+- Incoterms: 11 unique terms, 11 matrix rows, bilingual cards (VN "Giao lên tàu"), FOB/CIF anchors.
+- HS 8504.40 detail: MFN 10% row, FORM E (ACFTA) 0%, EUR1 3%, MOIT energy-label regulation note,
+  linked HVAC-VFD-15 with the Import-license badge.
+- Estimator: "VFD" → picked HVAC-VFD-15 (HS 8504.40, origin CN auto-filled, FX auto 25,450);
+  700 USD × 10 + 5M freight + 1M handling → customs value 184,150,000 ₫; **MFN 10% = landed unit
+  20,256,500 ₫; Form E 0% = 18,415,000 ₫ flagged Cheapest; FORM D/VK greyed (origin CN
+  impossible); EUR1 3% greyed** — persisted with cooFormType FORM_E.
+- PO-0003 Import docs: generated 5-doc checklist (C/O badged FORM E; no license — correct for
+  HEPA); C/O entered E263901234567 + issue date → RECEIVED → **Sign & verify → VERIFIED with a
+  ShipmentDoc VERIFIED signature by the purchaser**; po.cooFormTypeId = FORM_E.
+
+### §23 decisions (spec didn't specify or v1-scoped — decided and logged)
+1. **Landed unit cost excludes import VAT** (deductible input VAT for VAT-registered VN buyers);
+   VAT is shown as its own column for cash planning. The spec's example table was illustrative.
+2. **Customs value = price×qty×FX + freight + handling** for all terms v1 (approximates CIF for
+   EXW/FOB; CIF/DAP quotes simply leave freight/handling 0) — per-term automatic insurance/freight
+   estimation deferred.
+3. HS/duty/FX are **seed-maintained reference data v1** (12 representative codes) — admin CRUD
+   screens deferred to the governance phase along with per-origin freight defaults.
+4. **GRN import-doc warning** (missing C/O at receipt), §20 landed-cost-as-GRN-unit-cost, and
+   historical-actuals-beside-estimate deferred: landed capture on import PO headers is the
+   prerequisite and belongs with the governance/validation phase backlog.
+5. Documents with wrong data can only be corrected before RECEIVED; after VERIFIED the §19
+   signature seals them (append-only chain).
+6. FX rates are MANUAL seeds; a rate-sync job belongs to the API/integration phase.
+
+---
+
 ## Phase 13 — Barcode & Traceability (§21) — ✅ COMPLETE
 
 **Summary.** The warehouse is now scannable end to end. **Lot capture at GRN acceptance**: for
