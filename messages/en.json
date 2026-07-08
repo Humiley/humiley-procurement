@@ -125,7 +125,11 @@
     "ACTIVE": "Active",
     "INACTIVE": "Inactive",
     "BLACKLISTED": "Blacklisted",
-    "CONVERTED": "Converted"
+    "CONVERTED": "Converted",
+    "PENDING_APPROVAL": "Pending approval",
+    "SENT": "Sent",
+    "PARTIALLY_RECEIVED": "Partially received",
+    "RECEIVED": "Received"
   },
   "admin": {
     "users": {
@@ -207,6 +211,13 @@
       "bankAccount": "Bank account",
       "categories": "Supply categories (comma-separated)",
       "rating": "Rating"
+    },
+    "lifecycle": {
+      "title": "Vendor approval (Director)",
+      "submit": "Submit for approval",
+      "pendingNote": "Awaiting Director decision in Approvals",
+      "blacklist": "Blacklist",
+      "blacklistReason": "Reason for blacklisting this vendor (required):"
     }
   },
   "pr": {
@@ -246,7 +257,8 @@
     "deptRequisitions": "Department",
     "allRequisitions": "All",
     "stockHint": "In stock: {qty}",
-    "signatureBlock": "Electronic signatures"
+    "signatureBlock": "Electronic signatures",
+    "createPo": "Create PO from this PR"
   },
   "approvals": {
     "title": "Waiting for me",
@@ -270,6 +282,12 @@
       "APPROVED": "Approved — I authorize this document",
       "REJECTED": "Rejected — reason required",
       "RETURNED": "Returned for revision — reason required"
+    },
+    "colType": "Type",
+    "type": {
+      "PR": "PR",
+      "PO": "PO",
+      "VENDOR": "Vendor"
     }
   },
   "notifications": {
@@ -277,5 +295,45 @@
     "markAll": "Mark all read",
     "empty": "No notifications yet.",
     "markRead": "Mark read"
+  },
+  "po": {
+    "listTitle": "Purchase Orders",
+    "newButton": "New PO",
+    "newTitle": "New Purchase Order",
+    "empty": "No purchase orders yet.",
+    "fromPr": "Prefilled from approved requisition {ref} — the PR will be marked CONVERTED.",
+    "vendor": "Vendor",
+    "currency": "Currency",
+    "fxRate": "FX rate → VND",
+    "paymentTerms": "Payment terms",
+    "paymentTermsPh": "e.g. 30 days after delivery",
+    "incoterm": "Incoterms 2020",
+    "incotermPlace": "Named place",
+    "deliveryAddress": "Delivery address",
+    "expectedDate": "Expected date",
+    "warranty": "Warranty terms",
+    "vat": "VAT",
+    "lineDesc": "Description",
+    "uom": "UoM",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "amount": "Amount",
+    "addLine": "+ Add line",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "create": "Create purchase order",
+    "colNo": "No.",
+    "colPr": "Source PR",
+    "colStatus": "Status",
+    "submit": "Submit for approval",
+    "send": "Send to vendor",
+    "close": "Close",
+    "cancel": "Cancel",
+    "pdf": "PDF",
+    "tabLines": "Lines",
+    "tabApprovals": "Approvals & Signatures",
+    "tabAudit": "Audit",
+    "approvalsPending": "Submit the PO to start the approval flow.",
+    "signatureBlock": "Electronic signatures"
   }
 }

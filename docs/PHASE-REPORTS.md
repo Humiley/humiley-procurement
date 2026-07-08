@@ -21,6 +21,85 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 5 — Purchase Order Module — ✅ COMPLETE
+
+**Summary.** The §8 PO module is live end to end: POs are created from an APPROVED PR (lines,
+prices and department prefilled; the PR flips to CONVERTED) or standalone (PURCHASER/ADMIN);
+they route through the Phase-4 approval engine on the same amount bands; approval decisions are
+§19 electronic signatures with the hash chain; an APPROVED PO is SENT to the vendor by email with
+the branded PDF attached (CC the purchaser); the PDF is Vietnamese-safe on bundled Be Vietnam Pro
+fonts with the §10 letterhead style. The §7 vendor lifecycle (DRAFT → PENDING → APPROVED by a
+Director signature; APPROVED → BLACKLISTED with reason) runs through the same engine. The
+approvals queue now serves PRs, POs and vendors from one screen.
+
+### Built
+- **Schema:** `PurchaseOrder.createdById` (+ `User.purchaseOrders` relation) — migration
+  `po_created_by`. Needed for no-self-approval, notifications and PO list scoping.
+- **lib/pdf/** — `fonts.ts` registers bundled Be Vietnam Pro Regular/Bold/Italic TTFs (§22.4
+  gotcha: default PDF fonts break ế/ữ/đ) with hyphenation disabled; `PoPdf.tsx` = the branded
+  A4 document (two-tone emerald/navy bar, wordmark, doc no + `HML-PO · Rev 01.0` top-right,
+  bilingual EN·VN field labels with VN italic, navy table headers, totals block, §19 signature
+  block, fixed footer `Page X / Y`); `po-data.ts` assembles the serializable payload (Decimal →
+  grouped strings at the boundary). Route: `GET /api/po/[id]/pdf` (auth-guarded, nodejs runtime).
+- **PO lifecycle** (`purchase-orders/actions.ts`): `createPo` (Zod schema `lib/schemas/po.ts` with
+  the 11 Incoterms 2020 + VAT 0/5/8/10; vendor must be APPROVED; docnum `HML-PO-2026-####` inside
+  the create transaction; subtotal/VAT/total computed in Decimal; PR APPROVED→CONVERTED),
+  `submitPo` (rollback-safe step creation; department = source PR's dept, else creator's),
+  `decidePo` (sign → engine → PENDING_APPROVAL→APPROVED / back to DRAFT), `sendPo` (APPROVED→SENT,
+  emails the PDF via nodemailer with attachment + CC), `cancelPo` (blocked once a GRN exists),
+  `closePo`.
+- **Vendor lifecycle** (`vendors/actions.ts`): `submitVendorForApproval` (DRAFT→PENDING, VENDOR
+  matrix row: one Director level), `decideVendor` (signature + engine; PENDING→APPROVED/DRAFT),
+  `blacklistVendor` (reason required); `VendorLifecyclePanel` on the vendors page.
+- **UI:** PO register (role-scoped), PO create form (from-PR prefill via `?fromPr=`, incoterm +
+  named place, VAT select, live totals), PO detail (meta, lines, approval timeline + inline
+  decision bar + signature block with chain, audit tab, PDF/Submit/Send/Close/Cancel actions),
+  "Create PO from this PR" button on approved PRs; the approvals queue generalized with a Type
+  column (PR/PO/Vendor) and a `decideEntity` dispatcher; `DecideInline` made entity-generic.
+- **Seed:** PO matrix (same bands as PR) + VENDOR matrix (Director, any amount); demo PR
+  HML-PR-2026-0002 seeded APPROVED (completed steps) so Create-PO is demoable immediately.
+- i18n: full `po` namespace + vendors.lifecycle + approvals type labels + PO/vendor status labels
+  (EN/VN).
+
+### E2E evidence (browser, fresh seed)
+- Purchaser → approved PR → Create PO: form prefilled (30,000,000 ₫ line), DAP + named place
+  "Nhà máy Long Thành, Đồng Nai", VAT 10% → PO HML-PO-2026-0001 DRAFT with subtotal 30,000,000 /
+  VAT 3,000,000 / total 33,000,000; source PR → CONVERTED.
+- Submit → steps L1 mgr.eng (the PR's department manager) + L2 director.fin; approvals queue
+  showed the PO row typed "PO"; both approved via the signing ceremony → PO APPROVED; signature
+  #2 chains to #1.
+- Send to vendor → SENT; dev mail log shows `to=sales@cleanair.vn cc=purchaser@…
+  attachments=[HML-PO-2026-0001.pdf]`.
+- PDF text-extracted via pdf.js: "PURCHASE ORDER / Đơn đặt hàng", "NHÀ CUNG CẤP", Vietnamese
+  diacritics correct, both signature names present, `Page 1 / 1`, grouped totals (33,000,000).
+- Vendor V-E2E01: DRAFT → submitted (PENDING, "awaiting Director") → approved from the queue with
+  a Director signature → APPROVED.
+
+### ⚠️ Decisions made without asking (§23)
+1. **PO rejection state** — PoStatus has no REJECTED; Reject and Return both transition the PO
+   back to DRAFT (the decided step + signature + comment retain the full history; purchaser can
+   fix and resubmit).
+2. **PO approval department** — the matrix's DEPT_MANAGER level resolves against the source PR's
+   department; a standalone PO uses the creator's department.
+3. **PDF wordmark** — no logo asset exists in the repo (`public/` holds no logo.png); the PDF uses
+   the same typographic wordmark as the app shell. Drop `public/logo.png` in later and swap.
+4. **RFQ path deferred** — §8's create-from-awarded-quote lands with Phase 6 (RFQ module); the
+   create form covers from-PR + standalone now.
+5. **Vendor approval snapshot** — signs over code/name/taxCode/bankAccount/status (the §15
+   bank-change control fields), not the full profile.
+6. **Demo vendor E2E row** inserted via SQL for the lifecycle test (UI create works the same
+   path through MasterDataManager).
+
+### ⚠️ Known limitations
+- PO PDF is EN-labeled with VN sublines per §10; a locale-driven full-VN variant can come with
+  the reports phase if wanted.
+- Contract price auto-fill (§9) and GRN-driven status updates (PARTIALLY_RECEIVED/RECEIVED) land
+  in Phase 7; budget commitment move PR→PO in Phase 7's budget work.
+- Blacklist uses window.prompt for the reason (functional; a styled dialog can replace it in the
+  UI-polish pass).
+
+---
+
 ## Phase 4 — Approval Engine + E-Signature Core — ✅ COMPLETE
 
 **Summary.** The §6 approval workflow and §19 Part 11-aligned e-signature core are live and wired

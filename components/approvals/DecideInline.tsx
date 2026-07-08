@@ -4,11 +4,19 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
-import { decidePr } from "@/app/(portal)/approvals/actions";
+import { decideEntity } from "@/app/(portal)/approvals/actions";
 import type { Decision } from "@/lib/workflow/engine";
 
-/** The decision bar shown on a PR detail page to the approver whose turn it is (§6 + §19). */
-export function DecideInline({ prId, prNumber }: { prId: string; prNumber: string }) {
+/** The decision bar shown on a document page to the approver whose turn it is (§6 + §19). */
+export function DecideInline({
+  entityType,
+  entityId,
+  refLabel,
+}: {
+  entityType: "PR" | "PO" | "VENDOR";
+  entityId: string;
+  refLabel: string;
+}) {
   const t = useTranslations("approvals");
   const router = useRouter();
   const [decision, setDecision] = useState<Decision | null>(null);
@@ -16,7 +24,7 @@ export function DecideInline({ prId, prNumber }: { prId: string; prNumber: strin
 
   async function onSign(payload: SignaturePayload) {
     if (!decision) return;
-    await decidePr({ prId, decision, password: payload.password, comment: payload.reason });
+    await decideEntity({ entityType, entityId, decision, password: payload.password, comment: payload.reason });
     setDecision(null);
     startTransition(() => router.refresh());
   }
@@ -39,7 +47,7 @@ export function DecideInline({ prId, prNumber }: { prId: string; prNumber: strin
         open={!!decision}
         onClose={() => setDecision(null)}
         onConfirm={onSign}
-        title={`${t("signTitle")} — ${prNumber}`}
+        title={`${t("signTitle")} — ${refLabel}`}
         meanings={decision ? [decision] : []}
         meaningLabel={(m) => t(`meaning.${m}`)}
         submitLabel={t("signSubmit")}

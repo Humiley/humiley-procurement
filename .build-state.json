@@ -1,15 +1,16 @@
 {
-  "phase": 5,
+  "phase": 6,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
     2,
     3,
-    4
+    4,
+    5
   ],
-  "currentTask": "Phase 5 \u2014 PO module per \u00a78",
+  "currentTask": "Phase 6 \u2014 RFQ / sourcing per \u00a78",
   "completedTasks": [],
-  "nextAction": "Phase 5 (\u00a722.7 prompt 5): PO module per \u00a78 \u2014 PO create from approved PR (docnum, lines, vendor), PO approval via the Phase-4 engine (entityType PO \u2014 seed PO matrix bands), brand PDF per \u00a710/\u00a722.4 fonts, vendor approval flow through the engine, Incoterms field. npm run check + browser verify, Phase Report, commit phase-5.",
-  "lastCheckpointCommit": "phase-4",
-  "updatedAt": "2026-07-08T19:00:00+07:00"
+  "nextAction": "Phase 6 (\u00a722.7 prompt 6): RFQ + quotes + comparison per \u00a78 \u2014 RFQ create from approved PR or standalone; select >=1 vendors (3-quote rule >100M with justified override -> Exception SINGLE_SOURCE/NON_LOWEST_AWARD); RFQ PDF per vendor (reuse lib/pdf fonts/layout) + email send; manual quote entry (per-vendor line prices, lead time, terms, validity, attachment); comparison matrix (lines x vendors, lowest per line emerald-highlighted, totals/lead/terms rows); whole-quote award with justification when not lowest; award -> create PO prefilled from quote (reuse createPo). npm run check + seed + browser verify, Phase Report, commit phase-6.",
+  "lastCheckpointCommit": "phase-5",
+  "updatedAt": "2026-07-08T22:30:00+07:00"
 }

@@ -125,7 +125,11 @@
     "ACTIVE": "Hoạt động",
     "INACTIVE": "Ngừng",
     "BLACKLISTED": "Danh sách đen",
-    "CONVERTED": "Đã chuyển đổi"
+    "CONVERTED": "Đã chuyển đổi",
+    "PENDING_APPROVAL": "Chờ phê duyệt",
+    "SENT": "Đã gửi",
+    "PARTIALLY_RECEIVED": "Nhận một phần",
+    "RECEIVED": "Đã nhận"
   },
   "admin": {
     "users": {
@@ -207,6 +211,13 @@
       "bankAccount": "Số tài khoản",
       "categories": "Nhóm cung cấp (phân tách bằng dấu phẩy)",
       "rating": "Đánh giá"
+    },
+    "lifecycle": {
+      "title": "Phê duyệt nhà cung cấp (Giám đốc)",
+      "submit": "Trình phê duyệt",
+      "pendingNote": "Đang chờ Giám đốc quyết định trong mục Phê duyệt",
+      "blacklist": "Đưa vào danh sách đen",
+      "blacklistReason": "Lý do đưa nhà cung cấp vào danh sách đen (bắt buộc):"
     }
   },
   "pr": {
@@ -246,7 +257,8 @@
     "deptRequisitions": "Phòng ban",
     "allRequisitions": "Tất cả",
     "stockHint": "Tồn kho: {qty}",
-    "signatureBlock": "Chữ ký điện tử"
+    "signatureBlock": "Chữ ký điện tử",
+    "createPo": "Tạo PO từ PR này"
   },
   "approvals": {
     "title": "Chờ tôi duyệt",
@@ -270,6 +282,12 @@
       "APPROVED": "Phê duyệt — tôi chấp thuận chứng từ này",
       "REJECTED": "Từ chối — bắt buộc nêu lý do",
       "RETURNED": "Trả lại để chỉnh sửa — bắt buộc nêu lý do"
+    },
+    "colType": "Loại",
+    "type": {
+      "PR": "PR",
+      "PO": "PO",
+      "VENDOR": "NCC"
     }
   },
   "notifications": {
@@ -277,5 +295,45 @@
     "markAll": "Đánh dấu đã đọc tất cả",
     "empty": "Chưa có thông báo nào.",
     "markRead": "Đã đọc"
+  },
+  "po": {
+    "listTitle": "Đơn đặt hàng",
+    "newButton": "Tạo PO",
+    "newTitle": "Tạo đơn đặt hàng",
+    "empty": "Chưa có đơn đặt hàng nào.",
+    "fromPr": "Lấy dữ liệu từ phiếu yêu cầu đã duyệt {ref} — PR sẽ chuyển trạng thái CONVERTED.",
+    "vendor": "Nhà cung cấp",
+    "currency": "Tiền tệ",
+    "fxRate": "Tỷ giá → VND",
+    "paymentTerms": "Điều khoản thanh toán",
+    "paymentTermsPh": "vd: 30 ngày sau giao hàng",
+    "incoterm": "Incoterms 2020",
+    "incotermPlace": "Địa điểm chỉ định",
+    "deliveryAddress": "Địa chỉ giao hàng",
+    "expectedDate": "Ngày giao dự kiến",
+    "warranty": "Điều khoản bảo hành",
+    "vat": "Thuế GTGT",
+    "lineDesc": "Diễn giải",
+    "uom": "ĐVT",
+    "qty": "SL",
+    "unitPrice": "Đơn giá",
+    "amount": "Thành tiền",
+    "addLine": "+ Thêm dòng",
+    "subtotal": "Cộng",
+    "total": "Tổng cộng",
+    "create": "Tạo đơn đặt hàng",
+    "colNo": "Số",
+    "colPr": "PR nguồn",
+    "colStatus": "Trạng thái",
+    "submit": "Trình phê duyệt",
+    "send": "Gửi nhà cung cấp",
+    "close": "Đóng",
+    "cancel": "Huỷ",
+    "pdf": "PDF",
+    "tabLines": "Chi tiết",
+    "tabApprovals": "Phê duyệt & Chữ ký",
+    "tabAudit": "Nhật ký",
+    "approvalsPending": "Trình PO để bắt đầu luồng phê duyệt.",
+    "signatureBlock": "Chữ ký điện tử"
   }
 }

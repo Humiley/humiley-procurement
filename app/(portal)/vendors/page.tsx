@@ -9,9 +9,12 @@ import {
 } from "@/components/admin/MasterDataManager";
 import { ExcelImportButton } from "@/components/admin/ExcelImportButton";
 import { createVendor, updateVendor } from "@/app/(portal)/vendors/actions";
+import { VendorLifecyclePanel, type VendorLcRow } from "@/components/vendors/VendorLifecyclePanel";
+import { hasAnyRole, requireUser } from "@/lib/rbac";
 
 export default async function VendorsPage() {
   await requireRoles("ADMIN", "PURCHASER", "ACCOUNTANT", "DIRECTOR");
+  const me = await requireUser();
   const t = await getTranslations("vendors");
   const f = await getTranslations("vendors.fields");
   const common = await getTranslations("common");
@@ -60,7 +63,11 @@ export default async function VendorsPage() {
     { key: "categories", label: f("categories"), type: "text" },
   ];
 
+  const lcRows: VendorLcRow[] = vendors.map((v) => ({ id: v.id, code: v.code, nameEn: v.nameEn, status: v.status }));
+
   return (
+    <>
+    <VendorLifecyclePanel rows={lcRows} canManage={hasAnyRole(me, ["ADMIN", "PURCHASER", "DIRECTOR"])} />
     <MasterDataManager
       title={t("title")}
       subtitle={t("subtitle")}
@@ -79,5 +86,6 @@ export default async function VendorsPage() {
         />
       }
     />
+    </>
   );
 }

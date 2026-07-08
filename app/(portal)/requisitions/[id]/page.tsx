@@ -159,7 +159,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
     ) : (
       <div>
         <ApprovalTimeline steps={timelineSteps} />
-        {myTurn ? <DecideInline prId={pr.id} prNumber={pr.prNumber} /> : null}
+        {myTurn ? <DecideInline entityType="PR" entityId={pr.id} refLabel={pr.prNumber} /> : null}
         {signatures.length > 0 ? (
           <div className="mt-6">
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
@@ -210,12 +210,22 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
       }
       metaSlot={meta}
       actions={
-        <PrDetailActions
-          id={pr.id}
-          status={pr.status}
-          isOwner={isOwner}
-          canRecall={pr.status === "SUBMITTED" && steps.every((s) => s.status === "PENDING")}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {pr.status === "APPROVED" && hasAnyRole(user, ["PURCHASER", "ADMIN"]) ? (
+            <a
+              href={`/purchase-orders/new?fromPr=${pr.id}`}
+              className="rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+            >
+              {t("createPo")}
+            </a>
+          ) : null}
+          <PrDetailActions
+            id={pr.id}
+            status={pr.status}
+            isOwner={isOwner}
+            canRecall={pr.status === "SUBMITTED" && steps.every((s) => s.status === "PENDING")}
+          />
+        </div>
       }
       tabs={[
         { key: "details", label: t("tabDetails"), content: detailsTab, count: pr.lines.length },

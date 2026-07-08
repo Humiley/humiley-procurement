@@ -108,3 +108,22 @@ export async function markAllNotificationsRead() {
   await db.notification.updateMany({ where: { userId: user.id, isRead: false }, data: { isRead: true } });
   revalidatePath("/notifications");
 }
+
+/** One dispatcher for the queue: route a decision to the entity's decide action. */
+export async function decideEntity(params: {
+  entityType: "PR" | "PO" | "VENDOR";
+  entityId: string;
+  decision: Decision;
+  password: string;
+  comment?: string;
+}) {
+  if (params.entityType === "PR") {
+    return decidePr({ prId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+  }
+  if (params.entityType === "PO") {
+    const { decidePo } = await import("@/app/(portal)/purchase-orders/actions");
+    return decidePo({ poId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+  }
+  const { decideVendor } = await import("@/app/(portal)/vendors/actions");
+  return decideVendor({ vendorId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+}

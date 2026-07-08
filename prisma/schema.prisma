@@ -247,6 +247,7 @@ model User {
   managedDepartment Department? @relation("DeptManager")
 
   requisitions        PurchaseRequisition[]
+  purchaseOrders      PurchaseOrder[]       @relation("PoCreatedBy")
   approvalSteps       ApprovalStep[]        @relation("Approver")
   delegatedSteps      ApprovalStep[]        @relation("DelegatedFrom")
   goodsReceipts       GoodsReceipt[]
@@ -634,9 +635,11 @@ model PurchaseOrder {
   freightVnd      Decimal?  @db.Decimal(18, 2)
   handlingVnd     Decimal?  @db.Decimal(18, 2)
   cooFormTypeId   String?
+  createdById     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  createdBy       User?                @relation("PoCreatedBy", fields: [createdById], references: [id])
   vendor          Vendor               @relation(fields: [vendorId], references: [id])
   pr              PurchaseRequisition? @relation(fields: [prId], references: [id])
   quote           Quote?               @relation(fields: [quoteId], references: [id])

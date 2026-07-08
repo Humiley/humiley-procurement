@@ -33,15 +33,30 @@ function mailTransport() {
 }
 
 async function sendMail(to: string, subject: string, text: string) {
+  await sendMailRaw({ to, subject, text });
+}
+
+/** Full-control mail (attachments, CC) — e.g. the PO PDF to a vendor. Dev-logs when SMTP is unset. */
+export async function sendMailRaw(msg: {
+  to: string;
+  cc?: string;
+  subject: string;
+  text: string;
+  attachments?: { filename: string; content: Buffer }[];
+}) {
   const t = mailTransport();
   if (!t) {
-    console.log(`[mail:dev] to=${to} subject="${subject}"\n${text}`);
+    console.log(
+      `[mail:dev] to=${msg.to}${msg.cc ? ` cc=${msg.cc}` : ""} subject="${msg.subject}"` +
+        (msg.attachments?.length ? ` attachments=[${msg.attachments.map((a) => a.filename).join(", ")}]` : "") +
+        `\n${msg.text}`,
+    );
     return;
   }
   try {
-    await t.sendMail({ from: process.env.SMTP_FROM || "procurement@humiley.com", to, subject, text });
+    await t.sendMail({ from: process.env.SMTP_FROM || "procurement@humiley.com", ...msg });
   } catch (e) {
-    console.warn(`[mail] send failed to ${to}:`, e instanceof Error ? e.message : e);
+    console.warn(`[mail] send failed to ${msg.to}:`, e instanceof Error ? e.message : e);
   }
 }
 

@@ -123,7 +123,20 @@ async function main() {
       { entityType: "PR", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
     ],
   });
-  console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3).");
+  // §8: POs approve through the same bands; §7: vendors need one Director approval.
+  await db.approvalMatrix.deleteMany({ where: { entityType: { in: ["PO", "VENDOR"] } } });
+  await db.approvalMatrix.createMany({
+    data: [
+      { entityType: "PO", minAmountVnd: 0, maxAmountVnd: 19_999_999, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PO", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PO", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 2, approverRole: "DIRECTOR" },
+      { entityType: "PO", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PO", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 2, approverRole: "DIRECTOR" },
+      { entityType: "PO", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
+      { entityType: "VENDOR", minAmountVnd: 0, maxAmountVnd: null, level: 1, approverRole: "DIRECTOR" },
+    ],
+  });
+  console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3; PO same bands; VENDOR Director).");
 
   console.log(`Seeded ${DEPARTMENTS.length} departments, ${USERS.length} users.`);
   console.log("Login: any email above · password Humiley@2026 (force change on first login).");
@@ -440,6 +453,41 @@ async function seedDemoPr() {
     await db.purchaseRequisition.update({ where: { id: demoPr.id }, data: { currentApprovalLevel: 1 } });
   }
   console.log(`Seeded demo PR ${prNumber} (3 lines, SUBMITTED, approval steps L1+L2).`);
+
+  // A second demo PR already APPROVED (steps completed) so "Create PO from PR" is demoable at once.
+  const pr2Number = "HML-PR-2026-0002";
+  if (!(await db.purchaseRequisition.findUnique({ where: { prNumber: pr2Number } })) && requester && cc && mgrEng && dirFin) {
+    const itm = await db.item.findFirst({ where: { code: "CONS-BOLT-M8" } });
+    const uomAny = await db.uom.findFirst({ where: { code: "BOX" } });
+    if (itm && uomAny) {
+      const pr2 = await db.purchaseRequisition.create({
+        data: {
+          prNumber: pr2Number,
+          requesterId: requester.id,
+          departmentId: requester.departmentId!,
+          costCenterId: cc.id,
+          neededByDate: new Date(Date.now() + 14 * 24 * 3600 * 1000),
+          purpose: "Xưởng lắp ráp — vật tư tiêu hao Q3 (demo, đã duyệt)",
+          status: "APPROVED",
+          totalEstimatedVnd: 30_000_000,
+          currentApprovalLevel: 2,
+          lines: {
+            create: [
+              { itemId: itm.id, uomId: uomAny.id, qty: 100, estUnitPriceVnd: 300_000 },
+            ],
+          },
+        },
+      });
+      await db.approvalStep.createMany({
+        data: [
+          { entityType: "PR", entityId: pr2.id, level: 1, approverId: mgrEng.id, status: "APPROVED", decidedAt: new Date() },
+          { entityType: "PR", entityId: pr2.id, level: 2, approverId: dirFin.id, status: "APPROVED", decidedAt: new Date() },
+        ],
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 2 }, create: { key: "PR", year: 2026, lastValue: 2 } });
+      console.log(`Seeded demo PR ${pr2Number} (APPROVED — ready for Create PO).`);
+    }
+  }
 }
 
 main()
