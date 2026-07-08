@@ -1,16 +1,17 @@
 {
-  "phase": 6,
+  "phase": 7,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
-  "currentTask": "Phase 6 \u2014 RFQ / sourcing per \u00a78",
+  "currentTask": "Phase 7 \u2014 GRN + invoice + 3-way match + payment tracking per \u00a79",
   "completedTasks": [],
-  "nextAction": "Phase 6 (\u00a722.7 prompt 6): RFQ + quotes + comparison per \u00a78 \u2014 RFQ create from approved PR or standalone; select >=1 vendors (3-quote rule >100M with justified override -> Exception SINGLE_SOURCE/NON_LOWEST_AWARD); RFQ PDF per vendor (reuse lib/pdf fonts/layout) + email send; manual quote entry (per-vendor line prices, lead time, terms, validity, attachment); comparison matrix (lines x vendors, lowest per line emerald-highlighted, totals/lead/terms rows); whole-quote award with justification when not lowest; award -> create PO prefilled from quote (reuse createPo). npm run check + seed + browser verify, Phase Report, commit phase-6.",
-  "lastCheckpointCommit": "phase-5",
-  "updatedAt": "2026-07-08T22:30:00+07:00"
+  "nextAction": "Phase 7 (\u00a722.7 prompt 7): GRN + invoice + 3-way match + payment tracking per \u00a79 \u2014 GRN: WAREHOUSE picks an open PO (SENT/PARTIALLY_RECEIVED), outstanding qty per line, over-receipt blocked beyond tolerance (default 0%), optional QC accepted/rejected + reason (rejected reopens PO line), partial deliveries (multiple GRNs per PO), PO status auto-updates PARTIALLY_RECEIVED/RECEIVED, GRN acceptance is a \u00a719 signature (meaning RECEIVED). Invoice (ACCOUNTANT): enter vendor invoice against PO, lines default from received-not-invoiced qty, 3-way match PO price/qty vs GRN accepted vs invoice (tolerance qty 0% price 2%), MATCHED/MISMATCH per line, mismatch needs ACCOUNTANT override with comment (Exception TOLERANCE_OVERRIDE), invoice verify = signature (VERIFIED). Payment tracking: due date from terms, mark paid/partially paid (signature PAID), aging buckets 0-30/31-60/61-90/90+. Budget: PR approval commits, PO approval moves commitment, invoice match moves to spent (lib/budget). npm run check + seed + browser E2E, Phase Report, commit phase-7.",
+  "lastCheckpointCommit": "phase-6",
+  "updatedAt": "2026-07-08T23:30:00+07:00"
 }

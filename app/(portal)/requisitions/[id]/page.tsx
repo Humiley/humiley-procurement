@@ -212,12 +212,20 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {pr.status === "APPROVED" && hasAnyRole(user, ["PURCHASER", "ADMIN"]) ? (
-            <a
-              href={`/purchase-orders/new?fromPr=${pr.id}`}
-              className="rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
-            >
-              {t("createPo")}
-            </a>
+            <>
+              <a
+                href={`/purchase-orders/new?fromPr=${pr.id}`}
+                className="rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+              >
+                {t("createPo")}
+              </a>
+              <a
+                href={`/rfqs/new?fromPr=${pr.id}`}
+                className="rounded-lg border border-navy/30 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5"
+              >
+                {t("createRfq")}
+              </a>
+            </>
           ) : null}
           <PrDetailActions
             id={pr.id}

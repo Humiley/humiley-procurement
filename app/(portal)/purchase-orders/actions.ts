@@ -46,6 +46,7 @@ export async function createPo(input: PoFormPayload) {
         poNumber,
         vendorId: vendor.id,
         prId: pr?.id ?? null,
+        quoteId: values.quoteId ?? null,
         currency: values.currency.toUpperCase(),
         fxRate: new Prisma.Decimal(values.fxRate),
         paymentTerms: values.paymentTerms || null,

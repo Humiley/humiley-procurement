@@ -22,6 +22,7 @@ export const poLineSchema = z.object({
 export const poCreateSchema = z.object({
   vendorId: z.string().min(1, "Vendor is required"),
   prId: z.string().optional().nullable(),
+  quoteId: z.string().optional().nullable(),
   currency: z.string().trim().min(3).max(3).default("VND"),
   fxRate: decStr.default("1"),
   paymentTerms: z.string().trim().optional().nullable(),

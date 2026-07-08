@@ -129,7 +129,8 @@
     "PENDING_APPROVAL": "Pending approval",
     "SENT": "Sent",
     "PARTIALLY_RECEIVED": "Partially received",
-    "RECEIVED": "Received"
+    "RECEIVED": "Received",
+    "AWARDED": "Awarded"
   },
   "admin": {
     "users": {
@@ -258,7 +259,8 @@
     "allRequisitions": "All",
     "stockHint": "In stock: {qty}",
     "signatureBlock": "Electronic signatures",
-    "createPo": "Create PO from this PR"
+    "createPo": "Create PO from this PR",
+    "createRfq": "Create RFQ"
   },
   "approvals": {
     "title": "Waiting for me",
@@ -335,5 +337,49 @@
     "tabAudit": "Audit",
     "approvalsPending": "Submit the PO to start the approval flow.",
     "signatureBlock": "Electronic signatures"
+  },
+  "rfq": {
+    "listTitle": "RFQs / Sourcing",
+    "newButton": "New RFQ",
+    "newTitle": "New Request for Quotation",
+    "empty": "No RFQs yet.",
+    "fromPr": "Lines prefilled from approved requisition {ref}.",
+    "title": "Title",
+    "dueDate": "Quote due date",
+    "vendors": "Invite vendors",
+    "threeQuoteHint": "amounts over 100M ₫ need at least 3",
+    "lineDesc": "Description",
+    "uom": "UoM",
+    "qty": "Qty",
+    "addLine": "+ Add line",
+    "create": "Create RFQ",
+    "colNo": "No.",
+    "colPr": "Source PR",
+    "colQuotes": "Quotes",
+    "colStatus": "Status",
+    "vendorsPanel": "Invited vendors",
+    "send": "Send to vendors",
+    "close": "Close RFQ",
+    "sentAt": "sent {d}",
+    "notSent": "not sent yet",
+    "responded": "Quoted",
+    "enterQuote": "Enter quote",
+    "editQuote": "Edit quote",
+    "entryTitle": "Quote from {vendor}",
+    "quoteRef": "Quote ref",
+    "leadDays": "Lead time (days)",
+    "terms": "Payment terms",
+    "validUntil": "Valid until",
+    "unitPrice": "Unit price",
+    "cancel": "Cancel",
+    "saveQuote": "Save quote",
+    "compareLine": "Line",
+    "compareTotal": "TOTAL",
+    "compareLead": "Lead time",
+    "compareTerms": "Payment terms",
+    "award": "Award",
+    "noQuotesYet": "No quotes entered yet — send the RFQ, then record each vendor's offer.",
+    "sendJustification": "Fewer than 3 vendors for an amount over 100,000,000 ₫ — justification (required, logged as a single-source exception):",
+    "awardJustification": "This is NOT the lowest quote — justification (required, logged as a non-lowest-award exception):"
   }
 }

@@ -21,6 +21,74 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 6 — RFQ / Sourcing — ✅ COMPLETE
+
+**Summary.** The §8 sourcing loop is live: RFQs are created from an approved PR (lines copied) or
+standalone and sent to ≥1 APPROVED vendors — each vendor gets a bilingual branded RFQ PDF by email;
+the 3-quote rule (>100M ₫ needs ≥3 vendors) can be overridden only with a justification that lands
+in the Exception register as SINGLE_SOURCE. Received quotes are entered per vendor (line prices,
+lead time, terms, validity) and meet in a comparison matrix — lines × vendors with the lowest price
+per line and the lowest total highlighted emerald, plus totals / lead-time / terms rows. Awarding a
+quote that is NOT the lowest requires a justification (Exception NON_LOWEST_AWARD). The award
+creates the PO prefilled from the winning quote (linked via PO.quoteId; consumes the source PR →
+CONVERTED) and the RFQ closes as AWARDED. E2E-verified in the browser.
+
+### Built
+- **lib/schemas/rfq.ts** — rfqCreateSchema (title, dueDate, vendorIds ≥1, lines) + quoteEntrySchema.
+- **rfqs/actions.ts** — `createRfq` (docnum HML-RFQ-2026-####, APPROVED-vendor guard, PR guard),
+  `sendRfq` (DRAFT→SENT; 3-quote override → Exception SINGLE_SOURCE; per-vendor PDF email via
+  sendMailRaw; sentAt stamps), `enterQuote` (replace-on-reentry; Decimal line totals; respondedAt),
+  `awardQuote` (lowest-total comparison; NON_LOWEST_AWARD exception; PO via createPo with quote
+  prices/vendor/currency/fx/terms + quoteId; RFQ SENT→AWARDED; quote.isSelected), `closeRfq`.
+- **lib/pdf/RfqPdf.tsx + rfq-data.ts + /api/rfq/[id]/pdf?vendor=** — per-vendor RFQ PDF on the
+  §10 letterhead: blank price/lead-time columns to fill, bilingual ask ("Vui lòng báo giá…"),
+  terms-requested block, Page X/Y footer. Be Vietnam Pro fonts (§22.4).
+- **UI** — RFQ register (quotes n/m column), create form (vendor chip multi-select with the
+  3-quote hint; lines from PR or manual), detail page: invited-vendors panel (sent/responded
+  badges, per-vendor PDF links, quote entry/edit), quote-entry panel, the comparison matrix with
+  emerald lowest-per-line + lowest-total, award buttons, close. "Create RFQ" button on approved
+  PRs beside Create PO.
+- **PO link** — poCreateSchema + createPo accept `quoteId`; award populates it.
+- i18n: full `rfq` namespace EN/VN + status AWARDED.
+
+### E2E evidence (browser, fresh seed)
+- Approved PR (30M) → Create RFQ: lines prefilled, 3 vendor chips selected, due 15/07/2026.
+- Send → 3 dev-log emails, each `attachments=[HML-RFQ-2026-0001.pdf]`; all vendors stamped sent.
+- RFQ PDF text-verified via pdf.js: "REQUEST FOR QUOTATION", "Yêu cầu báo giá", "Vui lòng báo
+  giá…", doc number + due date.
+- 3 quotes entered (unit 320k / 295k / 310k × 100) → matrix totals 32M / 29.5M / 31M with 295,000
+  and 29,500,000 ₫ emerald-highlighted.
+- Awarded the NON-lowest (V-FRT01, 31M — shorter lead time): justification captured →
+  Exception NON_LOWEST_AWARD row; RFQ AWARDED; quote.isSelected on the 31M quote only; redirected
+  to the created PO: HML-PO-2026-0001, vendor V-FRT01, subtotal 31,000,000 + VAT 10% =
+  34,100,000 ₫, PO.quoteId + PO.prId set, source PR → CONVERTED; PO PDF downloads (36 KB, %PDF).
+
+### ⚠️ Decisions made without asking (§23)
+1. **3-quote rule enforcement point** — at SEND (invited-vendor count vs the source PR estimate),
+   since quotes don't exist yet at that moment; awards additionally police NON_LOWEST_AWARD.
+   Standalone RFQs have no estimate (0) and don't trigger the rule.
+2. **Award is audited, not e-signed** — §19's controlled-action list doesn't name quote awards, and
+   the resulting PO immediately routes through the §6 engine with full signatures; the award writes
+   an AuditLog row (+ Exception when not lowest). Can be upgraded to a signature in the governance
+   phase if audits want it.
+3. **Quote attachment upload deferred** — the Quote model carries attachmentId; wiring the file
+   upload reuses the Phase-3 attachment panel and lands with the invoice work in Phase 7.
+4. **Re-entering a vendor's quote replaces it** (delete + recreate in one transaction) — keeps one
+   live quote per vendor per RFQ, matching the whole-quote-award v1 model.
+5. **Award VAT default 10%** — the PO from a quote starts at the default VAT rate; the purchaser
+   can adjust on the PO before submitting it for approval.
+6. **RfqLine.uomId fallback** — quote-award PO lines fall back to the first UoM when an RFQ line
+   has no unit (standalone free-text lines).
+
+### ⚠️ Known limitations
+- Per-line awards are v2 (spec: whole-quote award for v1).
+- Quote-file attachments + the RFQ responded-tracking UI beyond badges come with Phase 7's
+  document work.
+- The award justification uses window.prompt (same pattern as blacklist; a styled dialog is a
+  UI-polish item).
+
+---
+
 ## Phase 5 — Purchase Order Module — ✅ COMPLETE
 
 **Summary.** The §8 PO module is live end to end: POs are created from an APPROVED PR (lines,

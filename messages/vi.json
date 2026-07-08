@@ -129,7 +129,8 @@
     "PENDING_APPROVAL": "Chờ phê duyệt",
     "SENT": "Đã gửi",
     "PARTIALLY_RECEIVED": "Nhận một phần",
-    "RECEIVED": "Đã nhận"
+    "RECEIVED": "Đã nhận",
+    "AWARDED": "Đã chọn thầu"
   },
   "admin": {
     "users": {
@@ -258,7 +259,8 @@
     "allRequisitions": "Tất cả",
     "stockHint": "Tồn kho: {qty}",
     "signatureBlock": "Chữ ký điện tử",
-    "createPo": "Tạo PO từ PR này"
+    "createPo": "Tạo PO từ PR này",
+    "createRfq": "Tạo RFQ"
   },
   "approvals": {
     "title": "Chờ tôi duyệt",
@@ -335,5 +337,49 @@
     "tabAudit": "Nhật ký",
     "approvalsPending": "Trình PO để bắt đầu luồng phê duyệt.",
     "signatureBlock": "Chữ ký điện tử"
+  },
+  "rfq": {
+    "listTitle": "Yêu cầu báo giá",
+    "newButton": "Tạo RFQ",
+    "newTitle": "Tạo yêu cầu báo giá",
+    "empty": "Chưa có RFQ nào.",
+    "fromPr": "Lấy dữ liệu từ phiếu yêu cầu đã duyệt {ref}.",
+    "title": "Tiêu đề",
+    "dueDate": "Hạn báo giá",
+    "vendors": "Mời nhà cung cấp",
+    "threeQuoteHint": "trên 100 triệu ₫ cần tối thiểu 3",
+    "lineDesc": "Diễn giải",
+    "uom": "ĐVT",
+    "qty": "SL",
+    "addLine": "+ Thêm dòng",
+    "create": "Tạo RFQ",
+    "colNo": "Số",
+    "colPr": "PR nguồn",
+    "colQuotes": "Báo giá",
+    "colStatus": "Trạng thái",
+    "vendorsPanel": "Nhà cung cấp được mời",
+    "send": "Gửi nhà cung cấp",
+    "close": "Đóng RFQ",
+    "sentAt": "đã gửi {d}",
+    "notSent": "chưa gửi",
+    "responded": "Đã báo giá",
+    "enterQuote": "Nhập báo giá",
+    "editQuote": "Sửa báo giá",
+    "entryTitle": "Báo giá của {vendor}",
+    "quoteRef": "Số báo giá",
+    "leadDays": "Thời gian giao (ngày)",
+    "terms": "Điều khoản thanh toán",
+    "validUntil": "Hiệu lực đến",
+    "unitPrice": "Đơn giá",
+    "cancel": "Huỷ",
+    "saveQuote": "Lưu báo giá",
+    "compareLine": "Hạng mục",
+    "compareTotal": "TỔNG",
+    "compareLead": "Thời gian giao",
+    "compareTerms": "Điều khoản TT",
+    "award": "Chọn thầu",
+    "noQuotesYet": "Chưa có báo giá — gửi RFQ rồi nhập báo giá của từng nhà cung cấp.",
+    "sendJustification": "Dưới 3 nhà cung cấp cho giá trị trên 100.000.000 ₫ — lý do (bắt buộc, ghi nhận ngoại lệ một nguồn):",
+    "awardJustification": "Đây KHÔNG phải báo giá thấp nhất — lý do (bắt buộc, ghi nhận ngoại lệ):"
   }
 }
