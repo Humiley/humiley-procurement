@@ -52,6 +52,11 @@ export async function createVendor(values: FormValues) {
 export async function updateVendor(id: string, values: FormValues) {
   const user = await requireRoles("ADMIN", "PURCHASER");
   const data = vendorSchema.parse(values);
+  // §15 bank-change dual control: any change to bank name/account freezes NEW payment requests
+  // for this vendor until a DIRECTOR signs the confirmation, and lands in the exception register.
+  const before = await db.vendor.findUnique({ where: { id }, select: { bankName: true, bankAccount: true, code: true, nameEn: true } });
+  const bankChanged =
+    !!before && ((before.bankName ?? "") !== (data.bankName ?? "") || (before.bankAccount ?? "") !== (data.bankAccount ?? ""));
   try {
     await db.vendor.update({
       where: { id },
@@ -71,11 +76,84 @@ export async function updateVendor(id: string, values: FormValues) {
       },
     });
     await audit({ userId: user.id, action: "VENDOR_UPDATE", entityType: "Vendor", entityId: id, after: { code: data.code } });
+    if (bankChanged) {
+      await db.vendor.update({ where: { id }, data: { bankChangeFreeze: true } });
+      await db.exception.create({
+        data: {
+          type: "BANK_CHANGE",
+          entityType: "Vendor",
+          entityId: id,
+          justification: `Bank details changed by ${user.name}: ${before!.bankName ?? "—"}/${before!.bankAccount ?? "—"} → ${data.bankName ?? "—"}/${data.bankAccount ?? "—"}`,
+        },
+      });
+      await audit({
+        userId: user.id,
+        action: "VENDOR_BANK_CHANGE",
+        entityType: "Vendor",
+        entityId: id,
+        before: { bankName: before!.bankName, bankAccount: before!.bankAccount },
+        after: { bankName: data.bankName ?? null, bankAccount: data.bankAccount ?? null },
+      });
+      const { notifyRole } = await import("@/lib/notify");
+      await notifyRole("DIRECTOR", {
+        titleEn: `Vendor ${before!.code} bank details changed — confirmation required`,
+        titleVn: `NCC ${before!.code} đổi tài khoản ngân hàng — cần xác nhận`,
+        bodyEn: `New payment requests for ${before!.nameEn} are frozen until a Director signs the confirmation. Verify by phone call-back before confirming.`,
+        bodyVn: `Đề nghị thanh toán mới cho ${before!.nameEn} bị khóa đến khi Giám đốc ký xác nhận. Gọi điện xác minh trước khi xác nhận.`,
+        link: "/vendors",
+      });
+    }
     revalidatePath("/vendors");
-    return { id };
+    return { id, bankChanged };
   } catch (e) {
     rethrow(e);
   }
+}
+
+/** §15: a DIRECTOR signs off the bank change (call-back done) — or rejects, reverting the details. */
+export async function confirmVendorBank(params: { vendorId: string; approve: boolean; password: string; comment?: string }) {
+  const user = await requireRoles("DIRECTOR", "ADMIN");
+  const vendor = await db.vendor.findUnique({ where: { id: params.vendorId } });
+  if (!vendor) throw new Error("Vendor not found.");
+  if (!vendor.bankChangeFreeze) throw new Error("No pending bank change on this vendor.");
+
+  let sig;
+  try {
+    sig = await signRecord({
+      userId: user.id,
+      password: params.password,
+      entityType: "VendorBankChange",
+      entityId: vendor.id,
+      meaning: params.approve ? "APPROVED" : "REJECTED",
+      reason: params.comment,
+      record: { code: vendor.code, bankName: vendor.bankName, bankAccount: vendor.bankAccount },
+    });
+  } catch (e) {
+    if (e instanceof SignatureError) throw new Error(e.message);
+    throw e;
+  }
+
+  if (params.approve) {
+    await db.vendor.update({ where: { id: vendor.id }, data: { bankChangeFreeze: false } });
+  } else {
+    // revert to the values recorded by the change audit
+    const changeLog = await db.auditLog.findFirst({
+      where: { entityType: "Vendor", entityId: vendor.id, action: "VENDOR_BANK_CHANGE" },
+      orderBy: { createdAt: "desc" },
+    });
+    const beforeJson = (changeLog?.beforeJson ?? {}) as { bankName?: string | null; bankAccount?: string | null };
+    await db.vendor.update({
+      where: { id: vendor.id },
+      data: { bankName: beforeJson.bankName ?? null, bankAccount: beforeJson.bankAccount ?? null, bankChangeFreeze: false },
+    });
+  }
+  await db.exception.updateMany({
+    where: { type: "BANK_CHANGE", entityType: "Vendor", entityId: vendor.id, approvedById: null },
+    data: { approvedById: user.id },
+  });
+  await audit({ userId: user.id, action: params.approve ? "VENDOR_BANK_CONFIRM" : "VENDOR_BANK_REJECT", entityType: "Vendor", entityId: vendor.id, after: { signatureId: sig.id } });
+  revalidatePath("/vendors");
+  return { id: vendor.id };
 }
 
 /* ── §7 vendor lifecycle: DRAFT → PENDING → APPROVED (Director, via the §6 engine + §19 e-sign);

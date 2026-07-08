@@ -249,6 +249,24 @@ async function inventoryValue(): Promise<ReportTable> {
   };
 }
 
+async function exceptionRegister(fy: number): Promise<ReportTable> {
+  const rows = await db.exception.findMany({
+    where: { createdAt: fyRange(fy) },
+    orderBy: { createdAt: "desc" },
+    include: { approvedBy: { select: { name: true } } },
+  });
+  return {
+    columns: ["date", "exceptionType", "entity", "justification", "approvedBy"],
+    rows: rows.map((e) => [
+      e.createdAt.toISOString().slice(0, 10),
+      e.type,
+      `${e.entityType} · ${e.entityId.slice(-8)}`,
+      e.justification,
+      e.approvedBy?.name ?? "—",
+    ]),
+  };
+}
+
 export const REPORTS: Record<string, ReportDef> = {
   "spend-by-vendor": { fn: spendByVendor },
   "spend-by-category": { fn: spendByCategory },
@@ -264,5 +282,6 @@ export const REPORTS: Record<string, ReportDef> = {
   "payment-aging": { fn: () => paymentAging() },
   "outstanding-advances": { fn: () => outstandingAdvances() },
   "inventory-value": { fn: () => inventoryValue() },
+  "exception-register": { fn: exceptionRegister },
 };
 export const REPORT_KEYS = Object.keys(REPORTS);

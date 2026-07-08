@@ -46,6 +46,9 @@ export async function createPaymentRequest(input: PayReqCreatePayload) {
   if (values.type === "VENDOR_PAYMENT") {
     const vendor = await db.vendor.findUnique({ where: { id: values.vendorId! } });
     if (!vendor) throw new Error("Vendor not found.");
+    if (vendor.bankChangeFreeze) {
+      throw new Error("This vendor's bank details changed recently and await Director confirmation — new payment requests are frozen (§15).");
+    }
     const invoices = await db.invoice.findMany({
       where: { id: { in: values.invoiceIds! }, vendorId: vendor.id, matchStatus: "MATCHED", paymentStatus: { not: "PAID" } },
       include: { po: { select: { poNumber: true } } },

@@ -590,6 +590,7 @@
     "empty": "No data for this period.",
     "rowCount": "{count} row(s)",
     "names": {
+    "exception-register": "Exception Register",
       "spend-by-vendor": "Spend by Vendor",
       "spend-by-category": "Spend by Category",
       "spend-by-department": "Spend by Department",
@@ -606,6 +607,7 @@
       "inventory-value": "Inventory Value"
     },
     "descs": {
+    "exception-register": "Every override — single-source, tolerance, bank changes — for the quarterly compliance report.",
       "spend-by-vendor": "Invoiced spend per vendor for the fiscal year.",
       "spend-by-category": "Invoiced spend per item category.",
       "spend-by-department": "Invoiced spend per requesting department.",
@@ -622,6 +624,10 @@
       "inventory-value": "On-hand stock valued at moving-average cost."
     },
     "cols": {
+    "exceptionType": "Exception",
+    "entity": "Entity",
+    "justification": "Justification",
+    "approvedBy": "Approved by",
       "vendor": "Vendor",
       "invoices": "Invoices",
       "amount": "Amount (₫)",
@@ -789,6 +795,66 @@
       "RECEIVED": "Received",
       "VERIFIED": "Verified"
     }
+  },
+  "bankctl": {
+    "title": "Vendor bank changes awaiting Director confirmation",
+    "hint": "New payment requests for these vendors are FROZEN. Verify the new account by a phone call-back to a known contact before confirming (§15).",
+    "changedBy": "changed by {name}",
+    "confirm": "Confirm (call-back done)",
+    "reject": "Reject & revert",
+    "awaiting": "Awaiting Director",
+    "signConfirmTitle": "Confirm vendor bank change",
+    "signRejectTitle": "Reject vendor bank change",
+    "meaningConfirm": "Approved (bank change verified by call-back)",
+    "meaningReject": "Rejected (details reverted)"
+  },
+  "matrix": {
+    "title": "Approval Matrix & Delegation",
+    "subtitle": "The system's Delegation of Authority (§6) — amount bands per document type; plus §15 step delegation.",
+    "addTitle": "Add matrix row",
+    "entityType": "Document type",
+    "min": "Min (₫)",
+    "max": "Max (₫)",
+    "noMax": "no cap",
+    "level": "Level",
+    "role": "Approver role",
+    "add": "Add",
+    "band": "Amount band",
+    "delete": "Delete",
+    "delegationTitle": "Pending approval steps — delegate",
+    "noPending": "No pending steps.",
+    "pickUser": "Pick new approver…",
+    "reassign": "Reassign"
+  },
+  "integrity": {
+    "title": "Signature-chain integrity (§19)",
+    "hint": "Re-computes every electronic-signature hash chain. A broken link means a signature row was altered after signing.",
+    "run": "Verify all chains",
+    "ok": "All {chains} chains intact — {signatures} signatures verified.",
+    "broken": "{count} broken chain(s) detected — investigate immediately:"
+  },
+  "adminSettings": {
+    "title": "Governance & Controls",
+    "subtitle": "§15/§19 admin console — integrity, audit trail, exceptions.",
+    "auditTitle": "Audit trail",
+    "auditDesc": "{count} immutable entries — filter by entity, action, user.",
+    "exceptionTitle": "Exception register",
+    "exceptionDesc": "{count} exceptions — the quarterly compliance report.",
+    "sigCount": "{count} electronic signatures recorded."
+  },
+  "auditlog": {
+    "title": "Audit Trail",
+    "back": "Governance",
+    "entityType": "Entity",
+    "action": "Action",
+    "user": "User",
+    "all": "All",
+    "apply": "Apply",
+    "when": "When",
+    "entity": "Entity",
+    "detail": "Detail",
+    "empty": "No entries match.",
+    "cap": "Newest 100 entries shown — refine the filters for older history."
   },
   "grn": {
     "lot": "Lot",

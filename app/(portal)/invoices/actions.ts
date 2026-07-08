@@ -71,6 +71,13 @@ export async function createInvoice(input: InvoiceCreatePayload) {
 
   const po = await db.purchaseOrder.findUnique({ where: { id: values.poId }, include: { lines: true, vendor: true } });
   if (!po) throw new Error("Purchase order not found.");
+  // §15 SoD: whoever posted a goods receipt on this PO cannot enter its invoice (ADMIN excepted).
+  if (!user.roles.includes("ADMIN")) {
+    const postedGrn = await db.goodsReceipt.count({ where: { poId: po.id, receivedById: user.id } });
+    if (postedGrn > 0) {
+      throw new Error("Segregation of duties: the goods-receipt poster cannot enter this PO's invoice (§15).");
+    }
+  }
   if (!["SENT", "PARTIALLY_RECEIVED", "RECEIVED", "CLOSED"].includes(po.status)) {
     throw new Error("Invoices can only be entered against a sent or received PO.");
   }

@@ -20,6 +20,10 @@ export async function createGrn(input: GrnCreatePayload) {
   const values = grnCreateSchema.parse(input);
 
   const po = await db.purchaseOrder.findUnique({ where: { id: values.poId }, include: { lines: true } });
+  // §15 SoD: the PO creator cannot post the goods receipt of their own PO (ADMIN excepted).
+  if (po && po.createdById === user.id && !user.roles.includes("ADMIN")) {
+    throw new Error("Segregation of duties: the PO creator cannot post its goods receipt (§15).");
+  }
   if (!po) throw new Error("Purchase order not found.");
   if (!["SENT", "PARTIALLY_RECEIVED"].includes(po.status)) {
     throw new Error("Goods can only be received against a SENT or partially received PO.");

@@ -590,6 +590,7 @@
     "empty": "Không có dữ liệu trong kỳ.",
     "rowCount": "{count} dòng",
     "names": {
+    "exception-register": "Sổ ngoại lệ",
       "spend-by-vendor": "Chi tiêu theo NCC",
       "spend-by-category": "Chi tiêu theo nhóm hàng",
       "spend-by-department": "Chi tiêu theo phòng ban",
@@ -606,6 +607,7 @@
       "inventory-value": "Giá trị tồn kho"
     },
     "descs": {
+    "exception-register": "Mọi ngoại lệ — chào giá đơn nguồn, vượt dung sai, đổi tài khoản — cho báo cáo tuân thủ quý.",
       "spend-by-vendor": "Chi tiêu theo hóa đơn của từng NCC trong năm.",
       "spend-by-category": "Chi tiêu theo nhóm vật tư.",
       "spend-by-department": "Chi tiêu theo phòng ban yêu cầu.",
@@ -622,6 +624,10 @@
       "inventory-value": "Tồn kho theo giá bình quân."
     },
     "cols": {
+    "exceptionType": "Ngoại lệ",
+    "entity": "Đối tượng",
+    "justification": "Lý do",
+    "approvedBy": "Người duyệt",
       "vendor": "NCC",
       "invoices": "Hóa đơn",
       "amount": "Giá trị (₫)",
@@ -789,6 +795,66 @@
       "RECEIVED": "Đã nhận",
       "VERIFIED": "Đã xác nhận"
     }
+  },
+  "bankctl": {
+    "title": "Thay đổi tài khoản NCC chờ Giám đốc xác nhận",
+    "hint": "Đề nghị thanh toán mới cho các NCC này đã bị KHÓA. Gọi điện xác minh với đầu mối quen trước khi xác nhận (§15).",
+    "changedBy": "thay đổi bởi {name}",
+    "confirm": "Xác nhận (đã gọi xác minh)",
+    "reject": "Từ chối & khôi phục",
+    "awaiting": "Chờ Giám đốc",
+    "signConfirmTitle": "Xác nhận đổi tài khoản NCC",
+    "signRejectTitle": "Từ chối đổi tài khoản NCC",
+    "meaningConfirm": "Đã duyệt (xác minh qua điện thoại)",
+    "meaningReject": "Từ chối (đã khôi phục thông tin cũ)"
+  },
+  "matrix": {
+    "title": "Ma trận phê duyệt & Ủy quyền",
+    "subtitle": "Phân cấp thẩm quyền của hệ thống (§6) — dải giá trị theo loại chứng từ; kèm ủy quyền bước duyệt (§15).",
+    "addTitle": "Thêm dòng ma trận",
+    "entityType": "Loại chứng từ",
+    "min": "Từ (₫)",
+    "max": "Đến (₫)",
+    "noMax": "không trần",
+    "level": "Cấp",
+    "role": "Vai trò duyệt",
+    "add": "Thêm",
+    "band": "Dải giá trị",
+    "delete": "Xóa",
+    "delegationTitle": "Bước duyệt đang chờ — ủy quyền",
+    "noPending": "Không có bước nào đang chờ.",
+    "pickUser": "Chọn người duyệt mới…",
+    "reassign": "Chuyển giao"
+  },
+  "integrity": {
+    "title": "Toàn vẹn chuỗi chữ ký (§19)",
+    "hint": "Tính lại toàn bộ chuỗi băm chữ ký điện tử. Mắt xích gãy nghĩa là bản ghi chữ ký đã bị sửa sau khi ký.",
+    "run": "Kiểm tra toàn bộ chuỗi",
+    "ok": "Toàn bộ {chains} chuỗi nguyên vẹn — đã kiểm {signatures} chữ ký.",
+    "broken": "Phát hiện {count} chuỗi bị gãy — cần điều tra ngay:"
+  },
+  "adminSettings": {
+    "title": "Quản trị & Kiểm soát",
+    "subtitle": "Bảng điều khiển §15/§19 — toàn vẹn, nhật ký, ngoại lệ.",
+    "auditTitle": "Nhật ký hệ thống",
+    "auditDesc": "{count} bản ghi bất biến — lọc theo đối tượng, hành động, người dùng.",
+    "exceptionTitle": "Sổ ngoại lệ",
+    "exceptionDesc": "{count} ngoại lệ — báo cáo tuân thủ hàng quý.",
+    "sigCount": "Đã ghi nhận {count} chữ ký điện tử."
+  },
+  "auditlog": {
+    "title": "Nhật ký hệ thống",
+    "back": "Quản trị",
+    "entityType": "Đối tượng",
+    "action": "Hành động",
+    "user": "Người dùng",
+    "all": "Tất cả",
+    "apply": "Áp dụng",
+    "when": "Thời điểm",
+    "entity": "Đối tượng",
+    "detail": "Chi tiết",
+    "empty": "Không có bản ghi phù hợp.",
+    "cap": "Hiển thị 100 bản ghi mới nhất — lọc thêm để xem lịch sử cũ hơn."
   },
   "grn": {
     "lot": "Lô",

@@ -1,5 +1,5 @@
 {
-  "phase": 15,
+  "phase": 16,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -15,11 +15,12 @@
     11,
     12,
     13,
-    14
+    14,
+    15
   ],
   "currentTask": "Phase 9 — Inventory core per §10b",
   "completedTasks": [],
-  "nextAction": "Phase 15 (§22.7 prompt 15): governance & controls per §15 + §16 + rest of §19 — read §15/§16/§19 first, then: SoD enforcement (creator≠approver already; add vendor-bank-change dual control: changing vendor bank details requires a second user's signed confirmation before payments use them), approval-matrix admin UI (/admin/approval-matrix CRUD), exception register page (list Exceptions with filters), signature-chain integrity check (lib/esign verify job + /admin/settings panel button showing chain OK/broken + last verified), audit-log viewer (/admin/audit with entity/user/action filters), SLA reminder sweep (overdue approval steps → notification, run-on-load like renewals), delegation (ApprovalStep reassign by ADMIN with audit), validation pack: docs/VALIDATION.md summarizing Part-11 controls. npm run check + seed + browser E2E (bank change dual-control blocks payment until confirmed; chain check passes; tampered row detected in a COPY database is out of scope — simulate by flipping a hash in dev db and restoring), Phase Report, commit phase-15.",
-  "lastCheckpointCommit": "phase-14",
+  "nextAction": "Phase 16 (§22.7 prompt 16): integration & API readiness per §17 — read §17 first. Deliver: versioned REST API under /api/v1 (read endpoints: PRs, POs, GRNs, invoices, payment requests, vendors, stock balances; token auth via ApiKey model if present else header key from env), accounting export (payment requests / invoices as csv or xlsx download for MISA/accounting import), webhooks (WebhookSubscription model if present: register URL per event, fire on PO approved / invoice matched / payment paid — best-effort POST with audit), master-data importers (xlsx items + vendors import if cheap, else log), and the PORTAL INTEGRATION documentation the user requires (docs/PORTAL-INTEGRATION.md: M365/Entra SSO swap plan for Auth.js, portal launcher entry, user-directory mapping — THIS IS THE STANDING CONSTRAINT from the user; document exact steps even if SSO code itself is deferred to deployment). npm run check + seed + E2E (API key auth + one GET returns JSON; export downloads; webhook fires to a local sink), Phase Report, commit phase-16.",
+  "lastCheckpointCommit": "phase-15",
   "updatedAt": "2026-07-09T02:00:00+07:00"
 }

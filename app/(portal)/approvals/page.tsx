@@ -13,6 +13,31 @@ export default async function ApprovalsPage() {
   const user = await requireUser();
   const steps = await pendingStepsFor(user.id);
 
+  // §15 SLA sweep (run-on-load like renewals): overdue PENDING steps remind their approver once
+  // per breach (deduped on an unread notification carrying the step link).
+  try {
+    const overdue = await db.approvalStep.findMany({
+      where: { status: "PENDING", slaDueAt: { lt: new Date() } },
+      include: { approver: { select: { id: true } } },
+      take: 25,
+    });
+    const { notifyUser } = await import("@/lib/notify");
+    for (const s of overdue) {
+      const link = `/approvals?overdue=${s.id}`;
+      const dup = await db.notification.findFirst({ where: { link, isRead: false } });
+      if (dup) continue;
+      await notifyUser(s.approver.id, {
+        titleEn: `Approval overdue: ${s.entityType} level ${s.level}`,
+        titleVn: `Phê duyệt quá hạn: ${s.entityType} cấp ${s.level}`,
+        bodyEn: "The SLA for this approval step has passed — please decide it.",
+        bodyVn: "Bước phê duyệt này đã quá hạn SLA — vui lòng xử lý.",
+        link,
+      });
+    }
+  } catch (e) {
+    console.warn("SLA sweep failed:", e);
+  }
+
   const prIds = steps.filter((s) => s.entityType === "PR").map((s) => s.entityId);
   const poIds = steps.filter((s) => s.entityType === "PO").map((s) => s.entityId);
   const vendorIds = steps.filter((s) => s.entityType === "VENDOR").map((s) => s.entityId);

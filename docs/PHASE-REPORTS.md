@@ -21,6 +21,74 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 15 — Governance & Controls (§15 / §16 / §19) — ✅ COMPLETE
+
+**Summary.** The audit-facing control layer is in. **Vendor bank-change dual control** (highest
+fraud risk): any change to bank name/account freezes new payment requests for the vendor, writes a
+BANK_CHANGE exception + before/after audit, and alerts every DIRECTOR; a Director then signs the
+call-back confirmation (§19 signature) to unfreeze — or rejects, which reverts the details from
+the audit trail. **SoD in code**: the PO creator cannot post its own GRN; the GRN poster cannot
+enter the same PO's invoice (both ADMIN-excepted, on top of the engine's universal no-self-approval).
+**DoA admin**: /admin/approval-matrix manages the matrix bands (audited add/delete) and hosts §15
+**delegation** — ADMIN reassigns any PENDING step with audit + notification to the new approver.
+**Signature-chain integrity**: /admin/settings runs a full-database sweep; every signature row now
+also carries a **selfHash** (hash of its own canonical fields) because a prev-hash chain alone
+cannot detect tampering of a chain's LAST link — found during testing, fixed with a migration, a
+backfill, and a strengthened verifyChain. **Audit viewer** (/admin/audit) filters the immutable
+trail by entity/action/user. **SLA sweep**: overdue PENDING steps notify their approver (deduped),
+run-on-load. **Exception register** joined the report suite (on-screen + branded xlsx) as the
+quarterly compliance report, and `docs/VALIDATION.md` maps every §15/§16/§19 control to its
+implementation and evidence.
+
+### Built
+- vendors/actions.ts: bank-change interception in updateVendor (freeze + exception + audit +
+  DIRECTOR alerts) + confirmVendorBank (§19 sign; approve=unfreeze / reject=revert-from-audit) ·
+  BankConfirmPanel on /vendors · payment-request creation guard for frozen vendors ·
+  governance.actions.ts (matrix add/delete · reassignStep · verifyAllChains) · MatrixManager +
+  /admin/approval-matrix · IntegrityPanel + /admin/settings · /admin/audit viewer · SLA sweep in
+  approvals load · SoD guards in createGrn + createInvoice · exception-register report ·
+  **migration `signature_self_hash`** + sign.ts selfHash write + verifyChain selfHash check +
+  backfill · docs/VALIDATION.md · bankctl/matrix/integrity/adminSettings/auditlog i18n EN/VN.
+
+### E2E evidence (browser)
+- Purchaser edited V-CLEAN01's bank account (007100112233 → 9990001112223) → **freeze on**,
+  BANK_CHANGE exception with the before→after narrative, 2 Director notifications.
+- Creating a vendor payment while frozen was refused: "bank details changed recently and await
+  Director confirmation — new payment requests are frozen (§15)" — zero PaymentRequest rows.
+- Finance Director confirmed via the panel (call-back wording) with a signed APPROVED
+  (VendorBankChange) → **freeze off**, exception stamped approvedBy = Finance Director.
+- Integrity: sweep OK ("All 2 chains intact — 2 signatures verified") → tampered a signature's
+  fullNamePrinted in SQL → **initially undetected (tail-of-chain gap) → selfHash added** → sweep
+  now reports "1 broken chain(s)" pointing at the exact signature id → restored → sweep OK again.
+- Matrix admin: 20 seeded band rows grouped by document type; added a PR 999,000,000-band row and
+  deleted it; both actions appeared in /admin/audit under the MATRIX filter.
+- SLA: aged a PENDING PR step 2 days past slaDueAt → /approvals load created "Approval overdue:
+  PR level 1" for mgr.eng (deduped by link).
+- SoD: gave the purchaser a temporary WAREHOUSE role → posting a GRN against their own PO-0002
+  was refused: "Segregation of duties: the PO creator cannot post its goods receipt (§15)" (role
+  reverted after the test).
+- Exception register report: renders the BANK_CHANGE row; xlsx endpoint 200/xlsx.
+
+### §23 decisions (spec didn't specify or v1-scoped — decided and logged)
+1. **selfHash added beyond spec**: §19's prev-hash chain cannot evidence tampering of the newest
+   link; each row now stores the hash of its own canonical fields, checked by verifyChain. A DB
+   admin who recomputes selfHash still breaks the NEXT link; external anchoring is the §17 backlog.
+2. **Bank-change confirmation is a direct DIRECTOR signature**, not an engine matrix flow — the
+   freeze is instant, and the confirming signature IS the §15 second control. The 30-day
+   "verify by call-back" banner is folded into the confirmation ceremony wording (the freeze
+   blocks payments outright, which is stronger than a banner).
+3. **Matrix versioning deferred**: schema carries effectiveFrom/version; v1 ships audited CRUD.
+   In-flight documents already keep their created steps regardless of later matrix edits.
+4. **Payment-chain SoD (invoice matcher ≠ payment approver) intentionally NOT enforced** — §10a
+   deliberately routes the Chief Accountant through verify AND approve; enforcing the pair would
+   contradict the spec's own payment flow. Documented in VALIDATION.md.
+5. SoD conflict report (users holding conflicting roles) deferred; the audit trail + exception
+   register cover the evidence trail v1.
+6. Urgent-PR parallel approvals, CapEx handover export, COI exclusion deferred to backlog (noted
+   in VALIDATION.md §8).
+
+---
+
 ## Phase 14 — Trade Compliance (§20) — ✅ COMPLETE
 
 **Summary.** Import purchasing now carries its compliance brain. The **Incoterms 2020 book**

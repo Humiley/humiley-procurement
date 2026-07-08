@@ -147,17 +147,24 @@ export async function signRecord(params: {
     : null;
 
   // signedAt is written explicitly so the stored row hashes identically at verify time.
+  // selfHash makes every row independently verifiable — without it, tampering the LAST
+  // link of a chain (nothing references its hash yet) would be undetectable.
+  const signedAt = new Date();
+  const row: SigRow = {
+    userId: user.id,
+    entityType: params.entityType,
+    entityId: params.entityId,
+    meaning: params.meaning,
+    signedAt,
+    fullNamePrinted: user.name,
+    recordSnapshotHash,
+    prevSignatureHash,
+  };
   return db.electronicSignature.create({
     data: {
-      userId: user.id,
-      entityType: params.entityType,
-      entityId: params.entityId,
-      meaning: params.meaning,
-      signedAt: new Date(),
-      fullNamePrinted: user.name,
+      ...row,
       reason: params.reason || null,
-      recordSnapshotHash,
-      prevSignatureHash,
+      selfHash: signatureHash(row),
     },
   });
 }
@@ -173,7 +180,7 @@ export async function verifyChain(entityType: string, entityId: string) {
     if ((s.prevSignatureHash ?? null) !== expectedPrev) {
       return { ok: false as const, brokenAt: s.id };
     }
-    expectedPrev = signatureHash({
+    const recomputed = signatureHash({
       userId: s.userId,
       entityType: s.entityType,
       entityId: s.entityId,
@@ -183,6 +190,12 @@ export async function verifyChain(entityType: string, entityId: string) {
       recordSnapshotHash: s.recordSnapshotHash,
       prevSignatureHash: s.prevSignatureHash,
     });
+    // selfHash catches tail tampering (rows not yet referenced by a next link);
+    // legacy rows without selfHash rely on the prev-hash chain alone.
+    if (s.selfHash && s.selfHash !== recomputed) {
+      return { ok: false as const, brokenAt: s.id };
+    }
+    expectedPrev = recomputed;
   }
   return { ok: true as const, count: sigs.length };
 }

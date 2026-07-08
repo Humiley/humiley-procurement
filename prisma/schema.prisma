@@ -1215,6 +1215,7 @@ model ElectronicSignature {
   reason             String?
   recordSnapshotHash String
   prevSignatureHash  String?
+  selfHash           String?
 
   user User @relation(fields: [userId], references: [id])
 

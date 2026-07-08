@@ -10,6 +10,7 @@ import {
 import { ExcelImportButton } from "@/components/admin/ExcelImportButton";
 import { createVendor, updateVendor } from "@/app/(portal)/vendors/actions";
 import { VendorLifecyclePanel, type VendorLcRow } from "@/components/vendors/VendorLifecyclePanel";
+import { BankConfirmPanel, type FrozenVendorRow } from "@/components/vendors/BankConfirmPanel";
 import { hasAnyRole, requireUser } from "@/lib/rbac";
 
 export default async function VendorsPage() {
@@ -64,10 +65,29 @@ export default async function VendorsPage() {
   ];
 
   const lcRows: VendorLcRow[] = vendors.map((v) => ({ id: v.id, code: v.code, nameEn: v.nameEn, status: v.status }));
+  const frozen = vendors.filter((v) => v.bankChangeFreeze);
+  const changeLogs = frozen.length
+    ? await db.auditLog.findMany({
+        where: { entityType: "Vendor", entityId: { in: frozen.map((v) => v.id) }, action: "VENDOR_BANK_CHANGE" },
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { name: true } } },
+      })
+    : [];
+  const frozenRows: FrozenVendorRow[] = frozen.map((v) => ({
+    id: v.id,
+    code: v.code,
+    nameEn: v.nameEn,
+    bankName: v.bankName,
+    bankAccount: v.bankAccount,
+    changedBy: changeLogs.find((l) => l.entityId === v.id)?.user?.name ?? null,
+  }));
 
   return (
     <>
-    <VendorLifecyclePanel rows={lcRows} canManage={hasAnyRole(me, ["ADMIN", "PURCHASER", "DIRECTOR"])} />
+    <>
+      <BankConfirmPanel rows={frozenRows} canConfirm={hasAnyRole(me, ["DIRECTOR", "ADMIN"])} />
+      <VendorLifecyclePanel rows={lcRows} canManage={hasAnyRole(me, ["ADMIN", "PURCHASER", "DIRECTOR"])} />
+    </>
     <MasterDataManager
       title={t("title")}
       subtitle={t("subtitle")}
