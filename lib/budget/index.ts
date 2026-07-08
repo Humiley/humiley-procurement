@@ -104,6 +104,24 @@ export async function spendOnInvoice(invoiceId: string) {
   });
 }
 
+/** Goods issue executed (§10b): the issued cost (qty × avgCost from the OUT movements) hits spend. */
+export async function spendFromStock(goodsIssueId: string) {
+  const fy = currentFiscalYear();
+  await db.$transaction(async (tx) => {
+    const gi = await tx.goodsIssue.findUnique({ where: { id: goodsIssueId }, select: { costCenterId: true } });
+    if (!gi) return;
+    const movements = await tx.stockMovement.findMany({
+      where: { refEntityType: "GoodsIssue", refEntityId: goodsIssueId, type: "ISSUE_OUT" },
+      select: { itemId: true, qty: true, unitCostVnd: true },
+    });
+    for (const m of movements) {
+      const budgetId = await budgetIdForPrLine(tx, { budgetId: null, itemId: m.itemId }, gi.costCenterId, fy);
+      if (!budgetId) continue;
+      await addToBudget(tx, budgetId, "spentVnd", new D(m.qty).times(m.unitCostVnd).toDecimalPlaces(2));
+    }
+  });
+}
+
 /** PO closed: release whatever commitment remains (ordered − invoiced, per line). */
 export async function releaseOnPoClose(poId: string) {
   const fy = currentFiscalYear();

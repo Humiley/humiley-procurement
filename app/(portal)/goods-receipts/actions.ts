@@ -9,6 +9,7 @@ import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { grnCreateSchema, grnAcceptSchema, type GrnCreatePayload, type GrnAcceptPayload } from "@/lib/schemas/grn";
+import { postMovement } from "@/lib/stock/post-movement";
 
 const D = Prisma.Decimal;
 
@@ -67,7 +68,7 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
 
   const grn = await db.goodsReceipt.findUnique({
     where: { id: values.grnId },
-    include: { lines: { include: { poLine: true } }, po: { include: { lines: true } } },
+    include: { lines: { include: { poLine: { include: { item: { select: { id: true } } } } } }, po: { include: { lines: true } } },
   });
   if (!grn) throw new Error("GRN not found.");
   if (grn.status !== "QC_PENDING") throw new Error("Only a QC-pending GRN can be accepted.");
@@ -121,6 +122,24 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
           where: { id: gl.poLineId },
           data: { receivedQty: new D(gl.poLine.receivedQty).plus(l.qtyAccepted) },
         });
+        // §10b: accepted catalog items enter stock at the PO price (moving-average IN);
+        // rejected quantities never enter stock. Free-text lines carry no item → no stock.
+        if (gl.poLine.itemId) {
+          await postMovement(
+            {
+              type: "GRN_IN",
+              warehouseId: grn.warehouseId,
+              itemId: gl.poLine.itemId,
+              qty: l.qtyAccepted,
+              unitCostVnd: gl.poLine.unitPrice,
+              refEntityType: "GoodsReceipt",
+              refEntityId: grn.id,
+              note: grn.grnNumber,
+              createdById: user.id,
+            },
+            tx,
+          );
+        }
       }
     }
     await tx.goodsReceipt.update({ where: { id: grn.id }, data: { status: newStatus } });

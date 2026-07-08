@@ -112,7 +112,7 @@ export async function markAllNotificationsRead() {
 
 /** One dispatcher for the queue: route a decision to the entity's decide action. */
 export async function decideEntity(params: {
-  entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST";
+  entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST" | "GOODS_ISSUE";
   entityId: string;
   decision: Decision;
   password: string;
@@ -128,6 +128,10 @@ export async function decideEntity(params: {
   if (params.entityType === "PAYMENT_REQUEST") {
     const { decidePaymentRequest } = await import("@/app/(portal)/payment-requests/actions");
     return decidePaymentRequest({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+  }
+  if (params.entityType === "GOODS_ISSUE") {
+    const { decideGoodsIssue } = await import("@/app/(portal)/inventory/issues/actions");
+    return decideGoodsIssue({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
   }
   const { decideVendor } = await import("@/app/(portal)/vendors/actions");
   return decideVendor({ vendorId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });

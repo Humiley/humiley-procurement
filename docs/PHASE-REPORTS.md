@@ -21,6 +21,65 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 9 — Inventory Core (§10b) — ✅ COMPLETE
+
+**Summary.** Stock is live on a single-writer architecture: `lib/stock/post-movement.ts` is the ONLY
+code allowed to touch `StockBalance` — every change posts a `StockMovement` AND updates the balance
+(+ moving-average cost) in one transaction with the balance row locked (`SELECT … FOR UPDATE`).
+IN movements (GRN/transfer/adjust/return) recompute the moving average; OUT movements are refused
+beyond on-hand and post at the CURRENT average cost. GRN acceptance now feeds stock automatically:
+each accepted, item-linked line posts `GRN_IN` into the GRN's warehouse at the PO line price.
+Goods issues (Phiếu xuất kho) run the full lifecycle — request (warehouse + cost center + purpose +
+item lines with live on-hand hints) → dept-manager approval through the §6 engine (`GOODS_ISSUE`
+entity, §19 signed decisions, wired into the same approvals queue) → warehouse executes under an
+ISSUED signature, per-line quantity ≤ requested and ≤ on-hand, stock OUT at average cost, and the
+issued cost charges the cost center's budget (`spendFromStock`). Stock Balances page (warehouse ×
+item, on-hand / avg cost / value + totals KPI) and a Stock Card ledger (running balance per
+movement) complete §10b's visibility.
+
+### Built
+- lib/stock/post-movement.ts (single writer; StockError; moving-average; FOR-UPDATE lock; HML-MOV
+  docnum pad 6; runs standalone or inside an outer tx) · migration `stock_balance_nolot_unique`
+  (partial unique index for NULL-lot rows) · GRN acceptGrn posts GRN_IN per accepted line ·
+  lib/schemas/gi.ts · inventory/issues/actions.ts (create HML-GI docnum / submit → engine steps /
+  decide = sign → applyDecision → transition / execute = pre-check + ISSUED signature + ISSUE_OUT
+  + budget) · lib/budget spendFromStock (OUT movements × avg cost → spentVnd) · approvals
+  dispatcher + queue + DecideInline extended to GOODS_ISSUE · pages: /inventory (balances + KPIs),
+  /inventory/card (running-balance ledger), /inventory/issues (register / new / detail with exec
+  panel) · seed: GOODS_ISSUE matrix + HML-PO-2026-0002 (SENT, 10 pcs @ 1,000,000) · gi + inventory
+  i18n EN/VN + status.ISSUED.
+
+### E2E evidence (browser, fresh seed)
+- Warehouse keeper received 10 pcs HVAC-DMPR-30 @ 1,000,000 on PO-0002 (GRN QC accept 10/0, RECEIVED
+  signature) → **balance 10.0000, avgCost 1,000,000, value 10M** (HML-MOV-2026-000001 GRN_IN).
+- Requester created HML-GI-2026-0001 (4 pcs, on-hand hint showed "10 PCS") → submit → L1 step routed
+  to mgr.eng → approved from the queue (signed) → warehouse executed 4 (ISSUED signature) →
+  **balance 6.0000, avg unchanged 1,000,000** (HML-MOV-2026-000002 ISSUE_OUT @ avg cost).
+- **Stock card shows both rows with running balance 10 → 6**, each referencing its document.
+- Budget: CC-ENG × HVAC spentVnd = 4,000,000 (4 × avg 1M) via spendFromStock.
+- **Over-issue guard proven:** GI-2026-0002 (100 pcs, approved) execution refused with
+  "Insufficient stock: 6 on hand, 100 requested." — no movement, no balance change, and (after the
+  pre-sign check) no signature row.
+
+### §23 decisions (spec didn't specify — decided and logged)
+1. **Free-text GRN lines skip stock** — only PO lines with a catalog `itemId` post GRN_IN (no item ⇒
+   nothing to keep a balance for).
+2. **GOODS_ISSUE approval band** = single L1 DEPT_MANAGER for any value (engine gets amountVnd 0 —
+   an issue request has no monetary amount at request time).
+3. **Issue cost → budget** via new `spendFromStock`: resolves (issue costCenter × item.category ×
+   FY) per OUT movement and adds qty × avgCost to spentVnd — best-effort like the other §9 hooks.
+4. **Partial issue v1 = single execution**: warehouse may issue ≤ requested once; the remainder does
+   not stay open as a back-order (transfers/counts arrive in Phase 10).
+5. **NULL-lot balances**: Postgres treats NULLs as distinct in the 3-column unique key, so no-lot
+   rows get a partial unique index (`StockBalance_wh_item_nolot_key`) and a branched ON CONFLICT —
+   race-safe upsert either way.
+6. **No orphan signatures**: execution pre-checks on-hand BEFORE signRecord (the in-tx FOR-UPDATE
+   guard remains authoritative). One orphan ISSUED signature from pre-fix guard testing stays in the
+   chain — §19 signatures are append-only, never deleted.
+7. **Routes** live under `/inventory/issues` to match the §11 nav (actions colocated).
+
+---
+
 ## Phase 8 — Payment Request Module (§10a) — ✅ COMPLETE
 
 **Summary.** Đề nghị thanh toán is live with all four types: VENDOR_PAYMENT (Accounting/Purchasing

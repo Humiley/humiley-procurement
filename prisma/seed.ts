@@ -141,6 +141,8 @@ async function main() {
       { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 1, approverRole: "DEPT_MANAGER" },
       { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 2, approverRole: "ACCOUNTANT" },
       { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
+      // §10b goods issues: one dept-manager approval regardless of value
+      { entityType: "GOODS_ISSUE", minAmountVnd: 0, maxAmountVnd: null, level: 1, approverRole: "DEPT_MANAGER" },
     ],
   });
   console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3; PO same bands; VENDOR Director).");
@@ -580,6 +582,39 @@ async function seedDemoPr() {
         await db.sequence.upsert({ where: { key_year: { key: "INV", year: 2026 } }, update: { lastValue: 2 }, create: { key: "INV", year: 2026, lastValue: 2 } });
       }
       console.log(`Seeded ${pr3Number} (CONVERTED) + ${po1Number} (RECEIVED) + 2 MATCHED invoices — ready for payment-request demo.`);
+    }
+  }
+
+  // A SENT PO with nothing received — drives the §10b acceptance (GRN of 10 pcs @ 1,000,000
+  // raises stock by 10 / value by 10M; issuing 4 posts OUT at avg cost).
+  const po2Number = "HML-PO-2026-0002";
+  if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po2Number } }))) {
+    const damper = await db.item.findFirst({ where: { code: "HVAC-DMPR-30" }, include: { uom: true } });
+    const vendor2 = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
+    const purchaser2 = await db.user.findUnique({ where: { email: "purchaser@humiley.com" } });
+    if (damper && vendor2 && purchaser2) {
+      await db.purchaseOrder.create({
+        data: {
+          poNumber: po2Number,
+          vendorId: vendor2.id,
+          currency: "VND",
+          paymentTerms: "30 days after delivery",
+          incoterm: "DAP",
+          incotermPlace: "Nhà máy Long Thành, Đồng Nai",
+          expectedDate: new Date(Date.now() + 5 * 24 * 3600 * 1000),
+          status: "SENT",
+          subtotal: 10_000_000,
+          vatPct: 10,
+          vatAmount: 1_000_000,
+          total: 11_000_000,
+          createdById: purchaser2.id,
+          lines: {
+            create: [{ itemId: damper.id, description: `${damper.code} · ${damper.nameEn}`, uomId: damper.uomId, qty: 10, unitPrice: 1_000_000, amount: 10_000_000 }],
+          },
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 2 }, create: { key: "PO", year: 2026, lastValue: 2 } });
+      console.log(`Seeded ${po2Number} (SENT, 10 pcs @ 1,000,000) — ready for the §10b GRN→stock→issue demo.`);
     }
   }
 }

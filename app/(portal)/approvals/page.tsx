@@ -17,8 +17,9 @@ export default async function ApprovalsPage() {
   const poIds = steps.filter((s) => s.entityType === "PO").map((s) => s.entityId);
   const vendorIds = steps.filter((s) => s.entityType === "VENDOR").map((s) => s.entityId);
   const payIds = steps.filter((s) => s.entityType === "PAYMENT_REQUEST").map((s) => s.entityId);
+  const giIds = steps.filter((s) => s.entityType === "GOODS_ISSUE").map((s) => s.entityId);
 
-  const [prs, pos, vendors, preqs] = await Promise.all([
+  const [prs, pos, vendors, preqs, gis] = await Promise.all([
     prIds.length
       ? db.purchaseRequisition.findMany({
           where: { id: { in: prIds }, status: "SUBMITTED" },
@@ -38,8 +39,15 @@ export default async function ApprovalsPage() {
           include: { requester: { select: { name: true } }, department: { select: { code: true } } },
         })
       : [],
+    giIds.length
+      ? db.goodsIssue.findMany({
+          where: { id: { in: giIds }, status: "SUBMITTED" },
+          include: { requester: { select: { name: true } }, department: { select: { code: true } }, warehouse: { select: { code: true } } },
+        })
+      : [],
   ]);
   const payById = new Map(preqs.map((p) => [p.id, p]));
+  const giById = new Map(gis.map((g) => [g.id, g]));
   const prById = new Map(prs.map((p) => [p.id, p]));
   const poById = new Map(pos.map((p) => [p.id, p]));
   const vById = new Map(vendors.map((v) => [v.id, v]));
@@ -69,6 +77,9 @@ export default async function ApprovalsPage() {
     } else if (s.entityType === "PAYMENT_REQUEST" && payById.has(s.entityId)) {
       const q = payById.get(s.entityId)!;
       rows.push({ ...base, ref: q.paymentRequestNumber, title: `${q.type} · ${q.payeeName}`, who: q.requester.name, dept: q.department.code, amount: decToString(q.amount, 0), link: `/payment-requests/${q.id}` });
+    } else if (s.entityType === "GOODS_ISSUE" && giById.has(s.entityId)) {
+      const g = giById.get(s.entityId)!;
+      rows.push({ ...base, ref: g.issueNumber, title: `${g.warehouse.code} · ${g.purpose}`, who: g.requester.name, dept: g.department.code, amount: null, link: `/inventory/issues/${g.id}` });
     }
   }
 

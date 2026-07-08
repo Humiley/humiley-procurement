@@ -11,7 +11,7 @@ import type { Decision } from "@/lib/workflow/engine";
 
 export type QueueRow = {
   stepId: string;
-  entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST";
+  entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST" | "GOODS_ISSUE";
   entityId: string;
   ref: string;
   title: string;
