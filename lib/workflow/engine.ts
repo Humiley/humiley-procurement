@@ -70,6 +70,15 @@ async function resolveApprover(row: {
     const preferChief = row.level >= 3;
     dirs.sort((a, b) => Number(preferChief ? b.isChief : !b.isChief) - Number(preferChief ? a.isChief : !a.isChief));
     eligible.push(...dirs.map((d) => ({ id: d.id, name: d.name })));
+  } else if (row.approverRole === "ACCOUNTANT") {
+    // §10a: the Chief Accountant (isChief) signs payment-request approvals first
+    const accts = await db.user.findMany({
+      where: { isActive: true, roles: { has: "ACCOUNTANT" } },
+      select: { id: true, name: true, isChief: true },
+      orderBy: { name: "asc" },
+    });
+    accts.sort((a, b) => Number(b.isChief) - Number(a.isChief));
+    eligible.push(...accts.map((u) => ({ id: u.id, name: u.name })));
   } else if (row.approverRole) {
     const users = await db.user.findMany({
       where: { isActive: true, roles: { has: row.approverRole } },

@@ -6,7 +6,7 @@ import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
-const ALLOWED_ENTITIES = new Set(["PurchaseRequisition"]);
+const ALLOWED_ENTITIES = new Set(["PurchaseRequisition", "PaymentRequest"]);
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -32,6 +32,16 @@ export async function POST(req: Request) {
       user.roles.includes("DIRECTOR") ||
       user.roles.includes("DEPT_MANAGER");
     if (pr.requesterId !== user.id && !privileged) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  // Payment request: requester while draft/submitted; accountants/admin always (receipts, evidence).
+  if (entityType === "PaymentRequest") {
+    const preq = await db.paymentRequest.findUnique({ where: { id: entityId } });
+    if (!preq) return NextResponse.json({ error: "Payment request not found" }, { status: 404 });
+    const privileged = user.roles.includes("ADMIN") || user.roles.includes("ACCOUNTANT");
+    if (preq.requesterId !== user.id && !privileged) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }

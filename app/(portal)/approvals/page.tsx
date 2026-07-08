@@ -16,8 +16,9 @@ export default async function ApprovalsPage() {
   const prIds = steps.filter((s) => s.entityType === "PR").map((s) => s.entityId);
   const poIds = steps.filter((s) => s.entityType === "PO").map((s) => s.entityId);
   const vendorIds = steps.filter((s) => s.entityType === "VENDOR").map((s) => s.entityId);
+  const payIds = steps.filter((s) => s.entityType === "PAYMENT_REQUEST").map((s) => s.entityId);
 
-  const [prs, pos, vendors] = await Promise.all([
+  const [prs, pos, vendors, preqs] = await Promise.all([
     prIds.length
       ? db.purchaseRequisition.findMany({
           where: { id: { in: prIds }, status: "SUBMITTED" },
@@ -31,7 +32,14 @@ export default async function ApprovalsPage() {
         })
       : [],
     vendorIds.length ? db.vendor.findMany({ where: { id: { in: vendorIds }, status: "PENDING" } }) : [],
+    payIds.length
+      ? db.paymentRequest.findMany({
+          where: { id: { in: payIds }, status: "SUBMITTED" },
+          include: { requester: { select: { name: true } }, department: { select: { code: true } } },
+        })
+      : [],
   ]);
+  const payById = new Map(preqs.map((p) => [p.id, p]));
   const prById = new Map(prs.map((p) => [p.id, p]));
   const poById = new Map(pos.map((p) => [p.id, p]));
   const vById = new Map(vendors.map((v) => [v.id, v]));
@@ -58,6 +66,9 @@ export default async function ApprovalsPage() {
     } else if (s.entityType === "VENDOR" && vById.has(s.entityId)) {
       const v = vById.get(s.entityId)!;
       rows.push({ ...base, ref: v.code, title: v.nameEn, who: "—", dept: "—", amount: null, link: "/vendors" });
+    } else if (s.entityType === "PAYMENT_REQUEST" && payById.has(s.entityId)) {
+      const q = payById.get(s.entityId)!;
+      rows.push({ ...base, ref: q.paymentRequestNumber, title: `${q.type} · ${q.payeeName}`, who: q.requester.name, dept: q.department.code, amount: decToString(q.amount, 0), link: `/payment-requests/${q.id}` });
     }
   }
 

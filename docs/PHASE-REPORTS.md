@@ -21,6 +21,66 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 8 — Payment Request Module (§10a) — ✅ COMPLETE
+
+**Summary.** Đề nghị thanh toán is live with all four types: VENDOR_PAYMENT (Accounting/Purchasing
+pick a vendor → open MATCHED-unpaid invoices with amounts → combine 1+; payee bank auto-fills from
+the vendor master; invoices already on an open request are blocked), ADVANCE (any user; optional PO
+reference; §10a advance control — an unsettled PAID advance older than 30 days blocks new ones),
+REIMBURSEMENT (free expense lines; receipts REQUIRED before submit via the generalized attachment
+panel), and ADVANCE_SETTLEMENT (links one of the requester's own PAID advances). Approval runs the
+§6 engine on §10a bands (<20M DM · 20–200M +Chief Accountant · >200M +Director; the ACCOUNTANT
+resolver prefers isChief) with §19 signatures, PLUS the mandatory accounting verification: the
+FINAL approval is refused until an ACCOUNTANT has signed VERIFIED. Payment execution is a PAID
+signature capturing the bank reference and cascades PAID to every linked invoice. The register
+carries the accountant's daily payment run (approved-not-paid by due date) and the voucher PDF
+prints the brand letterhead with Requester / Chief Accountant / Approver signature blocks.
+
+### Built
+- lib/schemas/payreq.ts (type-specific superRefine) · payment-requests/actions.ts (create/submit/
+  verify/decide/markPaid/cancel; HML-PAY docnum; advance-block query; invoice double-carry guard;
+  verification gate on the last pending step; PAID cascade via updateMany) · engine: ACCOUNTANT
+  resolver prefers isChief · approvals queue + decideEntity + DecideInline extended to
+  PAYMENT_REQUEST · attachments API + PrAttachments generalized (entityType prop; PaymentRequest
+  whitelisted with requester/accountant guard) · PayReqPdf + /api/payment-request/[id]/pdf ·
+  pages: register (+payment-run panel), type-driven create form, detail (meta, lines with invoice
+  links + live payment badges, approval timeline + inline decide, signatures, attachments panel) ·
+  seed: PAYMENT_REQUEST matrix + two MATCHED UNPAID invoices on the received demo PO · full
+  payreq i18n EN/VN.
+
+### E2E evidence (browser, fresh seed)
+- Purchaser combined BOTH matched invoices (13.2M + 19.8M) into HML-PAY-2026-0001 = 33,000,000 ₫;
+  payee + bank auto-filled from the vendor.
+- Submit → steps L1 mgr.eng + L2 accountant (chief) per the 20–200M band.
+- L1 approved (signed). **Guard proven:** the chief accountant's L2 approval BEFORE verification
+  was refused with "Accounting must verify this payment request before the final approval."
+- Verified (VERIFIED signature) → badge shows; L2 approved → APPROVED; Execute payment with bank
+  ref VCB-FT26190-889021 (PAID signature) → request PAID with paidDate;
+  **cascade: both invoices → PAID with paid dates.**
+- Signature trail: APPROVED (manager) → VERIFIED (chief) → APPROVED (chief) → PAID.
+- Voucher PDF text-verified: "PAYMENT REQUEST / Đề nghị thanh toán", payee, 33,000,000 total,
+  "Kế toán trưởng" + "Người duyệt" blocks with the chief's printed name.
+
+### ⚠️ Decisions made without asking (§23)
+1. **Bank reference entry** rides the PAID SignatureDialog's reason field (labelled accordingly) —
+   one ceremony, one dialog.
+2. **Requester signature block** on the voucher falls back to the requester's printed name when no
+   AUTHORED signature exists (submission is not a §19 ceremony in this build).
+3. **Budget hooks for REIMBURSEMENT / non-PO ADVANCE deferred to Phase 11** (the dedicated budget
+   phase): payment-request lines carry no item/category, so §10a's commitment rule needs the
+   category-mapping decision that Phase 11 owns. PO-backed payments are already counted via the PO
+   (no double-count).
+4. **Advance-settlement difference** (payable/refundable) is represented by the settlement's own
+   line total; no separate net-off posting in v1.
+5. VENDOR_PAYMENT creation is also allowed to ADMIN (spec: ACCOUNTANT or PURCHASER).
+
+### ⚠️ Known limitations
+- "Outstanding advances" dashboard widget lands with Phase 12 (dashboards).
+- Partial payment of a payment request is out of scope (invoices cascade fully PAID per the
+  acceptance test; PARTIALLY_PAID stays available on invoices from Phase 7).
+
+---
+
 ## Phase 7 — GRN · Invoice · 3-Way Match · Payments · Budget — ✅ COMPLETE
 
 **Summary.** The §9 receiving-to-payment loop is live end to end: WAREHOUSE receives against open

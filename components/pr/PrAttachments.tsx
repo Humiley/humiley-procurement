@@ -16,10 +16,14 @@ export function PrAttachments({
   entityId,
   attachments,
   canUpload,
+  entityType = "PurchaseRequisition",
+  refreshPath,
 }: {
   entityId: string;
   attachments: PrAttachment[];
   canUpload: boolean;
+  entityType?: string;
+  refreshPath?: string;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +38,7 @@ export function PrAttachments({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("entityType", "PurchaseRequisition");
+      fd.append("entityType", entityType);
       fd.append("entityId", entityId);
       const res = await fetch("/api/v1/attachments", { method: "POST", body: fd });
       if (!res.ok) throw new Error((await res.json()).error ?? "Upload failed.");
@@ -50,7 +54,7 @@ export function PrAttachments({
   async function remove(id: string) {
     setBusy(true);
     try {
-      await deleteAttachment(id, `/requisitions/${entityId}`);
+      await deleteAttachment(id, refreshPath ?? `/requisitions/${entityId}`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not remove.");

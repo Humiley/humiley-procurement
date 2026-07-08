@@ -13,7 +13,7 @@ export function DecideInline({
   entityId,
   refLabel,
 }: {
-  entityType: "PR" | "PO" | "VENDOR";
+  entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST";
   entityId: string;
   refLabel: string;
 }) {

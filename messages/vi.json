@@ -295,7 +295,8 @@
     "type": {
       "PR": "PR",
       "PO": "PO",
-      "VENDOR": "NCC"
+      "VENDOR": "NCC",
+      "PAYMENT_REQUEST": "Thanh toán"
     }
   },
   "notifications": {
@@ -472,5 +473,56 @@
     "committed": "Đã cam kết",
     "remaining": "Còn lại",
     "over": "VƯỢT NGÂN SÁCH"
+  },
+  "payreq": {
+    "listTitle": "Đề nghị thanh toán",
+    "newButton": "Tạo đề nghị",
+    "newTitle": "Tạo đề nghị thanh toán",
+    "empty": "Chưa có đề nghị thanh toán.",
+    "type": {
+      "VENDOR_PAYMENT": "Thanh toán NCC",
+      "ADVANCE": "Tạm ứng",
+      "REIMBURSEMENT": "Hoàn phí",
+      "ADVANCE_SETTLEMENT": "Hoàn ứng"
+    },
+    "costCenter": "Trung tâm chi phí",
+    "method": "Hình thức",
+    "bankTransfer": "Chuyển khoản",
+    "cash": "Tiền mặt",
+    "dueDate": "Hạn thanh toán",
+    "reason": "Lý do / nội dung",
+    "reasonPh": "vd: Thanh toán hàng giao tháng 7",
+    "vendor": "Nhà cung cấp",
+    "noMatchedInvoices": "Không có hoá đơn đã khớp, chưa trả của NCC này.",
+    "amount": "Số tiền",
+    "advancePo": "PO liên quan (tuỳ chọn)",
+    "noPo": "— không có PO —",
+    "settleAdvance": "Khoản tạm ứng cần hoàn",
+    "expenseLines": "Dòng chi phí",
+    "lineDesc": "Diễn giải",
+    "addLine": "+ Thêm dòng",
+    "receiptsNote": "Đính kèm chứng từ trên trang đề nghị trước khi trình.",
+    "total": "Tổng cộng",
+    "create": "Tạo đề nghị thanh toán",
+    "colNo": "Số",
+    "colType": "Loại",
+    "colPayee": "Thụ hưởng",
+    "colRequester": "Người đề nghị",
+    "colStatus": "Trạng thái",
+    "paymentRun": "Chờ chi — đã duyệt, chưa thanh toán (theo hạn)",
+    "bank": "Ngân hàng / Số TK",
+    "paidOn": "Đã trả ngày",
+    "verifiedBadge": "Kế toán đã kiểm tra",
+    "submit": "Trình phê duyệt",
+    "verify": "Kế toán kiểm tra & ký",
+    "markPaid": "Thực hiện chi (PAID)",
+    "cancel": "Huỷ",
+    "pdf": "Phiếu PDF",
+    "meaningVerified": "Đã kiểm tra — hoá đơn hợp lệ & tuân thủ thuế",
+    "meaningPaid": "Đã trả — nhập số tham chiếu ngân hàng bên dưới",
+    "signSubmit": "Ký & xác nhận",
+    "tabApprovals": "Phê duyệt & chữ ký",
+    "approvalsPending": "Trình để bắt đầu luồng phê duyệt.",
+    "attachments": "Chứng từ đính kèm"
   }
 }

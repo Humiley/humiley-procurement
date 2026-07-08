@@ -295,7 +295,8 @@
     "type": {
       "PR": "PR",
       "PO": "PO",
-      "VENDOR": "Vendor"
+      "VENDOR": "Vendor",
+      "PAYMENT_REQUEST": "Payment"
     }
   },
   "notifications": {
@@ -472,5 +473,56 @@
     "committed": "Committed",
     "remaining": "Remaining",
     "over": "OVER BUDGET"
+  },
+  "payreq": {
+    "listTitle": "Payment Requests",
+    "newButton": "New payment request",
+    "newTitle": "New Payment Request · Đề nghị thanh toán",
+    "empty": "No payment requests yet.",
+    "type": {
+      "VENDOR_PAYMENT": "Vendor payment",
+      "ADVANCE": "Advance",
+      "REIMBURSEMENT": "Reimbursement",
+      "ADVANCE_SETTLEMENT": "Advance settlement"
+    },
+    "costCenter": "Cost center",
+    "method": "Payment method",
+    "bankTransfer": "Bank transfer",
+    "cash": "Cash",
+    "dueDate": "Due date",
+    "reason": "Reason / purpose",
+    "reasonPh": "e.g. Payment for July deliveries",
+    "vendor": "Vendor",
+    "noMatchedInvoices": "No matched, unpaid invoices for this vendor.",
+    "amount": "Amount",
+    "advancePo": "Related PO (optional)",
+    "noPo": "— no PO —",
+    "settleAdvance": "Advance being settled",
+    "expenseLines": "Expense lines",
+    "lineDesc": "Description",
+    "addLine": "+ Add line",
+    "receiptsNote": "Attach the receipts on the request page before submitting.",
+    "total": "Total",
+    "create": "Create payment request",
+    "colNo": "No.",
+    "colType": "Type",
+    "colPayee": "Payee",
+    "colRequester": "Requester",
+    "colStatus": "Status",
+    "paymentRun": "To pay — approved, waiting for payment (by due date)",
+    "bank": "Bank / account",
+    "paidOn": "Paid on",
+    "verifiedBadge": "Verified by accounting",
+    "submit": "Submit for approval",
+    "verify": "Accounting verification & sign",
+    "markPaid": "Execute payment (PAID)",
+    "cancel": "Cancel",
+    "pdf": "Voucher PDF",
+    "meaningVerified": "Verified — invoice validity & tax compliance checked",
+    "meaningPaid": "Paid — enter the bank / payment reference below",
+    "signSubmit": "Sign & confirm",
+    "tabApprovals": "Approvals & signatures",
+    "approvalsPending": "Submit to start the approval flow.",
+    "attachments": "Attachments / receipts"
   }
 }

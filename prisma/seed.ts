@@ -134,6 +134,13 @@ async function main() {
       { entityType: "PO", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 2, approverRole: "DIRECTOR" },
       { entityType: "PO", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
       { entityType: "VENDOR", minAmountVnd: 0, maxAmountVnd: null, level: 1, approverRole: "DIRECTOR" },
+      // §10a payment requests: <20M L1 DM; 20–200M +Chief Accountant; >200M +Director
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 0, maxAmountVnd: 19_999_999, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 20_000_000, maxAmountVnd: 200_000_000, level: 2, approverRole: "ACCOUNTANT" },
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 1, approverRole: "DEPT_MANAGER" },
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 2, approverRole: "ACCOUNTANT" },
+      { entityType: "PAYMENT_REQUEST", minAmountVnd: 200_000_001, maxAmountVnd: null, level: 3, approverRole: "DIRECTOR" },
     ],
   });
   console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3; PO same bands; VENDOR Director).");
@@ -543,7 +550,36 @@ async function seedDemoPr() {
       });
       await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 3 }, create: { key: "PR", year: 2026, lastValue: 3 } });
       await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 1 }, create: { key: "PO", year: 2026, lastValue: 1 } });
-      console.log(`Seeded ${pr3Number} (CONVERTED) + ${po1Number} (SENT) — ready for GRN/invoice demo.`);
+      // Two MATCHED, UNPAID invoices on this PO (goods fully received) so the §10a acceptance —
+      // "two matched invoices combine into one payment request; PAID cascades to both" — is
+      // demoable immediately.
+      const po1 = await db.purchaseOrder.findUnique({ where: { poNumber: po1Number }, include: { lines: true } });
+      if (po1) {
+        await db.poLine.update({ where: { id: po1.lines[0].id }, data: { receivedQty: 100, invoicedQty: 100 } });
+        await db.purchaseOrder.update({ where: { id: po1.id }, data: { status: "RECEIVED" } });
+        let invNo = 0;
+        for (const part of [40, 60]) {
+          invNo += 1;
+          await db.invoice.create({
+            data: {
+              invoiceNumber: `HML-INV-2026-000${invNo}`,
+              vendorInvoiceNo: `000120${invNo}/HD-2026`,
+              vendorId: po1.vendorId,
+              poId: po1.id,
+              invoiceDate: new Date(),
+              dueDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+              subtotal: part * 300_000,
+              vatAmount: part * 30_000,
+              total: part * 330_000,
+              matchStatus: "MATCHED",
+              paymentStatus: "UNPAID",
+              lines: { create: [{ poLineId: po1.lines[0].id, qty: part, unitPrice: 300_000, amount: part * 300_000 }] },
+            },
+          });
+        }
+        await db.sequence.upsert({ where: { key_year: { key: "INV", year: 2026 } }, update: { lastValue: 2 }, create: { key: "INV", year: 2026, lastValue: 2 } });
+      }
+      console.log(`Seeded ${pr3Number} (CONVERTED) + ${po1Number} (RECEIVED) + 2 MATCHED invoices — ready for payment-request demo.`);
     }
   }
 }
