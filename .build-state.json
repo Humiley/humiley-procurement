@@ -1,5 +1,5 @@
 {
-  "phase": 12,
+  "phase": 13,
   "phaseStatus": "NOT_STARTED",
   "completedPhases": [
     1,
@@ -12,11 +12,12 @@
     8,
     9,
     10,
-    11
+    11,
+    12
   ],
   "currentTask": "Phase 9 — Inventory core per §10b",
   "completedTasks": [],
-  "nextAction": "Phase 12 (§22.7 prompt 12): dashboards + reports + xlsx per §10-G — role-aware /dashboard (requester: my PRs by status + recent activity; purchaser/director: pending approvals, open POs, spend MTD/YTD, top-10 vendors by spend, PR→PO cycle time, savings awarded-vs-highest, deliveries due this week, expiring contracts; charts with Recharts: monthly spend trend, spend by category donut, by department bar). /reports index + report pages, ALL exportable to xlsx via exceljs through lib/kpi: spend by vendor/category/department/project, PR register, PO register, GRN register, invoice aging, vendor performance, budget vs actual, approval cycle time; plus payment aging + outstanding advances + inventory value + stock card export (deferred items). Include xlsx budget import (deferred Phase 11) + stock-count xlsx entry (deferred Phase 10) if cheap, else log. npm run check + seed + browser E2E (dashboard renders per role, one report filters + downloads xlsx and the file parses), Phase Report, commit phase-12.",
-  "lastCheckpointCommit": "phase-11",
+  "nextAction": "Phase 13 (§22.7 prompt 13): barcode & traceability per §21 — lot capture on GRN (lot number + expiry for lot-tracked items, Lot model), barcode generation (Code128/QR data model already in schema: Barcode/Lot), label generation + printing (/inventory/labels batch print page, browser print CSS), /scan hub (mobile-first PWA page: manual code entry v1 + camera scan if cheap via getUserMedia BarcodeDetector), scan-driven lookups (scan a lot/item code → balance + movements + trace links), FEFO suggestion on goods-issue execution for lot-tracked items (earliest expiry first), /trace/[lotId] forward/backward trace (GRN→PO/vendor backward; issues/transfers/counts forward). npm run check + seed (a lot-tracked item receipt with lots) + browser E2E (receive with lots, labels render, scan lookup finds the lot, trace shows chain), Phase Report, commit phase-13.",
+  "lastCheckpointCommit": "phase-12",
   "updatedAt": "2026-07-09T02:00:00+07:00"
 }

@@ -21,6 +21,59 @@ One-click full build per spec §24. Reports appended per phase; decisions logged
      model (opt-in per user, like the HR/Finance apps).
   4. The **FINAL-REPORT** must document the exact integration/embedding + SSO steps.
 
+## Phase 12 — Dashboards, Reports & xlsx (§10-G) — ✅ COMPLETE
+
+**Summary.** The portal now explains itself. **/dashboard is role-aware**: every user gets their
+pipeline (my requisitions with a by-status breakdown, pending approvals, open POs, unread
+notifications, recent activity); managers (PURCHASER/DIRECTOR/ACCOUNTANT/DEPT_MANAGER/ADMIN)
+additionally get the §10-G analytics row — spend MTD/YTD, average PR→PO cycle time, savings
+(awarded vs highest quote across awarded RFQs) — plus three brand-palette Recharts (monthly spend
+trend area, spend-by-category donut, spend-by-department bar) and three operational panels (top-10
+vendors by spend, deliveries due this week, contracts expiring ≤90d). **/reports** is a 14-report
+suite driven by one registry (`lib/kpi/reports.ts`): spend by vendor/category/department/project,
+PR/PO/GRN registers, invoice aging (bucketed 0-30/31-60/61-90/90+), vendor performance (on-time +
+reject rates), budget vs actual with utilization, approval cycle time, payment aging, outstanding
+advances, and inventory value. Every report renders on screen with an FY filter and **exports to a
+branded xlsx** (navy header row, emerald rule, auto-sized columns) through `/api/reports/[key]` —
+the file is produced by the same registry function as the page, so screen and file always agree.
+
+### Built
+- lib/kpi/reports.ts (registry: 14 data functions → {columns, rows}; i18n column vocabulary under
+  reports.cols.*) · lib/kpi/dashboard.ts (managerDashboard: one query pass → KPIs + chart series +
+  panels) · components/charts/DashboardCharts.tsx (Recharts area/donut/bar, brand palette only) ·
+  dashboard page rework (role-aware sections) · /reports index + /reports/[key] viewer (FY filter,
+  numeric right-align, row count) · /api/reports/[key] xlsx route (exceljs, role-gated, branded
+  header, attachment filename `<key>-fy<yyyy>.xlsx`) · reports + dashboard i18n EN/VN (names,
+  descriptions, ~40 shared column labels).
+
+### E2E evidence (browser, seeded data)
+- ADMIN /dashboard: Spend MTD = Spend YTD = **33,000,000 ₫** (the two seeded invoices), PR→PO
+  cycle, savings card; all three charts mounted with live series (area path, pie sector, bar rect
+  verified in the DOM); deliveries-due lists **HML-PO-2026-0002** (expected +5d); expiring
+  contracts lists **HML-CTR-2026-0001**; top vendors ranks V-CLEAN01.
+- Requester /dashboard: manager row absent, "My requisitions by status" lists the requester's four
+  PRs with status chips.
+- /reports: 14 cards; spend-by-vendor renders V-CLEAN01 · 2 invoices · 33,000,000; xlsx export
+  returned 200, `PK` zip magic, 6,734 bytes, `attachment; filename="spend-by-vendor-fy2026.xlsx"`.
+- Spot-checked with rows: budget-vs-actual (8), invoice-aging (2), inventory-value (3),
+  approval-cycle-time (1).
+
+### §23 decisions (spec didn't specify — decided and logged)
+1. **"Spend" = invoiced totals** (Invoice/InvoiceLine by invoiceDate), not PO value — actuals, and
+   consistent across dashboard + all four spend reports. Direct POs with no PR report department
+   "—"; uncategorized/free-text lines report category "—".
+2. **Savings** = Σ per awarded RFQ (highest quote − selected quote) — spec names the metric without
+   a formula.
+3. **Report filters are FY-scoped v1**; ageing/advance/inventory reports are point-in-time and
+   ignore FY by nature. Per-report vendor/department filters can layer on the registry later.
+4. **One registry powers screen AND xlsx** so exports always match what was reviewed on screen.
+5. **xlsx IMPORTS still deferred** (budget rows, stock-count entry) — export was the §10-G
+   requirement; imports are admin conveniences and now tracked for the governance/API phases.
+6. Vendor performance on-time rate counts only POs with an expectedDate (no expected date ⇒ not
+   measurable, excluded from the denominator).
+
+---
+
 ## Phase 11 — Budget Engine Completion + Contracts (§9) — ✅ COMPLETE
 
 **Summary.** The §9 loop closed on both fronts. **Budget engine:** ADMINs now set budget rows
