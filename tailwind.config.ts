@@ -31,9 +31,8 @@ const config: Config = {
         card: "0.5rem",
       },
       boxShadow: {
-        // shadows carry the navy brand hue instead of neutral black (reads warmer on the panel bg)
-        card: "0 1px 3px rgba(32,80,144,0.10), 0 1px 2px rgba(32,80,144,0.05)",
-        "card-hover": "0 6px 16px rgba(32,80,144,0.14), 0 2px 4px rgba(32,80,144,0.08)",
+        card: "0 1px 3px rgba(31,41,55,0.08), 0 1px 2px rgba(31,41,55,0.04)",
+        "card-hover": "0 6px 16px rgba(31,41,55,0.12), 0 2px 4px rgba(31,41,55,0.06)",
       },
     },
   },

@@ -27,14 +27,14 @@ body {
 @layer components {
   /* Primary CTA (emerald ≤10% of surface) */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Secondary / navy action */
   .btn-navy {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/25 bg-white px-4 py-2 text-sm font-semibold text-navy transition hover:bg-panel active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/25 bg-white px-4 py-2 text-sm font-semibold text-navy transition hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-grey transition hover:bg-panel hover:text-body;

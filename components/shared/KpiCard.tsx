@@ -8,29 +8,19 @@ export function KpiCard({
   icon: Icon,
   href,
   accent = "navy",
-  delay,
 }: {
   label: string;
   value: string | number;
   icon?: LucideIcon;
   href?: string;
   accent?: "navy" | "emerald";
-  /** Optional stagger index — tiles cascade in instead of mounting all at once. */
-  delay?: number;
 }) {
   const inner = (
-    <div
-      className={cn(
-        "card group flex items-center gap-4 p-4 transition-all duration-200",
-        href && "hover:-translate-y-0.5 hover:shadow-card-hover active:translate-y-0 active:scale-[0.99]",
-        delay !== undefined && "fade-up",
-      )}
-      style={delay !== undefined ? { animationDelay: `${delay * 60}ms` } : undefined}
-    >
+    <div className="card flex items-center gap-4 p-4 transition hover:shadow-md">
       {Icon && (
         <span
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg",
             accent === "emerald" ? "bg-emerald/10 text-emerald" : "bg-navy/10 text-navy",
           )}
         >
@@ -41,7 +31,7 @@ export function KpiCard({
         {/* long VND figures scale down instead of truncating — every digit stays visible */}
         <p
           className={cn(
-            "font-bold leading-snug tracking-tight tabular-nums text-body",
+            "font-bold leading-snug tabular-nums text-body",
             String(value).length > 11 ? "text-lg" : "text-2xl",
           )}
           title={String(value)}
