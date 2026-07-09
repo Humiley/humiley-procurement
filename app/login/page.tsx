@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/shared/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginBackdrop } from "@/components/auth/LoginBackdrop";
 
 export default async function LoginPage({ searchParams }: { searchParams: { email?: string | string[] } }) {
   const session = await auth();
@@ -15,17 +16,27 @@ export default async function LoginPage({ searchParams }: { searchParams: { emai
   const prefillEmail = (rawEmail ?? "").trim().slice(0, 120);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-panel p-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex justify-center">
-          <Logo variant="navy" />
+    /* Mirrors the Humiley Portal login: photo backdrop (day-alternating, orientation-aware),
+       frosted-glass card, full-colour logo — one product family, one front door. */
+    <div
+      id="login-overlay"
+      className="flex min-h-[100dvh] overflow-y-auto bg-[#0d1c39] bg-cover bg-center p-6"
+    >
+      <LoginBackdrop />
+      <div className="login-glass relative z-[2] m-auto w-full max-w-[380px] rounded-[20px] border border-white/30 bg-white/15 px-8 pb-6 pt-7 text-center shadow-[0_24px_70px_rgba(4,16,42,0.45)] backdrop-blur-xl backdrop-saturate-125">
+        <div className="mb-7 flex justify-center">
+          <Logo variant="navy" className="h-[72px] sm:h-[88px]" />
         </div>
-        <div className="card p-6">
-          <h1 className="text-lg font-bold text-navy">{t("welcome")}</h1>
-          <p className="mb-5 mt-0.5 text-sm text-grey">{t("subtitle")}</p>
+        <h1 className="login-title mb-2 text-[21px] font-extrabold tracking-tight text-navy [text-shadow:0_1px_8px_rgba(255,255,255,0.7)]">
+          {t("welcome")}
+        </h1>
+        <p className="mb-6 text-[13px] leading-relaxed text-white/95 [text-shadow:0_1px_6px_rgba(0,0,0,0.35)]">
+          {t("subtitle")}
+        </p>
+        <div className="text-left">
           <LoginForm prefillEmail={prefillEmail} />
         </div>
-        <p className="mt-4 text-center text-xs text-grey">
+        <p className="mt-5 text-xs text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.3)]">
           Humiley Procurement Portal
         </p>
       </div>

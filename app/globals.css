@@ -62,6 +62,14 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  /* login card sits on a photo — labels go white, fields go frosted (portal look) */
+  .login-glass .label {
+    @apply text-white;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  }
+  .login-glass .field {
+    @apply border-white/60 bg-white/85 focus:border-white focus:ring-white/70;
+  }
   /* staggered entry for dashboard tiles — GPU transform+opacity only */
   .fade-up {
     opacity: 0;
