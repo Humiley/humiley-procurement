@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, Trophy } from "lucide-react";
 import { sendRfq, enterQuote, awardQuote, closeRfq } from "@/app/(portal)/rfqs/actions";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
+import { TextPromptDialog } from "@/components/shared/TextPromptDialog";
 
 export type RfqVendorCol = {
   vendorId: string;
@@ -43,9 +46,11 @@ export function RfqDetail({
   canManage: boolean;
 }) {
   const t = useTranslations("rfq");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [justFor, setJustFor] = useState<null | { kind: "send" } | { kind: "award"; v: RfqVendorCol }>(null);
   const [error, setError] = useState<string | null>(null);
   const [entryFor, setEntryFor] = useState<string | null>(null); // vendorId being quoted
   const [entry, setEntry] = useState<{ prices: Record<string, string>; lead: string; terms: string; valid: string; ref: string }>({ prices: {}, lead: "", terms: "", valid: "", ref: "" });
@@ -63,7 +68,8 @@ export function RfqDetail({
     setError(null);
     setBusy(kind);
     try {
-      await fn();
+      act(await fn());
+      toast(tc("done"));
       start(() => router.refresh());
     } catch (e) {
       setError(fmtErr(e));
@@ -74,24 +80,29 @@ export function RfqDetail({
 
   async function onSend() {
     const needJust = estimateVnd > 100_000_000 && vendors.length < 3;
-    const just = needJust ? window.prompt(t("sendJustification")) : undefined;
-    if (needJust && !just) return;
-    await run("send", () => sendRfq(rfqId, just || undefined));
+    if (needJust) return setJustFor({ kind: "send" });   // §15 justification via a real dialog, not window.prompt
+    await run("send", () => sendRfq(rfqId, undefined));
   }
 
-  async function onAward(v: RfqVendorCol) {
-    const notLowest = lowestTotal !== null && Number(v.quote!.totalVnd) > lowestTotal;
-    const just = notLowest ? window.prompt(t("awardJustification")) : undefined;
-    if (notLowest && !just) return;
+  async function doAward(v: RfqVendorCol, justification?: string) {
     setError(null);
     setBusy("award" + v.vendorId);
     try {
-      const res = await awardQuote({ rfqId, quoteId: v.quote!.id, justification: just || undefined });
+      const res = act(await awardQuote({ rfqId, quoteId: v.quote!.id, justification }));
+      toast(tc("done"));
       router.push(`/purchase-orders/${res.poId}`);
     } catch (e) {
       setError(fmtErr(e));
       setBusy(null);
     }
+  }
+
+  async function onAward(v: RfqVendorCol) {
+    // awarding creates a purchase order — never a single silent click
+    if (!window.confirm(tc("confirmIrreversible"))) return;
+    const notLowest = lowestTotal !== null && Number(v.quote!.totalVnd) > lowestTotal;
+    if (notLowest) return setJustFor({ kind: "award", v });
+    await doAward(v);
   }
 
   function openEntry(v: RfqVendorCol) {
@@ -137,7 +148,7 @@ export function RfqDetail({
               </button>
             ) : null}
             {canManage && ["DRAFT", "SENT"].includes(status) ? (
-              <button className="rounded-lg border border-grey/30 px-3 py-1.5 text-sm font-semibold text-grey hover:bg-grey/10" disabled={!!busy} onClick={() => run("close", () => closeRfq(rfqId))}>
+              <button className="rounded-lg border border-grey/30 px-3 py-1.5 text-sm font-semibold text-grey hover:bg-grey/10" disabled={!!busy} onClick={() => { if (!window.confirm(tc("confirmIrreversible"))) return; run("close", () => closeRfq(rfqId)); }}>
                 {t("close")}
               </button>
             ) : null}
@@ -259,6 +270,18 @@ export function RfqDetail({
       ) : (
         <p className="rounded-xl border border-grey/20 bg-white p-4 text-sm text-grey">{t("noQuotesYet")}</p>
       )}
+      <TextPromptDialog
+        open={!!justFor}
+        title={justFor?.kind === "award" ? t("awardJustification") : t("sendJustification")}
+        label={justFor?.kind === "award" ? t("awardJustification") : t("sendJustification")}
+        onClose={() => setJustFor(null)}
+        onConfirm={async (just) => {
+          const j = justFor;
+          setJustFor(null);
+          if (j?.kind === "send") await run("send", () => sendRfq(rfqId, just));
+          else if (j?.kind === "award") await doAward(j.v, just);
+        }}
+      />
     </div>
   );
 }

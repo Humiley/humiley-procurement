@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createCount } from "@/app/(portal)/inventory/counts/actions";
+import { act } from "@/lib/act";
 
 /** Pick a warehouse → snapshot a new count sheet. */
 export function NewCountButton({ warehouses }: { warehouses: { id: string; label: string }[] }) {
@@ -19,7 +20,7 @@ export function NewCountButton({ warehouses }: { warehouses: { id: string; label
     setError(null);
     setBusy(true);
     try {
-      const res = await createCount({ warehouseId });
+      const res = act(await createCount({ warehouseId }));
       router.push(`/inventory/counts/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));

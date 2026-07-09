@@ -9,6 +9,7 @@ import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
 import { createSteps } from "@/lib/workflow/engine";
 import { prCreateSchema, type PrCreateInput, type PrFormPayload } from "@/lib/schemas/pr";
+import { guard } from "@/lib/safe-action";
 
 function lineTotals(lines: PrCreateInput["lines"]) {
   const total = lines.reduce(
@@ -30,7 +31,7 @@ function toLineData(lines: PrCreateInput["lines"]) {
   }));
 }
 
-export async function createPr(input: PrFormPayload) {
+async function _createPr(input: PrFormPayload) {
   const user = await requireUser();
   if (!user.departmentId) {
     throw new Error("You must belong to a department to raise a requisition.");
@@ -67,7 +68,7 @@ export async function createPr(input: PrFormPayload) {
   return { id: pr.id, prNumber: pr.prNumber };
 }
 
-export async function updatePr(id: string, input: PrFormPayload) {
+async function _updatePr(id: string, input: PrFormPayload) {
   const user = await requireUser();
   const pr = await db.purchaseRequisition.findUnique({ where: { id } });
   if (!pr) throw new Error("Requisition not found.");
@@ -104,7 +105,7 @@ export async function updatePr(id: string, input: PrFormPayload) {
   return { id };
 }
 
-export async function submitPr(id: string) {
+async function _submitPr(id: string) {
   const user = await requireUser();
   const pr = await db.purchaseRequisition.findUnique({
     where: { id },
@@ -162,7 +163,7 @@ export async function submitPr(id: string) {
   return { id };
 }
 
-export async function recallPr(id: string) {
+async function _recallPr(id: string) {
   const user = await requireUser();
   const pr = await db.purchaseRequisition.findUnique({ where: { id } });
   if (!pr) throw new Error("Requisition not found.");
@@ -191,7 +192,7 @@ export async function recallPr(id: string) {
   return { id };
 }
 
-export async function cancelPr(id: string) {
+async function _cancelPr(id: string) {
   const user = await requireUser();
   const pr = await db.purchaseRequisition.findUnique({ where: { id } });
   if (!pr) throw new Error("Requisition not found.");
@@ -211,3 +212,10 @@ export async function cancelPr(id: string) {
   revalidatePath("/requisitions");
   return { id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createPr(...a: Parameters<typeof _createPr>) { return guard(_createPr, a); }
+export async function updatePr(...a: Parameters<typeof _updatePr>) { return guard(_updatePr, a); }
+export async function submitPr(...a: Parameters<typeof _submitPr>) { return guard(_submitPr, a); }
+export async function recallPr(...a: Parameters<typeof _recallPr>) { return guard(_recallPr, a); }
+export async function cancelPr(...a: Parameters<typeof _cancelPr>) { return guard(_cancelPr, a); }

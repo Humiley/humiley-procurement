@@ -7,6 +7,7 @@ import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
@@ -18,7 +19,7 @@ const reorderPrSchema = z.object({
 export type ReorderPrPayload = z.input<typeof reorderPrSchema>;
 
 /** §10b one-click reorder: draft PR with reorderQty lines, flagged source=REORDER. */
-export async function generateReorderPr(input: ReorderPrPayload) {
+async function _generateReorderPr(input: ReorderPrPayload) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const values = reorderPrSchema.parse(input);
   if (!user.departmentId) throw new Error("Your account has no department — ask an admin to fix it.");
@@ -61,3 +62,6 @@ export async function generateReorderPr(input: ReorderPrPayload) {
   revalidatePath("/requisitions");
   return { id: pr.id, prNumber: pr.prNumber };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function generateReorderPr(...a: Parameters<typeof _generateReorderPr>) { return guard(_generateReorderPr, a); }

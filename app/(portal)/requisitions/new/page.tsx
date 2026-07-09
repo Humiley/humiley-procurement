@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { requireUser } from "@/lib/rbac";
+import { requireUser, isAdmin } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { PrForm, type CostCenterOpt } from "@/components/pr/PrForm";
@@ -22,6 +22,28 @@ export default async function NewRequisitionPage() {
     db.uom.findMany({ orderBy: { code: "asc" } }),
     db.stockBalance.groupBy({ by: ["itemId"], _sum: { qtyOnHand: true } }),   // §5 stock hint: free stock across warehouses
   ]);
+
+  // §22 prerequisite empty state: a PR needs a cost center for the requester's department.
+  if (costCenters.length === 0) {
+    const tp = await getTranslations("prereq");
+    return (
+      <div className="space-y-4">
+        <Link href="/requisitions" className="btn-ghost -ml-3 w-fit">
+          <ArrowLeft className="h-4 w-4" /> {tc("back")}
+        </Link>
+        <div className="card mx-auto max-w-lg p-6 text-center">
+          <h1 className="text-lg font-bold text-navy">{tp("title")}</h1>
+          <p className="mt-2 text-sm text-grey">{tp("prBody")}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {isAdmin(user) ? (
+              <Link href="/admin/cost-centers" className="btn-outline">{tp("adminLink")}</Link>
+            ) : null}
+            <Link href="/requisitions" className="btn-ghost">{tp("backToList")}</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const stockByItem = new Map(stock.map((s) => [s.itemId, s._sum.qtyOnHand]));
   const ccOpts: CostCenterOpt[] = costCenters.map((c) => ({ id: c.id, label: `${c.code} · ${c.nameEn}` }));

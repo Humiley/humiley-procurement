@@ -6,13 +6,14 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ScanLine, Camera, Loader2 } from "lucide-react";
 import { scanLookup, type ScanResult } from "@/app/(portal)/scan/actions";
+import { act } from "@/lib/act";
 
 /**
  * §21 scan hub — mobile-first. A keyboard-wedge scanner types the code and sends Enter;
  * phones can use the camera when the browser exposes BarcodeDetector. Documents open
  * directly; lots/items show stock + history with a trace link.
  */
-export function ScanHub() {
+export function ScanHub({ initialCode }: { initialCode?: string }) {
   const t = useTranslations("scan");
   const ti = useTranslations("inventory.type");
   const router = useRouter();
@@ -27,6 +28,12 @@ export function ScanHub() {
   useEffect(() => {
     inputRef.current?.focus();
     setCameraSupported("BarcodeDetector" in window && !!navigator.mediaDevices?.getUserMedia);
+    // Topbar search lands here as /scan?code=… — run the lookup once on mount.
+    if (initialCode?.trim()) {
+      setCode(initialCode);
+      void lookup(initialCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function lookup(raw: string) {
@@ -34,7 +41,7 @@ export function ScanHub() {
     if (!value) return;
     setBusy(true);
     try {
-      const hit = await scanLookup(value);
+      const hit = act(await scanLookup(value));
       if (hit.kind === "document") {
         router.push(hit.href);
         return;

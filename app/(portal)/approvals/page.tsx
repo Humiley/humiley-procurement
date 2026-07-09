@@ -9,7 +9,7 @@ import { ApprovalsQueue, type QueueRow } from "@/components/approvals/ApprovalsQ
  * §6 approval queue — "Waiting for me" across every entity the engine routes
  * (PRs, POs, vendors); decisions run through the §19 signing ceremony.
  */
-export default async function ApprovalsPage() {
+export default async function ApprovalsPage({ searchParams }: { searchParams?: { overdue?: string } }) {
   const user = await requireUser();
   const steps = await pendingStepsFor(user.id);
 
@@ -108,5 +108,6 @@ export default async function ApprovalsPage() {
     }
   }
 
-  return <ApprovalsQueue rows={rows} />;
+  // §15 SLA deep-link: /approvals?overdue=<stepId> highlights the breached step in the queue.
+  return <ApprovalsQueue rows={rows} highlightStepId={searchParams?.overdue ?? null} />;
 }

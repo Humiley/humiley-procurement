@@ -12,6 +12,7 @@ import {
   uomSchema,
   itemSchema,
 } from "@/lib/schemas/masterdata";
+import { guard } from "@/lib/safe-action";
 
 type FormValues = Record<string, string | boolean>;
 
@@ -23,7 +24,7 @@ function rethrow(e: unknown): never {
 }
 
 // ---- Departments -------------------------------------------------------------
-export async function createDepartment(values: FormValues) {
+async function _createDepartment(values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = departmentSchema.parse(values);
   try {
@@ -44,7 +45,7 @@ export async function createDepartment(values: FormValues) {
   }
 }
 
-export async function updateDepartment(id: string, values: FormValues) {
+async function _updateDepartment(id: string, values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = departmentSchema.parse(values);
   try {
@@ -67,7 +68,7 @@ export async function updateDepartment(id: string, values: FormValues) {
 }
 
 // ---- Cost Centers ------------------------------------------------------------
-export async function createCostCenter(values: FormValues) {
+async function _createCostCenter(values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = costCenterSchema.parse(values);
   try {
@@ -80,7 +81,7 @@ export async function createCostCenter(values: FormValues) {
   }
 }
 
-export async function updateCostCenter(id: string, values: FormValues) {
+async function _updateCostCenter(id: string, values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = costCenterSchema.parse(values);
   try {
@@ -94,7 +95,7 @@ export async function updateCostCenter(id: string, values: FormValues) {
 }
 
 // ---- Categories --------------------------------------------------------------
-export async function createCategory(values: FormValues) {
+async function _createCategory(values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = categorySchema.parse(values);
   try {
@@ -115,7 +116,7 @@ export async function createCategory(values: FormValues) {
   }
 }
 
-export async function updateCategory(id: string, values: FormValues) {
+async function _updateCategory(id: string, values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = categorySchema.parse(values);
   if (data.parentId === id) throw new Error("A category cannot be its own parent.");
@@ -139,7 +140,7 @@ export async function updateCategory(id: string, values: FormValues) {
 }
 
 // ---- UoM ---------------------------------------------------------------------
-export async function createUom(values: FormValues) {
+async function _createUom(values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = uomSchema.parse(values);
   try {
@@ -152,7 +153,7 @@ export async function createUom(values: FormValues) {
   }
 }
 
-export async function updateUom(id: string, values: FormValues) {
+async function _updateUom(id: string, values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = uomSchema.parse(values);
   try {
@@ -166,7 +167,7 @@ export async function updateUom(id: string, values: FormValues) {
 }
 
 // ---- Items -------------------------------------------------------------------
-export async function createItem(values: FormValues) {
+async function _createItem(values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = itemSchema.parse(values);
   try {
@@ -191,7 +192,7 @@ export async function createItem(values: FormValues) {
   }
 }
 
-export async function updateItem(id: string, values: FormValues) {
+async function _updateItem(id: string, values: FormValues) {
   const admin = await requireRoles("ADMIN");
   const data = itemSchema.parse(values);
   try {
@@ -216,3 +217,15 @@ export async function updateItem(id: string, values: FormValues) {
     rethrow(e);
   }
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createDepartment(...a: Parameters<typeof _createDepartment>) { return guard(_createDepartment, a); }
+export async function updateDepartment(...a: Parameters<typeof _updateDepartment>) { return guard(_updateDepartment, a); }
+export async function createCostCenter(...a: Parameters<typeof _createCostCenter>) { return guard(_createCostCenter, a); }
+export async function updateCostCenter(...a: Parameters<typeof _updateCostCenter>) { return guard(_updateCostCenter, a); }
+export async function createCategory(...a: Parameters<typeof _createCategory>) { return guard(_createCategory, a); }
+export async function updateCategory(...a: Parameters<typeof _updateCategory>) { return guard(_updateCategory, a); }
+export async function createUom(...a: Parameters<typeof _createUom>) { return guard(_createUom, a); }
+export async function updateUom(...a: Parameters<typeof _updateUom>) { return guard(_updateUom, a); }
+export async function createItem(...a: Parameters<typeof _createItem>) { return guard(_createItem, a); }
+export async function updateItem(...a: Parameters<typeof _updateItem>) { return guard(_updateItem, a); }

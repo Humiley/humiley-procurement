@@ -14,11 +14,12 @@ import { checkReorderAfterOut } from "@/lib/stock/reorder";
 import { assertWarehouseKeeper } from "@/lib/stock/keeper";
 import { giCreateSchema, giExecuteSchema, type GiCreatePayload, type GiExecutePayload } from "@/lib/schemas/gi";
 import type { SignatureMeaning } from "@prisma/client";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
 /** §10b goods issue (Xuất kho): request → dept-manager approval → warehouse issues from stock. */
-export async function createGoodsIssue(input: GiCreatePayload) {
+async function _createGoodsIssue(input: GiCreatePayload) {
   const user = await requireUser();
   const values = giCreateSchema.parse(input);
   if (!user.departmentId) throw new Error("Your account has no department — ask an admin to fix it.");
@@ -55,7 +56,7 @@ export async function createGoodsIssue(input: GiCreatePayload) {
   return { id: gi.id };
 }
 
-export async function submitGoodsIssue(id: string) {
+async function _submitGoodsIssue(id: string) {
   const user = await requireUser();
   const gi = await db.goodsIssue.findUnique({ where: { id } });
   if (!gi) throw new Error("Goods issue not found.");
@@ -83,7 +84,7 @@ export async function submitGoodsIssue(id: string) {
   return { id };
 }
 
-export async function decideGoodsIssue(params: { id: string; decision: Decision; password: string; comment?: string }) {
+async function _decideGoodsIssue(params: { id: string; decision: Decision; password: string; comment?: string }) {
   const user = await requireUser();
   const gi = await db.goodsIssue.findUnique({ where: { id: params.id }, include: { lines: true } });
   if (!gi) throw new Error("Goods issue not found.");
@@ -139,7 +140,7 @@ let sig;
 }
 
 /** WAREHOUSE executes: ISSUED signature; qtyIssued ≤ onHand enforced by the stock writer; OUT at avgCost. */
-export async function executeGoodsIssue(params: { payload: GiExecutePayload; password: string }) {
+async function _executeGoodsIssue(params: { payload: GiExecutePayload; password: string }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = giExecuteSchema.parse(params.payload);
 
@@ -270,3 +271,9 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
   revalidatePath("/inventory");
   return { id: gi.id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createGoodsIssue(...a: Parameters<typeof _createGoodsIssue>) { return guard(_createGoodsIssue, a); }
+export async function submitGoodsIssue(...a: Parameters<typeof _submitGoodsIssue>) { return guard(_submitGoodsIssue, a); }
+export async function decideGoodsIssue(...a: Parameters<typeof _decideGoodsIssue>) { return guard(_decideGoodsIssue, a); }
+export async function executeGoodsIssue(...a: Parameters<typeof _executeGoodsIssue>) { return guard(_executeGoodsIssue, a); }

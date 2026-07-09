@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
@@ -21,7 +22,7 @@ const budgetUpsertSchema = z.object({
 export type BudgetUpsertPayload = z.input<typeof budgetUpsertSchema>;
 
 /** §9 admin budget row (costCenter × category × FY): create or set the amount; ledger columns untouched. */
-export async function upsertBudget(input: BudgetUpsertPayload) {
+async function _upsertBudget(input: BudgetUpsertPayload) {
   const admin = await requireRoles("ADMIN");
   const values = budgetUpsertSchema.parse(input);
 
@@ -46,3 +47,6 @@ export async function upsertBudget(input: BudgetUpsertPayload) {
   revalidatePath("/budgets");
   return { id: row.id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function upsertBudget(...a: Parameters<typeof _upsertBudget>) { return guard(_upsertBudget, a); }

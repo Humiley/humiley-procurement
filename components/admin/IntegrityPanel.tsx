@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useTranslations } from "next-intl";
 import { ShieldCheck, ShieldX, Loader2 } from "lucide-react";
 import { verifyAllChains, type IntegrityResult } from "@/app/(portal)/admin/governance.actions";
+import { act } from "@/lib/act";
 
 /** §19 tamper-evidence: re-compute every signature chain on demand. */
 export function IntegrityPanel() {
@@ -18,7 +19,7 @@ export function IntegrityPanel() {
     setError(null);
     setBusy(true);
     try {
-      setResult(await verifyAllChains());
+      setResult(act(await verifyAllChains()));
     } catch (e) {
       setError(fmtErr(e));
     } finally {

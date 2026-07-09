@@ -8,6 +8,7 @@ import { formatVnDate, formatVnDateTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { InvoiceDetailActions } from "@/components/invoice/InvoiceDetailActions";
 import { computeMatch } from "@/app/(portal)/invoices/actions";
+import { act } from "@/lib/act";
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const user = await requireUser();
@@ -27,7 +28,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   if (!canSee) notFound();
 
   const [match, signatures] = await Promise.all([
-    computeMatch(inv.id),
+    computeMatch(inv.id).then(act),
     db.electronicSignature.findMany({ where: { entityType: "Invoice", entityId: inv.id }, orderBy: { signedAt: "asc" } }),
   ]);
   const verified = signatures.some((s) => s.meaning === "VERIFIED");

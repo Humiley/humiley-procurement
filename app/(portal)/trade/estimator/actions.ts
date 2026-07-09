@@ -6,11 +6,12 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { computeLandedRoutes, type LandedRoute } from "@/lib/trade/landed";
 import { latestFxRates } from "@/lib/fx";
+import { guard } from "@/lib/safe-action";
 
 export type TradeHit = { hsCodeId: string; hsCode: string; label: string; itemId: string | null; origin: string | null; lastPriceVnd: string | null };
 
 /** §20 estimator search — item name/code or HS code → HS candidates. */
-export async function searchTrade(q: string): Promise<TradeHit[]> {
+async function _searchTrade(q: string): Promise<TradeHit[]> {
   await requireUser();
   const query = q.trim();
   if (query.length < 2) return [];
@@ -45,7 +46,7 @@ export async function searchTrade(q: string): Promise<TradeHit[]> {
   return hits.slice(0, 8);
 }
 
-export async function fxRates(): Promise<Record<string, number>> {
+async function _fxRates(): Promise<Record<string, number>> {
   await requireUser();
   return latestFxRates();
 }
@@ -70,7 +71,7 @@ export type EstimateResult = {
 };
 
 /** Compute the duty-comparison card and persist the estimate (§20 LandedCostEstimate). */
-export async function estimateLanded(input: EstimatePayload): Promise<EstimateResult> {
+async function _estimateLanded(input: EstimatePayload): Promise<EstimateResult> {
   const user = await requireUser();
   const v = estimateSchema.parse(input);
 
@@ -111,3 +112,8 @@ export async function estimateLanded(input: EstimatePayload): Promise<EstimateRe
 
   return { routes, hs, savedId: saved.id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function searchTrade(...a: Parameters<typeof _searchTrade>) { return guard(_searchTrade, a); }
+export async function fxRates(...a: Parameters<typeof _fxRates>) { return guard(_fxRates, a); }
+export async function estimateLanded(...a: Parameters<typeof _estimateLanded>) { return guard(_estimateLanded, a); }

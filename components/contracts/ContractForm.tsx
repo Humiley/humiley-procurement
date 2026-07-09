@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { createContract } from "@/app/(portal)/contracts/actions";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
 
 export type CtrOpt = { id: string; label: string };
 
@@ -25,12 +27,14 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   async function submit() {
     setError(null);
     setBusy(true);
     try {
-      const res = await createContract({
+      const res = act(await createContract({
         vendorId,
         title,
         startDate,
@@ -38,7 +42,8 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
         valueVnd: valueVnd.replace(/[,.\s]/g, ""),
         renewalAlertDays: alertDays,
         prices: prices.filter((p) => p.itemId && p.priceVnd).map((p) => ({ itemId: p.itemId, priceVnd: p.priceVnd.replace(/[,.\s]/g, "") })),
-      });
+      }));
+      setTouched(false);
       router.push(`/contracts/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -48,7 +53,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
@@ -71,7 +76,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("endDate")} *</span>
-          <input type="date" className={field} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input type="date" className={field} min={startDate || undefined} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("value")} *</span>

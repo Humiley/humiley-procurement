@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, Undo2, XCircle, Pencil, Loader2 } from "lucide-react";
 import { submitPr, recallPr, cancelPr } from "@/app/(portal)/requisitions/actions";
+import { act } from "@/lib/act";
 
 export function PrDetailActions({
   id,
@@ -29,7 +30,7 @@ export function PrDetailActions({
     setError(null);
     setBusy(key);
     try {
-      await fn();
+      act(await fn());
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));

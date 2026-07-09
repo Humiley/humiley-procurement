@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { decToString } from "@/lib/money";
 import { ymdVn, ymdHmVn } from "@/lib/dates";
+import { guard } from "@/lib/safe-action";
 
 /**
  * §17 accounting export — MATCHED invoices / PAID payment requests as CSV batches for
@@ -18,7 +19,7 @@ const csvCell = (v: unknown) => {
 const toCsv = (header: string[], rows: (string | number)[][]) =>
   [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n");
 
-export async function exportAccountingBatch(kind: "INVOICES" | "PAYMENT_REQUESTS") {
+async function _exportAccountingBatch(kind: "INVOICES" | "PAYMENT_REQUESTS") {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
 
   if (kind === "INVOICES") {
@@ -77,7 +78,7 @@ export async function exportAccountingBatch(kind: "INVOICES" | "PAYMENT_REQUESTS
   return { batchNumber: batch.batchNumber, rowCount: rows.length, csv };
 }
 
-export async function pendingExportCounts() {
+async function _pendingExportCounts() {
   await requireRoles("ACCOUNTANT", "ADMIN");
   const [invoices, payments, batches] = await Promise.all([
     db.invoice.count({ where: { matchStatus: "MATCHED", exportBatchId: null } }),
@@ -90,3 +91,7 @@ export async function pendingExportCounts() {
     batches: batches.map((b) => ({ batchNumber: b.batchNumber, kind: b.kind, rowCount: b.rowCount, by: b.createdBy.name, at: ymdHmVn(b.createdAt) })),
   };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function exportAccountingBatch(...a: Parameters<typeof _exportAccountingBatch>) { return guard(_exportAccountingBatch, a); }
+export async function pendingExportCounts(...a: Parameters<typeof _pendingExportCounts>) { return guard(_pendingExportCounts, a); }

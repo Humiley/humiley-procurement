@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { KeyRound, Plus, Power, Webhook, Trash2, Radio } from "lucide-react";
 import { createApiKey, deactivateApiKey, createWebhook, deleteWebhook, testWebhook } from "@/app/(portal)/admin/integration.actions";
+import { act } from "@/lib/act";
 
 export type ApiKeyRow = { id: string; name: string; prefix: string; isActive: boolean; lastUsedAt: string | null };
 export type WebhookRow = { id: string; url: string; events: string[]; hasSecret: boolean };
@@ -15,6 +16,7 @@ const EVENTS = ["po.approved", "invoice.matched", "payment.paid", "stock.belowMi
 /** §17 integration console — API keys (token shown once) + outbound webhooks with test ping. */
 export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: WebhookRow[] }) {
   const t = useTranslations("integration");
+  const tcm = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [keyName, setKeyName] = useState("");
@@ -30,7 +32,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
     setError(null);
     setBusy(true);
     try {
-      await fn();
+      act(await fn());
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));
@@ -55,7 +57,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
             disabled={busy || !keyName.trim()}
             onClick={() =>
               run(async () => {
-                const res = await createApiKey(keyName);
+                const res = act(await createApiKey(keyName));
                 setMinted(res.token);
                 setKeyName("");
               })
@@ -84,7 +86,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                 <span className="text-xs text-grey">{k.lastUsedAt ? t("lastUsed", { when: k.lastUsedAt }) : t("neverUsed")}</span>
                 <span className="flex-1" />
                 {k.isActive ? (
-                  <button type="button" disabled={busy} onClick={() => run(() => deactivateApiKey(k.id))} className="flex items-center gap-1 rounded-lg border border-danger/40 px-2.5 py-1 text-xs font-semibold text-danger hover:bg-danger/5">
+                  <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deactivateApiKey(k.id)); }} className="flex items-center gap-1 rounded-lg border border-danger/40 px-2.5 py-1 text-xs font-semibold text-danger hover:bg-danger/5">
                     <Power className="h-3.5 w-3.5" /> {t("deactivate")}
                   </button>
                 ) : null}
@@ -149,7 +151,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                   disabled={busy}
                   onClick={() =>
                     run(async () => {
-                      await testWebhook(h.id);
+                      act(await testWebhook(h.id));
                       setTestResult(t("pinged", { url: h.url }));
                     })
                   }
@@ -157,7 +159,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                 >
                   <Radio className="h-3.5 w-3.5" /> {t("test")}
                 </button>
-                <button type="button" disabled={busy} onClick={() => run(() => deleteWebhook(h.id))} className="text-grey hover:text-danger" aria-label={t("delete")}>
+                <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deleteWebhook(h.id)); }} className="text-grey hover:text-danger" aria-label={t("delete")}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </li>

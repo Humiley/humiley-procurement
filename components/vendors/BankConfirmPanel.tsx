@@ -6,12 +6,15 @@ import { useTranslations } from "next-intl";
 import { ShieldAlert } from "lucide-react";
 import { SignatureDialog } from "@/components/shared/SignatureDialog";
 import { confirmVendorBank } from "@/app/(portal)/vendors/actions";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
 
 export type FrozenVendorRow = { id: string; code: string; nameEn: string; bankName: string | null; bankAccount: string | null; changedBy: string | null };
 
 /** §15 vendor bank-change dual control — a DIRECTOR signs the call-back confirmation (or rejects → revert). */
 export function BankConfirmPanel({ rows, canConfirm }: { rows: FrozenVendorRow[]; canConfirm: boolean }) {
   const t = useTranslations("bankctl");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [target, setTarget] = useState<{ id: string; approve: boolean } | null>(null);
 
@@ -54,9 +57,11 @@ export function BankConfirmPanel({ rows, canConfirm }: { rows: FrozenVendorRow[]
         meaningLabel={() => (target?.approve ? t("meaningConfirm") : t("meaningReject"))}
         submitLabel={target?.approve ? t("confirm") : t("reject")}
         requireReason={!target?.approve}
+        context={(() => { const v = rows.find((r) => r.id === target?.id); return v ? `${v.code} · ${v.nameEn} — ${v.bankName ?? "—"} / ${v.bankAccount ?? "—"}` : undefined; })()}
         onConfirm={async (p) => {
-          await confirmVendorBank({ vendorId: target!.id, approve: target!.approve, password: p.password, comment: p.reason });
+          act(await confirmVendorBank({ vendorId: target!.id, approve: target!.approve, password: p.password, comment: p.reason }));
           setTarget(null);
+          toast(tc("done"));
           router.refresh();
         }}
       />

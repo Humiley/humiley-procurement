@@ -10,6 +10,8 @@ import { DocListPage, type ListColumn } from "@/components/shared/DocListPage";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ROLE_VALUES } from "@/lib/schemas/user";
 import { createUser, updateUser, resetUserPassword } from "@/app/(portal)/admin/users/actions";
+import { toast } from "@/components/shared/Toaster";
+import { act } from "@/lib/act";
 
 export type UserRow = {
   id: string;
@@ -162,22 +164,22 @@ function UserFormModal({
     setBusy(true);
     try {
       if (isEdit && user) {
-        await updateUser(user.id, {
+        act(await updateUser(user.id, {
           name,
           roles,
           departmentId: departmentId || null,
           isChief,
           isActive,
-        });
+        }));
       } else {
-        await createUser({
+        act(await createUser({
           name,
           email,
           roles,
           departmentId: departmentId || null,
           isChief,
           isActive,
-        });
+        }));
       }
       router.refresh();
       onClose();
@@ -191,7 +193,9 @@ function UserFormModal({
     if (!user) return;
     setBusy(true);
     try {
-      await resetUserPassword(user.id);
+      if (!window.confirm(t("common.confirmIrreversible"))) return;
+      act(await resetUserPassword(user.id));
+      toast(t("common.done"));
       router.refresh();
       onClose();
     } catch (e) {

@@ -30,29 +30,29 @@ export default async function DashboardPage() {
   ]);
 
   const byStatus = myPrs.reduce<Record<string, number>>((m, p) => ({ ...m, [p.status]: (m[p.status] ?? 0) + 1 }), {});
-  const money = (v: number) => `${v.toLocaleString("en-US")} ₫`;
+  const money = (v: number) => `${v.toLocaleString("en-US")}\u00A0₫`;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-navy">{t("title")}</h1>
+        <h1 className="text-balance text-2xl font-bold tracking-tight text-navy">{t("title")}</h1>
         <p className="mt-0.5 text-sm text-grey">{t("welcome", { name: user.name })}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label={t("myRequisitions")} value={myPrs.length} icon={FileText} href="/requisitions" />
-        <KpiCard label={t("pendingApprovals")} value={pendingApprovals} icon={CheckSquare} href="/approvals" accent="emerald" />
-        <KpiCard label={t("openPos")} value={openPos} icon={ShoppingCart} href="/purchase-orders" />
-        <KpiCard label={t("notifications")} value={unread} icon={Bell} href="/notifications" />
+        <KpiCard label={t("myRequisitions")} value={myPrs.length} icon={FileText} href="/requisitions" delay={0} />
+        <KpiCard label={t("pendingApprovals")} value={pendingApprovals} icon={CheckSquare} href="/approvals" accent="emerald" delay={1} />
+        <KpiCard label={t("openPos")} value={openPos} icon={ShoppingCart} href="/purchase-orders" delay={2} />
+        <KpiCard label={t("notifications")} value={unread} icon={Bell} href="/notifications" delay={3} />
       </div>
 
       {mgr ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard label={t("spendMtd")} value={money(mgr.spendMtd)} icon={Banknote} />
-            <KpiCard label={t("spendYtd")} value={money(mgr.spendYtd)} icon={TrendingUp} />
-            <KpiCard label={t("cycleTime")} value={`${mgr.cycleTimeDays} ${t("days")}`} icon={Timer} />
-            <KpiCard label={t("savings")} value={money(mgr.savingsVnd)} icon={PiggyBank} accent="emerald" />
+            <KpiCard label={t("spendMtd")} value={money(mgr.spendMtd)} icon={Banknote} delay={4} />
+            <KpiCard label={t("spendYtd")} value={money(mgr.spendYtd)} icon={TrendingUp} delay={5} />
+            <KpiCard label={t("cycleTime")} value={`${mgr.cycleTimeDays} ${t("days")}`} icon={Timer} delay={6} />
+            <KpiCard label={t("savings")} value={money(mgr.savingsVnd)} icon={PiggyBank} accent="emerald" delay={7} />
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

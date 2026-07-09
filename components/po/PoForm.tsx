@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPo } from "@/app/(portal)/purchase-orders/actions";
 import { INCOTERMS_2020, VAT_RATES } from "@/lib/schemas/po";
+import { act } from "@/lib/act";
+import { MoneyInput } from "@/components/shared/MoneyInput";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
+
+/** Keep only digits and at most one decimal dot. */
+function cleanQty(v: string): string {
+  const s = v.replace(/[^\d.]/g, "");
+  const i = s.indexOf(".");
+  return i === -1 ? s : s.slice(0, i + 1) + s.slice(i + 1).replace(/\./g, "");
+}
 
 export type PoFormOpt = { id: string; label: string };
 export type PoVendorContract = { contractNumber: string; prices: Record<string, string> };
@@ -33,9 +43,10 @@ export function PoForm({
   contracts?: Record<string, PoVendorContract>;
 }) {
   const t = useTranslations("po");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
-  const [vendorId, setVendorId] = useState(vendors[0]?.id || "");
+  const [vendorId, setVendorId] = useState("");
   const [currency, setCurrency] = useState("VND");
   const [fxRate, setFxRate] = useState("1");
   const [paymentTerms, setPaymentTerms] = useState("");
@@ -50,6 +61,8 @@ export function PoForm({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   // §9: an ACTIVE framework agreement auto-fills contracted prices; edits are flagged inline.
   const activeContract = contracts[vendorId];
@@ -72,9 +85,13 @@ export function PoForm({
 
   async function submit() {
     setError(null);
+    if (!vendorId) {
+      setError(tc("required"));
+      return;
+    }
     setBusy(true);
     try {
-      const res = await createPo({
+      const res = act(await createPo({
         vendorId,
         prId: fromPr?.id ?? null,
         currency,
@@ -87,7 +104,8 @@ export function PoForm({
         warrantyTerms,
         vatPct: vatPct as never,
         lines: lines.map((l) => ({ ...l, qty: String(l.qty), unitPrice: String(l.unitPrice) })),
-      });
+      }));
+      setTouched(false);
       router.push(`/purchase-orders/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -97,7 +115,7 @@ export function PoForm({
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {fromPr ? (
         <p className="rounded-lg bg-navy/5 px-3 py-2 text-sm text-navy">{t("fromPr", { ref: fromPr.label })}</p>
@@ -110,7 +128,8 @@ export function PoForm({
       <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("vendor")} *</span>
-          <select className={field} value={vendorId} onChange={(e) => setVendorId(e.target.value)}>
+          <select className={field} value={vendorId} required onChange={(e) => setVendorId(e.target.value)}>
+            <option value="">—</option>
             {vendors.map((v) => (
               <option key={v.id} value={v.id}>{v.label}</option>
             ))}
@@ -189,10 +208,10 @@ export function PoForm({
                   </select>
                 </td>
                 <td className="px-2 py-1.5">
-                  <input className={`${field} text-right`} value={l.qty} onChange={(e) => setLine(i, { qty: e.target.value })} />
+                  <input className={`${field} text-right tabular-nums`} inputMode="decimal" value={l.qty} onChange={(e) => setLine(i, { qty: cleanQty(e.target.value) })} />
                 </td>
                 <td className="px-2 py-1.5">
-                  <input className={`${field} text-right`} value={l.unitPrice} onChange={(e) => setLine(i, { unitPrice: e.target.value })} />
+                  <MoneyInput value={l.unitPrice} onChange={(raw) => setLine(i, { unitPrice: raw })} />
                   {activeContract && l.itemId && activeContract.prices[l.itemId] ? (
                     <span className={`mt-0.5 block text-right text-[10px] font-semibold ${Number(l.unitPrice) === Number(activeContract.prices[l.itemId]) ? "text-emerald" : "text-danger"}`}>
                       {t("contractPrice")}: {Number(activeContract.prices[l.itemId]).toLocaleString("en-US")}

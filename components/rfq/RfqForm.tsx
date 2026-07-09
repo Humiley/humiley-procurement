@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createRfq } from "@/app/(portal)/rfqs/actions";
+import { act } from "@/lib/act";
 
 export type RfqFormOpt = { id: string; label: string };
 export type RfqFormLine = { itemId?: string | null; description: string; uomId?: string | null; qty: string };
@@ -49,13 +50,13 @@ export function RfqForm({
     setError(null);
     setBusy(true);
     try {
-      const res = await createRfq({
+      const res = act(await createRfq({
         title,
         prId: fromPr?.id ?? null,
         dueDate,
         vendorIds: Array.from(selected),
         lines: lines.map((l) => ({ ...l, qty: String(l.qty) })),
-      });
+      }));
       router.push(`/rfqs/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));

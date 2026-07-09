@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
-import { ScrollText, AlertTriangle } from "lucide-react";
+import { ScrollText, AlertTriangle, Ruler, Coins } from "lucide-react";
 import { ymdHmVn } from "@/lib/dates";
 import { IntegrityPanel } from "@/components/admin/IntegrityPanel";
 import { IntegrationPanels, type ApiKeyRow, type WebhookRow } from "@/components/admin/IntegrationPanels";
@@ -12,6 +12,7 @@ import { FileSpreadsheet } from "lucide-react";
 export default async function SettingsPage() {
   await requireRoles("ADMIN");
   const t = await getTranslations("adminSettings");
+  const tm = await getTranslations("admin.md");
 
   const [auditCount, exceptionCount, sigCount, apiKeys, webhooks] = await Promise.all([
     db.auditLog.count(),
@@ -58,6 +59,20 @@ export default async function SettingsPage() {
           <span>
             <span className="block text-sm font-semibold text-navy">{t("exceptionTitle")}</span>
             <span className="block text-xs text-grey">{t("exceptionDesc", { count: exceptionCount })}</span>
+          </span>
+        </Link>
+        <Link href="/admin/cost-centers" className="card flex items-center gap-3 p-4 transition hover:shadow-md">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy/10 text-navy"><Coins className="h-5 w-5" /></span>
+          <span>
+            <span className="block text-sm font-semibold text-navy">{tm("costCenters.title")}</span>
+            <span className="block text-xs text-grey">{tm("costCenters.subtitle")}</span>
+          </span>
+        </Link>
+        <Link href="/admin/uom" className="card flex items-center gap-3 p-4 transition hover:shadow-md">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald/10 text-emerald"><Ruler className="h-5 w-5" /></span>
+          <span>
+            <span className="block text-sm font-semibold text-navy">{tm("uom.title")}</span>
+            <span className="block text-xs text-grey">{tm("uom.subtitle")}</span>
           </span>
         </Link>
       </div>

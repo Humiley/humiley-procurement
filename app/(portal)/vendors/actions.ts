@@ -10,6 +10,7 @@ import { transition, staleError } from "@/lib/workflow/transition";
 import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import type { SignatureMeaning } from "@prisma/client";
+import { guard } from "@/lib/safe-action";
 
 type FormValues = Record<string, string | boolean>;
 
@@ -20,7 +21,7 @@ function rethrow(e: unknown): never {
   throw e;
 }
 
-export async function createVendor(values: FormValues) {
+async function _createVendor(values: FormValues) {
   const user = await requireRoles("ADMIN", "PURCHASER");
   const data = vendorSchema.parse(values);
   try {
@@ -49,7 +50,7 @@ export async function createVendor(values: FormValues) {
   }
 }
 
-export async function updateVendor(id: string, values: FormValues) {
+async function _updateVendor(id: string, values: FormValues) {
   const user = await requireRoles("ADMIN", "PURCHASER");
   const data = vendorSchema.parse(values);
   // §15 bank-change dual control: any change to bank name/account freezes NEW payment requests
@@ -111,7 +112,7 @@ export async function updateVendor(id: string, values: FormValues) {
 }
 
 /** §15: a DIRECTOR signs off the bank change (call-back done) — or rejects, reverting the details. */
-export async function confirmVendorBank(params: { vendorId: string; approve: boolean; password: string; comment?: string }) {
+async function _confirmVendorBank(params: { vendorId: string; approve: boolean; password: string; comment?: string }) {
   const user = await requireRoles("DIRECTOR", "ADMIN");
   const vendor = await db.vendor.findUnique({ where: { id: params.vendorId } });
   if (!vendor) throw new Error("Vendor not found.");
@@ -171,7 +172,7 @@ export async function confirmVendorBank(params: { vendorId: string; approve: boo
 /* ── §7 vendor lifecycle: DRAFT → PENDING → APPROVED (Director, via the §6 engine + §19 e-sign);
    APPROVED → BLACKLISTED (reason required — blocks selection on RFQ/PO). ── */
 
-export async function submitVendorForApproval(id: string) {
+async function _submitVendorForApproval(id: string) {
   const user = await requireRoles("ADMIN", "PURCHASER");
   const v = await db.vendor.findUnique({ where: { id } });
   if (!v) throw new Error("Vendor not found.");
@@ -196,7 +197,7 @@ export async function submitVendorForApproval(id: string) {
   return { id };
 }
 
-export async function decideVendor(params: { vendorId: string; decision: Decision; password: string; comment?: string }) {
+async function _decideVendor(params: { vendorId: string; decision: Decision; password: string; comment?: string }) {
   const user = await requireUser();
   const v = await db.vendor.findUnique({ where: { id: params.vendorId } });
   if (!v) throw new Error("Vendor not found.");
@@ -257,7 +258,7 @@ export async function decideVendor(params: { vendorId: string; decision: Decisio
   return { outcome: result.outcome };
 }
 
-export async function blacklistVendor(id: string, reason: string) {
+async function _blacklistVendor(id: string, reason: string) {
   const user = await requireRoles("ADMIN", "DIRECTOR");
   if (!reason.trim()) throw new Error("A reason is required to blacklist a vendor.");
   const v = await db.vendor.findUnique({ where: { id } });
@@ -267,3 +268,11 @@ export async function blacklistVendor(id: string, reason: string) {
   await audit({ userId: user.id, action: "VENDOR_BLACKLIST", entityType: "Vendor", entityId: id, after: { reason: reason.trim() } });
   revalidatePath("/vendors");
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createVendor(...a: Parameters<typeof _createVendor>) { return guard(_createVendor, a); }
+export async function updateVendor(...a: Parameters<typeof _updateVendor>) { return guard(_updateVendor, a); }
+export async function confirmVendorBank(...a: Parameters<typeof _confirmVendorBank>) { return guard(_confirmVendorBank, a); }
+export async function submitVendorForApproval(...a: Parameters<typeof _submitVendorForApproval>) { return guard(_submitVendorForApproval, a); }
+export async function decideVendor(...a: Parameters<typeof _decideVendor>) { return guard(_decideVendor, a); }
+export async function blacklistVendor(...a: Parameters<typeof _blacklistVendor>) { return guard(_blacklistVendor, a); }

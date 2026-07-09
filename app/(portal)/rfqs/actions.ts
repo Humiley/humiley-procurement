@@ -10,12 +10,14 @@ import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
 import { sendMailRaw } from "@/lib/notify";
 import { rfqCreateSchema, quoteEntrySchema, type RfqFormPayload, type QuoteEntryPayload } from "@/lib/schemas/rfq";
+import { guard } from "@/lib/safe-action";
+import { act } from "@/lib/act";
 
 /** §8 3-quote policy: amounts above this need ≥3 invited vendors (override = justified Exception). */
 const THREE_QUOTE_THRESHOLD_VND = 100_000_000;
 
 /** Create an RFQ — from an APPROVED PR (lines copied) or standalone. PURCHASER/ADMIN. */
-export async function createRfq(input: RfqFormPayload) {
+async function _createRfq(input: RfqFormPayload) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const values = rfqCreateSchema.parse(input);
 
@@ -60,7 +62,7 @@ export async function createRfq(input: RfqFormPayload) {
  * DRAFT → SENT: emails the RFQ PDF to every invited vendor and stamps sentAt.
  * §8 3-quote rule: >100M estimate with <3 vendors requires a justification → Exception SINGLE_SOURCE.
  */
-export async function sendRfq(id: string, justification?: string) {
+async function _sendRfq(id: string, justification?: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const rfq = await db.rfq.findUnique({
     where: { id },
@@ -123,7 +125,7 @@ export async function sendRfq(id: string, justification?: string) {
 }
 
 /** Record a vendor's quote (re-entering replaces the previous one). Marks the vendor responded. */
-export async function enterQuote(input: QuoteEntryPayload) {
+async function _enterQuote(input: QuoteEntryPayload) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const values = quoteEntrySchema.parse(input);
 
@@ -173,7 +175,7 @@ export async function enterQuote(input: QuoteEntryPayload) {
  * Creates the PO prefilled from the winning quote (links PO.quoteId; consumes the source PR
  * when it is still APPROVED) and closes the RFQ as AWARDED.
  */
-export async function awardQuote(params: { rfqId: string; quoteId: string; justification?: string }) {
+async function _awardQuote(params: { rfqId: string; quoteId: string; justification?: string }) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const rfq = await db.rfq.findUnique({
     where: { id: params.rfqId },
@@ -207,7 +209,7 @@ export async function awardQuote(params: { rfqId: string; quoteId: string; justi
   // Build the PO from the winning quote (§8: auto-fill vendor + prices).
   const fallbackUom = await db.uom.findFirst({ orderBy: { code: "asc" }, select: { id: true } });
   const { createPo } = await import("@/app/(portal)/purchase-orders/actions");
-  const po = await createPo({
+  const po = act(await createPo({
     vendorId: winner.vendorId,
     prId: rfq.pr && rfq.pr.status === "APPROVED" ? rfq.pr.id : null,
     quoteId: winner.id,
@@ -222,7 +224,7 @@ export async function awardQuote(params: { rfqId: string; quoteId: string; justi
       qty: String(l.qty),
       unitPrice: String(l.unitPrice),
     })),
-  });
+  }));
 
   await db.quote.update({ where: { id: winner.id }, data: { isSelected: true } });
   if (!(await transition(db.rfq, rfq.id, "SENT", "AWARDED"))) throw staleError();
@@ -240,7 +242,7 @@ export async function awardQuote(params: { rfqId: string; quoteId: string; justi
   return { poId: po.id };
 }
 
-export async function closeRfq(id: string) {
+async function _closeRfq(id: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const rfq = await db.rfq.findUnique({ where: { id } });
   if (!rfq) throw new Error("RFQ not found.");
@@ -250,3 +252,10 @@ export async function closeRfq(id: string) {
   revalidatePath(`/rfqs/${id}`);
   revalidatePath("/rfqs");
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createRfq(...a: Parameters<typeof _createRfq>) { return guard(_createRfq, a); }
+export async function sendRfq(...a: Parameters<typeof _sendRfq>) { return guard(_sendRfq, a); }
+export async function enterQuote(...a: Parameters<typeof _enterQuote>) { return guard(_enterQuote, a); }
+export async function awardQuote(...a: Parameters<typeof _awardQuote>) { return guard(_awardQuote, a); }
+export async function closeRfq(...a: Parameters<typeof _closeRfq>) { return guard(_closeRfq, a); }

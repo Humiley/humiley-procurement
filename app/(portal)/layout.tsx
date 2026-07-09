@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { AppShell } from "@/components/shell/AppShell";
+import { Toaster } from "@/components/shared/Toaster";
 
 export default async function PortalLayout({
   children,
@@ -18,6 +19,7 @@ export default async function PortalLayout({
       unreadCount={unreadCount}
     >
       {children}
+      <Toaster />
     </AppShell>
   );
 }

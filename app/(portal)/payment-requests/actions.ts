@@ -11,6 +11,7 @@ import { createSteps, applyDecision, type Decision, assertCurrentApprover } from
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { payReqCreateSchema, type PayReqCreatePayload } from "@/lib/schemas/payreq";
 import type { SignatureMeaning } from "@prisma/client";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
@@ -27,7 +28,7 @@ async function unsettledOldAdvance(userId: string) {
 }
 
 /** §10a: create a payment request — four types, type-specific sourcing + payee autofill. */
-export async function createPaymentRequest(input: PayReqCreatePayload) {
+async function _createPaymentRequest(input: PayReqCreatePayload) {
   const user = await requireUser();
   const values = payReqCreateSchema.parse(input);
 
@@ -133,7 +134,7 @@ export async function createPaymentRequest(input: PayReqCreatePayload) {
 }
 
 /** DRAFT → SUBMITTED into the §6 engine. Reimbursements must carry their receipts (§10a). */
-export async function submitPaymentRequest(id: string) {
+async function _submitPaymentRequest(id: string) {
   const user = await requireUser();
   const preq = await db.paymentRequest.findUnique({ where: { id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -166,7 +167,7 @@ export async function submitPaymentRequest(id: string) {
 }
 
 /** §10a: the mandatory ACCOUNTANT verification (invoice validity / tax compliance) — a VERIFIED signature. */
-export async function verifyPaymentRequest(params: { id: string; password: string; comment?: string }) {
+async function _verifyPaymentRequest(params: { id: string; password: string; comment?: string }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -199,7 +200,7 @@ export async function verifyPaymentRequest(params: { id: string; password: strin
 }
 
 /** §6 + §19 decision; the FINAL approval is blocked until accounting has verified (§10a). */
-export async function decidePaymentRequest(params: { id: string; decision: Decision; password: string; comment?: string }) {
+async function _decidePaymentRequest(params: { id: string; decision: Decision; password: string; comment?: string }) {
   const user = await requireUser();
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -260,7 +261,7 @@ let sig;
 }
 
 /** §10a payment execution: PAID signature + bank reference; cascades PAID to the linked invoices. */
-export async function markPaymentRequestPaid(params: { id: string; password: string; paymentRef: string }) {
+async function _markPaymentRequestPaid(params: { id: string; password: string; paymentRef: string }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   if (!params.paymentRef.trim()) throw new Error("Enter the bank/payment reference.");
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id }, include: { lines: true } });
@@ -305,7 +306,7 @@ export async function markPaymentRequestPaid(params: { id: string; password: str
   return { cascaded: invoiceIds.length };
 }
 
-export async function cancelPaymentRequest(id: string) {
+async function _cancelPaymentRequest(id: string) {
   const user = await requireUser();
   const preq = await db.paymentRequest.findUnique({ where: { id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -317,3 +318,11 @@ export async function cancelPaymentRequest(id: string) {
   revalidatePath(`/payment-requests/${id}`);
   revalidatePath("/payment-requests");
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createPaymentRequest(...a: Parameters<typeof _createPaymentRequest>) { return guard(_createPaymentRequest, a); }
+export async function submitPaymentRequest(...a: Parameters<typeof _submitPaymentRequest>) { return guard(_submitPaymentRequest, a); }
+export async function verifyPaymentRequest(...a: Parameters<typeof _verifyPaymentRequest>) { return guard(_verifyPaymentRequest, a); }
+export async function decidePaymentRequest(...a: Parameters<typeof _decidePaymentRequest>) { return guard(_decidePaymentRequest, a); }
+export async function markPaymentRequestPaid(...a: Parameters<typeof _markPaymentRequestPaid>) { return guard(_markPaymentRequestPaid, a); }
+export async function cancelPaymentRequest(...a: Parameters<typeof _cancelPaymentRequest>) { return guard(_cancelPaymentRequest, a); }

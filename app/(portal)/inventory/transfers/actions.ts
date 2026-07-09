@@ -12,11 +12,12 @@ import { postMovement, StockError } from "@/lib/stock/post-movement";
 import { checkReorderAfterOut } from "@/lib/stock/reorder";
 import { transferCreateSchema, type TransferCreatePayload } from "@/lib/schemas/transfer";
 import { assertWarehouseKeeper } from "@/lib/stock/keeper";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
 /** §10b stock transfer: TRANSFER_OUT on dispatch (IN_TRANSIT) → TRANSFER_IN on receipt, same cost. */
-export async function createTransfer(input: TransferCreatePayload) {
+async function _createTransfer(input: TransferCreatePayload) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = transferCreateSchema.parse(input);
 
@@ -40,7 +41,7 @@ export async function createTransfer(input: TransferCreatePayload) {
 }
 
 /** Dispatch: ISSUED signature; every line posts TRANSFER_OUT at the source's avg cost. */
-export async function dispatchTransfer(params: { id: string; password: string }) {
+async function _dispatchTransfer(params: { id: string; password: string }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const trf = await db.stockTransfer.findUnique({
     where: { id: params.id },
@@ -141,7 +142,7 @@ export async function dispatchTransfer(params: { id: string; password: string })
 }
 
 /** Receive: RECEIVED signature; TRANSFER_IN into the destination at the dispatch cost. */
-export async function receiveTransfer(params: { id: string; password: string }) {
+async function _receiveTransfer(params: { id: string; password: string }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const trf = await db.stockTransfer.findUnique({ where: { id: params.id }, include: { lines: true } });
   if (!trf) throw new Error("Transfer not found.");
@@ -209,7 +210,7 @@ export async function receiveTransfer(params: { id: string; password: string }) 
   return { id: trf.id };
 }
 
-export async function cancelTransfer(id: string) {
+async function _cancelTransfer(id: string) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const trf = await db.stockTransfer.findUnique({ where: { id } });
   if (!trf) throw new Error("Transfer not found.");
@@ -219,3 +220,9 @@ export async function cancelTransfer(id: string) {
   revalidatePath("/inventory/transfers");
   return { id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createTransfer(...a: Parameters<typeof _createTransfer>) { return guard(_createTransfer, a); }
+export async function dispatchTransfer(...a: Parameters<typeof _dispatchTransfer>) { return guard(_dispatchTransfer, a); }
+export async function receiveTransfer(...a: Parameters<typeof _receiveTransfer>) { return guard(_receiveTransfer, a); }
+export async function cancelTransfer(...a: Parameters<typeof _cancelTransfer>) { return guard(_cancelTransfer, a); }

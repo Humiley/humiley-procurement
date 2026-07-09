@@ -4,8 +4,10 @@ import { useState, useTransition } from "react";
 import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "@/components/shared/Toaster";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { verifyInvoice, markInvoicePaid } from "@/app/(portal)/invoices/actions";
+import { act } from "@/lib/act";
 
 /** §9 + §19: verify the 3-way match (VERIFIED) and record payment (PAID) — both signing ceremonies. */
 export function InvoiceDetailActions({
@@ -22,6 +24,7 @@ export function InvoiceDetailActions({
   paymentStatus: string;
 }) {
   const t = useTranslations("invoice");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [dialog, setDialog] = useState<null | "verify" | "paid" | "partial">(null);
@@ -31,11 +34,12 @@ export function InvoiceDetailActions({
   async function onSign(payload: SignaturePayload) {
     try {
       if (dialog === "verify") {
-        await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason });
+        act(await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason }));
       } else {
-        await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial" });
+        act(await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial" }));
       }
       setDialog(null);
+      toast(tc("done"));
       start(() => router.refresh());
     } catch (e) {
       setDialog(null);

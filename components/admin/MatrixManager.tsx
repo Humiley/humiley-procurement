@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2, UserCog } from "lucide-react";
 import { addMatrixRow, deleteMatrixRow, reassignStep } from "@/app/(portal)/admin/governance.actions";
+import { act } from "@/lib/act";
 
 export type MatrixRow = { id: string; entityType: string; min: string; max: string | null; level: number; approverRole: string | null };
 export type PendingStepRow = { id: string; entityType: string; refLabel: string; level: number; approver: string; approverId: string };
@@ -20,6 +21,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
   const fmtErr = useActionError();
   const ta = useTranslations("approvals.type");
   const tr = useTranslations("roles");
+  const tcm = useTranslations("common");
   const router = useRouter();
   const [entityType, setEntityType] = useState("PR");
   const [minA, setMinA] = useState("0");
@@ -34,7 +36,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
     setError(null);
     setBusy(true);
     try {
-      await fn();
+      act(await fn());
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));
@@ -90,7 +92,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
                   <td className="py-1.5">L{r.level}</td>
                   <td className="py-1.5">{r.approverRole ? tr(r.approverRole) : "—"}</td>
                   <td className="py-1.5 text-right">
-                    <button type="button" disabled={busy} onClick={() => run(() => deleteMatrixRow(r.id))} className="text-grey hover:text-danger" aria-label={t("delete")}>
+                    <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deleteMatrixRow(r.id)); }} className="text-grey hover:text-danger" aria-label={t("delete")}>
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>

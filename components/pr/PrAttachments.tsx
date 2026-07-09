@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "@/components/shared/Toaster";
 import { useRouter } from "next/navigation";
 import { Paperclip, Download, Trash2, Upload, Loader2 } from "lucide-react";
 import { deleteAttachment } from "@/app/(portal)/attachments.actions";
+import { act } from "@/lib/act";
 
 export type PrAttachment = {
   id: string;
@@ -27,6 +29,7 @@ export function PrAttachments({
   refreshPath?: string;
 }) {
   const t = useTranslations("attach");
+  const tc = useTranslations("common");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -54,9 +57,11 @@ export function PrAttachments({
   }
 
   async function remove(id: string) {
+    if (!window.confirm(tc("deleteAttachmentConfirm"))) return;
     setBusy(true);
     try {
-      await deleteAttachment(id, refreshPath ?? `/requisitions/${entityId}`);
+      act(await deleteAttachment(id, refreshPath ?? `/requisitions/${entityId}`));
+      toast(tc("done"));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("removeFailed"));

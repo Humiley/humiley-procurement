@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useTranslations } from "next-intl";
 import { Search, Calculator, Loader2 } from "lucide-react";
 import { searchTrade, estimateLanded, type TradeHit, type EstimateResult } from "@/app/(portal)/trade/estimator/actions";
+import { act } from "@/lib/act";
 
 /** §20 landed-cost estimator — search an item/HS code, enter commercials, compare duty routes. */
 export function Estimator({ rates }: { rates: Record<string, number> }) {
@@ -27,7 +28,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
   useEffect(() => {
     const h = setTimeout(async () => {
       if (q.trim().length < 2) return setHits([]);
-      setHits(await searchTrade(q));
+      setHits(act(await searchTrade(q)));
     }, 250);
     return () => clearTimeout(h);
   }, [q]);
@@ -43,7 +44,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
     setBusy(true);
     try {
       setResult(
-        await estimateLanded({
+        act(await estimateLanded({
           hsCodeId: picked.hsCodeId,
           itemId: picked.itemId,
           unitPrice,
@@ -53,7 +54,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
           freightEstVnd: freight || "0",
           handlingEstVnd: handling || "0",
           originCountry: origin || null,
-        }),
+        })),
       );
     } catch (e) {
       setError(fmtErr(e));

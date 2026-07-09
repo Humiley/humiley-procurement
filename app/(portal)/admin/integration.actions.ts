@@ -7,10 +7,11 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { mintApiToken } from "@/lib/api-auth";
 import { fireWebhook, type WebhookEvent } from "@/lib/webhooks";
+import { guard } from "@/lib/safe-action";
 
 /* ── §17 API keys ── */
 
-export async function createApiKey(name: string) {
+async function _createApiKey(name: string) {
   const admin = await requireRoles("ADMIN");
   const clean = name.trim();
   if (!clean) throw new Error("Name the key (e.g. 'MISA accounting').");
@@ -21,7 +22,7 @@ export async function createApiKey(name: string) {
   return { id: row.id, token }; // plaintext shown exactly once
 }
 
-export async function deactivateApiKey(id: string) {
+async function _deactivateApiKey(id: string) {
   const admin = await requireRoles("ADMIN");
   await db.apiKey.update({ where: { id }, data: { isActive: false } });
   await audit({ userId: admin.id, action: "APIKEY_DEACTIVATE", entityType: "ApiKey", entityId: id });
@@ -39,7 +40,7 @@ const webhookSchema = z.object({
 });
 export type WebhookPayload = z.input<typeof webhookSchema>;
 
-export async function createWebhook(input: WebhookPayload) {
+async function _createWebhook(input: WebhookPayload) {
   const admin = await requireRoles("ADMIN");
   const v = webhookSchema.parse(input);
   const row = await db.webhookSubscription.create({ data: { url: v.url, events: v.events, secret: v.secret || null } });
@@ -48,7 +49,7 @@ export async function createWebhook(input: WebhookPayload) {
   return { id: row.id };
 }
 
-export async function deleteWebhook(id: string) {
+async function _deleteWebhook(id: string) {
   const admin = await requireRoles("ADMIN");
   const row = await db.webhookSubscription.delete({ where: { id } });
   await audit({ userId: admin.id, action: "WEBHOOK_DELETE", entityType: "WebhookSubscription", entityId: id, before: { url: row.url } });
@@ -57,7 +58,7 @@ export async function deleteWebhook(id: string) {
 }
 
 /** Send a test ping to ONE subscription (temporarily targeting its URL with the test event). */
-export async function testWebhook(id: string) {
+async function _testWebhook(id: string) {
   const admin = await requireRoles("ADMIN");
   const sub = await db.webhookSubscription.findUnique({ where: { id } });
   if (!sub) throw new Error("Subscription not found.");
@@ -72,3 +73,10 @@ export async function testWebhook(id: string) {
   }
   return { ok: true };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createApiKey(...a: Parameters<typeof _createApiKey>) { return guard(_createApiKey, a); }
+export async function deactivateApiKey(...a: Parameters<typeof _deactivateApiKey>) { return guard(_deactivateApiKey, a); }
+export async function createWebhook(...a: Parameters<typeof _createWebhook>) { return guard(_createWebhook, a); }
+export async function deleteWebhook(...a: Parameters<typeof _deleteWebhook>) { return guard(_deleteWebhook, a); }
+export async function testWebhook(...a: Parameters<typeof _testWebhook>) { return guard(_testWebhook, a); }

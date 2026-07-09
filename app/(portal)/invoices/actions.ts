@@ -8,6 +8,7 @@ import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { invoiceCreateSchema, type InvoiceCreatePayload } from "@/lib/schemas/grn";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
@@ -28,7 +29,7 @@ export type MatchLine = {
 };
 
 /** Compare invoice lines against PO price and GRN-accepted quantities. */
-export async function computeMatch(invoiceId: string): Promise<{ lines: MatchLine[]; matched: boolean }> {
+async function _computeMatch(invoiceId: string): Promise<{ lines: MatchLine[]; matched: boolean }> {
   const inv = await db.invoice.findUnique({
     where: { id: invoiceId },
     include: { lines: { include: { poLine: true } } },
@@ -65,7 +66,7 @@ export async function computeMatch(invoiceId: string): Promise<{ lines: MatchLin
 }
 
 /** §9: enter a vendor invoice against a PO (ACCOUNTANT). Due date from the vendor's payment terms. */
-export async function createInvoice(input: InvoiceCreatePayload) {
+async function _createInvoice(input: InvoiceCreatePayload) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const values = invoiceCreateSchema.parse(input);
 
@@ -118,7 +119,7 @@ export async function createInvoice(input: InvoiceCreatePayload) {
   });
 
   // first-pass match result stored for the register badge
-  const match = await computeMatch(inv.id);
+  const match = await _computeMatch(inv.id);
   await db.invoice.update({ where: { id: inv.id }, data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" } });
 
   await audit({ userId: user.id, action: "INVOICE_CREATE", entityType: "Invoice", entityId: inv.id, after: { invoiceNumber: inv.invoiceNumber, po: po.poNumber, total: String(subtotal.plus(vatAmount)), matched: match.matched } });
@@ -131,7 +132,7 @@ export async function createInvoice(input: InvoiceCreatePayload) {
  * A MISMATCH requires an override comment → Exception TOLERANCE_OVERRIDE.
  * On verify the invoiced quantities post to the PO lines and the budget moves commit → spent.
  */
-export async function verifyInvoice(params: { invoiceId: string; password: string; overrideComment?: string }) {
+async function _verifyInvoice(params: { invoiceId: string; password: string; overrideComment?: string }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const inv = await db.invoice.findUnique({
     where: { id: params.invoiceId },
@@ -141,7 +142,7 @@ export async function verifyInvoice(params: { invoiceId: string; password: strin
   const already = await db.electronicSignature.findFirst({ where: { entityType: "Invoice", entityId: inv.id, meaning: "VERIFIED" } });
   if (already) throw new Error("This invoice is already verified.");
 
-  const match = await computeMatch(inv.id);
+  const match = await _computeMatch(inv.id);
   if (!match.matched && !(params.overrideComment || "").trim()) {
     throw new Error("The 3-way match has mismatches — an override comment is required to verify anyway.");
   }
@@ -202,7 +203,7 @@ export async function verifyInvoice(params: { invoiceId: string; password: strin
 }
 
 /** §9 + §19: payment status — PAID / PARTIALLY_PAID with a signature (meaning PAID). */
-export async function markInvoicePaid(params: { invoiceId: string; password: string; partial?: boolean }) {
+async function _markInvoicePaid(params: { invoiceId: string; password: string; partial?: boolean }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const inv = await db.invoice.findUnique({ where: { id: params.invoiceId }, include: { po: { select: { poNumber: true } } } });
   if (!inv) throw new Error("Invoice not found.");
@@ -234,3 +235,9 @@ export async function markInvoicePaid(params: { invoiceId: string; password: str
   revalidatePath(`/invoices/${inv.id}`);
   revalidatePath("/invoices");
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function computeMatch(...a: Parameters<typeof _computeMatch>) { return guard(_computeMatch, a); }
+export async function createInvoice(...a: Parameters<typeof _createInvoice>) { return guard(_createInvoice, a); }
+export async function verifyInvoice(...a: Parameters<typeof _verifyInvoice>) { return guard(_verifyInvoice, a); }
+export async function markInvoicePaid(...a: Parameters<typeof _markInvoicePaid>) { return guard(_markInvoicePaid, a); }

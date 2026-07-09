@@ -40,7 +40,12 @@
     "attachments": "Tệp đính kèm",
     "audit": "Nhật ký",
     "approvals": "Phê duyệt & Chữ ký",
-    "actionFailed": "Thao tác thất bại. Vui lòng thử lại."
+    "actionFailed": "Thao tác thất bại. Vui lòng thử lại.",
+    "done": "Đã hoàn tất.",
+    "confirmIrreversible": "Hành động này không thể hoàn tác. Tiếp tục?",
+    "deleteAttachmentConfirm": "Xóa tệp đính kèm này?",
+    "skipToContent": "Bỏ qua, đến nội dung chính",
+    "unsavedWarn": "Bạn có thay đổi chưa lưu."
   },
   "auth": {
     "signIn": "Đăng nhập",
@@ -87,7 +92,8 @@
     "groupProcure": "Mua sắm",
     "groupInventory": "Kho hàng",
     "groupTrade": "Thương mại & Tra cứu",
-    "groupInsight": "Phân tích"
+    "groupInsight": "Phân tích",
+    "menu": "Mở menu"
   },
   "dashboard": {
     "notifications": "Thông báo chưa đọc",
@@ -912,7 +918,9 @@
     "close": "Đóng",
     "errPassword": "Nhập mật khẩu để ký.",
     "errReason": "Cần nhập lý do.",
-    "errFailed": "Ký không thành công."
+    "errFailed": "Ký không thành công.",
+    "signing": "Bạn đang ký",
+    "bankRef": "Số tham chiếu ngân hàng / thanh toán"
   },
   "grn": {
     "lot": "Lô",
@@ -1089,5 +1097,24 @@
     "created": "Đã tạo",
     "updated": "Đã cập nhật",
     "skipped": "Bỏ qua"
+  },
+  "prereq": {
+    "title": "Cần thiết lập trước",
+    "prBody": "Yêu cầu mua hàng cần trung tâm chi phí cho phòng ban của bạn, nhưng chưa có. Hãy nhờ quản trị viên tạo trước, sau đó quay lại.",
+    "poBody": "Đơn đặt hàng cần nhà cung cấp đã được phê duyệt, nhưng chưa có. Hãy phê duyệt nhà cung cấp trước, sau đó quay lại.",
+    "grnBody": "Chỉ có thể nhập kho theo đơn đặt hàng đã gửi, hiện chưa có đơn nào đang mở.",
+    "adminLink": "Mở trang quản trị",
+    "backToList": "Quay lại danh sách"
+  },
+  "notif": {
+    "marking": "Đang đánh dấu…"
+  },
+  "shell": {
+    "searchHint": "Tìm số chứng từ — mở trung tâm quét mã"
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "body": "Trang bạn tìm không tồn tại, đã được di chuyển, hoặc bạn không có quyền truy cập.",
+    "home": "Về bảng điều khiển"
   }
 }

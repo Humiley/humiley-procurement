@@ -3,12 +3,13 @@ import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { pendingExportCounts } from "@/app/(portal)/admin/export.actions";
 import { ExportPanel } from "@/components/admin/ExportPanel";
+import { act } from "@/lib/act";
 
 /** §17 accounting export console (MISA/Bravo import batches). ACCOUNTANT/ADMIN. */
 export default async function AccountingExportPage() {
   await requireRoles("ACCOUNTANT", "ADMIN");
   const t = await getTranslations("acctExport");
-  const { invoices, payments, batches } = await pendingExportCounts();
+  const { invoices, payments, batches } = act(await pendingExportCounts());
 
   return (
     <div className="space-y-4">

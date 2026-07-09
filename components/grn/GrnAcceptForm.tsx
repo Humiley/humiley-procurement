@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { acceptGrn } from "@/app/(portal)/goods-receipts/actions";
+import { act } from "@/lib/act";
 
 export type GrnQcLine = { grnLineId: string; description: string; received: string; lotTracked?: boolean };
 
@@ -21,8 +22,24 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
 
+  // Validate BEFORE the e-sign ceremony so a bad quantity never throws a signature away:
+  // accepted + rejected must equal received, and a rejection needs a reason.
+  function validateQc(): string | null {
+    for (const l of lines) {
+      const q = qc[l.grnLineId];
+      const a = Number(q.a || "0");
+      const r = Number(q.r || "0");
+      const rec = Number(l.received);
+      if (!Number.isFinite(a) || !Number.isFinite(r) || a < 0 || r < 0 || Math.abs(a + r - rec) > 1e-9) {
+        return t("qcTitle");
+      }
+      if (r > 0 && !q.reason.trim()) return t("reasonPh");
+    }
+    return null;
+  }
+
   async function onSign(payload: SignaturePayload) {
-    await acceptGrn({
+    act(await acceptGrn({
       payload: {
         grnId,
         lines: lines.map((l) => ({
@@ -35,7 +52,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
         })),
       },
       password: payload.password,
-    });
+    }));
     setSignOpen(false);
     start(() => router.refresh());
   }
@@ -74,7 +91,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
       </table>
       </div>
       <div className="mt-3 flex justify-end">
-        <button type="button" className="rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90" onClick={() => { setError(null); setSignOpen(true); }}>
+        <button type="button" className="rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90" onClick={() => { const v = validateQc(); setError(v); if (!v) setSignOpen(true); }}>
           {t("acceptSign")}
         </button>
       </div>

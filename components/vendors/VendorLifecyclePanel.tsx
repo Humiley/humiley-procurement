@@ -4,17 +4,22 @@ import { useState, useTransition } from "react";
 import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "@/components/shared/Toaster";
+import { TextPromptDialog } from "@/components/shared/TextPromptDialog";
 import { ShieldCheck } from "lucide-react";
 import { submitVendorForApproval, blacklistVendor } from "@/app/(portal)/vendors/actions";
+import { act } from "@/lib/act";
 
 export type VendorLcRow = { id: string; code: string; nameEn: string; status: string };
 
 /** §7 vendor lifecycle panel: submit drafts for Director approval; blacklist approved vendors. */
 export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[]; canManage: boolean }) {
   const t = useTranslations("vendors.lifecycle");
+  const tcm = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [blacklistFor, setBlacklistFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
 
@@ -25,7 +30,8 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
     setError(null);
     setBusy(id);
     try {
-      await fn();
+      act(await fn());
+      toast(tcm("done"));
       start(() => router.refresh());
     } catch (e) {
       setError(fmtErr(e));
@@ -61,10 +67,7 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
               <button
                 className="rounded-lg border border-danger/30 px-2.5 py-1 text-xs font-semibold text-danger hover:bg-danger/5 disabled:opacity-50"
                 disabled={busy === v.id}
-                onClick={() => {
-                  const reason = window.prompt(t("blacklistReason"));
-                  if (reason) run(v.id, () => blacklistVendor(v.id, reason));
-                }}
+                onClick={() => setBlacklistFor(v.id)}
               >
                 {busy === v.id ? "…" : t("blacklist")}
               </button>
@@ -72,6 +75,18 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
           </li>
         ))}
       </ul>
+      <TextPromptDialog
+        open={!!blacklistFor}
+        title={t("blacklist")}
+        label={t("blacklistReason")}
+        danger
+        onClose={() => setBlacklistFor(null)}
+        onConfirm={async (reason) => {
+          const id = blacklistFor!;
+          setBlacklistFor(null);
+          await run(id, () => blacklistVendor(id, reason));
+        }}
+      />
     </div>
   );
 }

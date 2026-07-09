@@ -104,6 +104,7 @@ export function PrLinesEditor({
                   <select
                     className="field"
                     value={l.itemId}
+                    aria-label={t("thItem")}
                     onChange={(e) => pickItem(l.key, e.target.value)}
                   >
                     <option value="">{t("freeText")}</option>
@@ -117,6 +118,7 @@ export function PrLinesEditor({
                     <input
                       className="field mt-1"
                       placeholder={t("freeTextPlaceholder")}
+                      aria-label={t("freeTextPlaceholder")}
                       value={l.freeTextDescription}
                       onChange={(e) => update(l.key, { freeTextDescription: e.target.value })}
                     />
@@ -136,6 +138,7 @@ export function PrLinesEditor({
                     className="field"
                     value={l.uomId}
                     disabled={!!l.itemId}
+                    aria-label={t("thUom")}
                     onChange={(e) => update(l.key, { uomId: e.target.value })}
                   >
                     <option value="">—</option>
@@ -150,12 +153,13 @@ export function PrLinesEditor({
                   <input
                     className="field text-right tabular-nums"
                     inputMode="decimal"
+                    aria-label={t("qty")}
                     value={l.qty}
                     onChange={(e) => update(l.key, { qty: e.target.value.replace(/[^\d.]/g, "") })}
                   />
                 </td>
                 <td className="td">
-                  <MoneyInput value={l.unitPrice} onChange={(raw) => update(l.key, { unitPrice: raw })} />
+                  <MoneyInput value={l.unitPrice} ariaLabel={t("unitPrice")} onChange={(raw) => update(l.key, { unitPrice: raw })} />
                 </td>
                 <td className="td text-right font-medium tabular-nums">
                   {vnd.format(prLineAmount(l))}

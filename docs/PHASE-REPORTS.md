@@ -1173,3 +1173,52 @@ EN/VI parity 963/963 keys.
 now admin-only server-side with unchanged-value tolerance; launcher normalizes scheme-less
 URLs and refuses non-http(s); login handoff tolerates repeated `?email=` params; permission
 grid shows locked checkboxes on admin rows; SW cache → v8.
+
+---
+
+# UI/UX Deep Audit — 2026-07-09 (62-agent review, same-day fixes)
+
+Six-dimension audit (states / navigation / forms / feedback / a11y / mobile) with
+adversarial verification: **52 confirmed** (9 high) from 56 raw, 4 refuted. All fixed same-day
+except the two noted skips. Highlights:
+
+**Production-critical:** Next.js redacts thrown Server-Action error messages in prod builds —
+every inline error (incl. wrong e-sign password) would have shown a generic English blob once
+deployed. All 87 actions now wrap their implementation in `guard()` (lib/safe-action.ts):
+expected failures travel as `{ __err }` DATA (ZodErrors formatted readable — was a raw JSON
+dump), and every client callsite unwraps via `act()` (lib/act.ts), so the existing try/catch
+UI works unchanged with real messages in production. Next control flow (redirect/notFound)
+passes through. NEW RULE: every client call of a server action MUST go through `act(await …)`.
+
+**Feedback & safety:** success toasts app-wide (components/shared/Toaster.tsx, mounted in the
+portal layout — actions previously refreshed silently); window.confirm on every irreversible
+action (cancel/close PO, terminate contract, cancel payreq/transfer, close RFQ, award→PO,
+attachment delete, admin deletes, password reset); compliance justifications (RFQ <3 vendors,
+award-not-lowest, vendor blacklist) moved from window.prompt to the accessible
+TextPromptDialog; signature dialogs keep typed input on error (used to close and discard the
+password); SignatureDialog shows a "You are signing: …" context line (approvals + vendor
+bank control); payment execution's bank-reference field is now labeled as such.
+
+**States & navigation:** app-wide route-transition skeleton (app/(portal)/loading.tsx) — link
+clicks previously froze the page with zero feedback; in-shell 404; notification click-through
+finally marks read (/notifications/go/[id]); single active sidebar item + aria-current; the
+dead topbar search now routes to the scan hub (?code= supported); register filters persist in
+the URL; prerequisite empty-states on create pages (no cost centers / approved vendors / open
+POs) instead of dead-end forms; back links on all create pages; /admin/uom + /admin/cost-centers
+reachable from Settings; ?overdue= highlights + scrolls to the SLA-flagged approval row.
+
+**Forms:** MoneyInput preserves the caret mid-edit; PO form uses MoneyInput + clean qty
+inputs (was bare text that silently previewed 0); vendor select no longer preselects the
+first vendor; GRN acceptance validates BEFORE the signing ceremony; GRN/Invoice/GI block
+empty-qty submits client-side; date mins (neededBy/dueDate today+, contract end ≥ start);
+beforeunload unsaved-changes guard on all 7 long forms.
+
+**A11y & mobile:** dialogs are real modals (role/aria-modal/focus trap/Escape/focus restore/
+scroll lock); labels associated app-wide in shared dialogs + line editors; sortable headers
+keyboard-operable with aria-sort; drawer inert when closed, Escape, labeled close, 40px
+targets; skip-to-content; 16px inputs on touch (iOS zoom); approvals queue actions column
+sticky on mobile; SignatureDialog scrolls within 90dvh.
+
+**Accepted skips:** vendor rows keep linking to /vendors (no vendor detail page exists —
+future work); in-app nav is not covered by the unsaved-changes guard (no stable App Router
+blocking API); sticky actions cell stays white over row-highlight tints.

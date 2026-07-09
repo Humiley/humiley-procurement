@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "@/components/shared/Toaster";
 import { Send, PackageMinus } from "lucide-react";
 import { SignatureDialog } from "@/components/shared/SignatureDialog";
 import { submitGoodsIssue, executeGoodsIssue } from "@/app/(portal)/inventory/issues/actions";
+import { act } from "@/lib/act";
 
 export type GiExecLine = { lineId: string; label: string; uom: string; requested: string; onHand: string };
 
@@ -25,6 +27,7 @@ export function GiDetailActions({
   execLines: GiExecLine[];
 }) {
   const t = useTranslations("gi");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -38,7 +41,8 @@ export function GiDetailActions({
     setError(null);
     setBusy(true);
     try {
-      await submitGoodsIssue(id);
+      act(await submitGoodsIssue(id));
+      toast(tc("done"));
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));
@@ -106,11 +110,12 @@ export function GiDetailActions({
           onConfirm={async (p) => {
             setError(null);
             try {
-              await executeGoodsIssue({
+              act(await executeGoodsIssue({
                 payload: { issueId: id, lines: execLines.map((l) => ({ lineId: l.lineId, qtyIssued: qty[l.lineId] || "0" })) },
                 password: p.password,
-              });
+              }));
               setSignOpen(false);
+              toast(tc("done"));
               router.refresh();
             } catch (e) {
               throw e instanceof Error ? e : new Error("Issue failed.");

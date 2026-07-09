@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { createTransfer } from "@/app/(portal)/inventory/transfers/actions";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
 
 export type TrfOpt = { id: string; label: string };
 export type TrfItemOpt = { id: string; label: string; uom: string };
@@ -23,6 +25,8 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
   const [lines, setLines] = useState<Line[]>([{ itemId: items[0]?.id || "", qty: "" }]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   const onHand = (itemId: string) =>
     String(stock.filter((s) => s.warehouseId === fromId && s.itemId === itemId).reduce((sum, s) => sum + Number(s.onHand), 0));
@@ -31,7 +35,8 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
     setError(null);
     setBusy(true);
     try {
-      const res = await createTransfer({ fromWarehouseId: fromId, toWarehouseId: toId, lines });
+      const res = act(await createTransfer({ fromWarehouseId: fromId, toWarehouseId: toId, lines }));
+      setTouched(false);
       router.push(`/inventory/transfers/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -41,7 +46,7 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 

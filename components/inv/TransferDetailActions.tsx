@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "@/components/shared/Toaster";
 import { Truck, PackageCheck, X } from "lucide-react";
 import { SignatureDialog } from "@/components/shared/SignatureDialog";
 import { dispatchTransfer, receiveTransfer, cancelTransfer } from "@/app/(portal)/inventory/transfers/actions";
+import { act } from "@/lib/act";
 
 /** Dispatch (ISSUED sig) → in transit → receive (RECEIVED sig); drafts can be cancelled. */
 export function TransferDetailActions({ id, status, canAct }: { id: string; status: string; canAct: boolean }) {
   const t = useTranslations("trf");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [mode, setMode] = useState<"dispatch" | "receive" | null>(null);
@@ -20,10 +23,12 @@ export function TransferDetailActions({ id, status, canAct }: { id: string; stat
   if (!canAct || (status !== "DRAFT" && status !== "IN_TRANSIT")) return null;
 
   async function cancel() {
+    if (!window.confirm(tc("confirmIrreversible"))) return;
     setError(null);
     setBusy(true);
     try {
-      await cancelTransfer(id);
+      act(await cancelTransfer(id));
+      toast(tc("done"));
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));

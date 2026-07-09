@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
@@ -7,6 +10,7 @@ import { InvoiceForm, type InvPoLine, type InvPoOpt } from "@/components/invoice
 /** §9: new invoice — lines default from received-not-yet-invoiced at PO prices (?po=<id>). */
 export default async function NewInvoicePage({ searchParams }: { searchParams: { po?: string } }) {
   await requireRoles("ACCOUNTANT", "ADMIN");
+  const tc = await getTranslations("common");
 
   const pos = await db.purchaseOrder.findMany({
     where: { status: { in: ["SENT", "PARTIALLY_RECEIVED", "RECEIVED"] } },
@@ -34,10 +38,15 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: {
   }
 
   return (
-    <InvoiceForm
-      pos={pos.map((p): InvPoOpt => ({ id: p.id, label: `${p.poNumber} · ${p.vendor.code}` }))}
-      selectedPoId={searchParams.po || null}
-      lines={lines}
-    />
+    <div className="space-y-4">
+      <Link href="/invoices" className="btn-ghost -ml-3 w-fit">
+        <ArrowLeft className="h-4 w-4" /> {tc("back")}
+      </Link>
+      <InvoiceForm
+        pos={pos.map((p): InvPoOpt => ({ id: p.id, label: `${p.poNumber} · ${p.vendor.code}` }))}
+        selectedPoId={searchParams.po || null}
+        lines={lines}
+      />
+    </div>
   );
 }

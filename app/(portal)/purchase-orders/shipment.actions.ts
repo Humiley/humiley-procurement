@@ -7,9 +7,10 @@ import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
+import { guard } from "@/lib/safe-action";
 
 /** §20 import-document checklist per PO: C/O + B/L + invoice + packing list + customs decl (+ license). */
-export async function generateShipmentDocs(params: { poId: string; cooFormTypeId: string | null }) {
+async function _generateShipmentDocs(params: { poId: string; cooFormTypeId: string | null }) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const po = await db.purchaseOrder.findUnique({
     where: { id: params.poId },
@@ -47,7 +48,7 @@ const receiveSchema = z.object({
 });
 export type ShipDocReceivePayload = z.input<typeof receiveSchema>;
 
-export async function receiveShipmentDoc(input: ShipDocReceivePayload) {
+async function _receiveShipmentDoc(input: ShipDocReceivePayload) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const v = receiveSchema.parse(input);
   const doc = await db.shipmentDoc.findUnique({ where: { id: v.docId } });
@@ -64,7 +65,7 @@ export async function receiveShipmentDoc(input: ShipDocReceivePayload) {
 }
 
 /** VERIFIED is a §19 act — the purchaser signs that the paper matches the shipment. */
-export async function verifyShipmentDoc(params: { docId: string; password: string }) {
+async function _verifyShipmentDoc(params: { docId: string; password: string }) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const doc = await db.shipmentDoc.findUnique({ where: { id: params.docId }, include: { po: { select: { poNumber: true } } } });
   if (!doc) throw new Error("Document not found.");
@@ -90,3 +91,8 @@ export async function verifyShipmentDoc(params: { docId: string; password: strin
   revalidatePath(`/purchase-orders/${doc.poId}`);
   return { id: doc.id };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function generateShipmentDocs(...a: Parameters<typeof _generateShipmentDocs>) { return guard(_generateShipmentDocs, a); }
+export async function receiveShipmentDoc(...a: Parameters<typeof _receiveShipmentDoc>) { return guard(_receiveShipmentDoc, a); }
+export async function verifyShipmentDoc(...a: Parameters<typeof _verifyShipmentDoc>) { return guard(_verifyShipmentDoc, a); }

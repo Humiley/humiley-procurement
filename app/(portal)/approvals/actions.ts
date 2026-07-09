@@ -8,13 +8,14 @@ import { transition, staleError } from "@/lib/workflow/transition";
 import { applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import type { SignatureMeaning } from "@prisma/client";
+import { guard } from "@/lib/safe-action";
 
 /**
  * §6 + §19: decide the active approval step of a PR — as an electronic signature.
  * The password re-auth, snapshot hash and hash chain happen in signRecord BEFORE the
  * decision is recorded; the engine then advances/rejects/returns and notifies.
  */
-export async function decidePr(params: {
+async function _decidePr(params: {
   prId: string;
   decision: Decision;
   password: string;
@@ -102,20 +103,20 @@ let sig;
   return { outcome: result.outcome };
 }
 
-export async function markNotificationRead(id: string) {
+async function _markNotificationRead(id: string) {
   const user = await requireUser();
   await db.notification.updateMany({ where: { id, userId: user.id }, data: { isRead: true } });
   revalidatePath("/notifications");
 }
 
-export async function markAllNotificationsRead() {
+async function _markAllNotificationsRead() {
   const user = await requireUser();
   await db.notification.updateMany({ where: { userId: user.id, isRead: false }, data: { isRead: true } });
   revalidatePath("/notifications");
 }
 
 /** One dispatcher for the queue: route a decision to the entity's decide action. */
-export async function decideEntity(params: {
+async function _decideEntity(params: {
   entityType: "PR" | "PO" | "VENDOR" | "PAYMENT_REQUEST" | "GOODS_ISSUE";
   entityId: string;
   decision: Decision;
@@ -123,7 +124,7 @@ export async function decideEntity(params: {
   comment?: string;
 }) {
   if (params.entityType === "PR") {
-    return decidePr({ prId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+    return _decidePr({ prId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
   }
   if (params.entityType === "PO") {
     const { decidePo } = await import("@/app/(portal)/purchase-orders/actions");
@@ -140,3 +141,9 @@ export async function decideEntity(params: {
   const { decideVendor } = await import("@/app/(portal)/vendors/actions");
   return decideVendor({ vendorId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function decidePr(...a: Parameters<typeof _decidePr>) { return guard(_decidePr, a); }
+export async function markNotificationRead(...a: Parameters<typeof _markNotificationRead>) { return guard(_markNotificationRead, a); }
+export async function markAllNotificationsRead(...a: Parameters<typeof _markAllNotificationsRead>) { return guard(_markAllNotificationsRead, a); }
+export async function decideEntity(...a: Parameters<typeof _decideEntity>) { return guard(_decideEntity, a); }

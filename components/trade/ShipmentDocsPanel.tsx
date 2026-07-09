@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { FileCheck2, FilePlus2 } from "lucide-react";
 import { SignatureDialog } from "@/components/shared/SignatureDialog";
 import { generateShipmentDocs, receiveShipmentDoc, verifyShipmentDoc } from "@/app/(portal)/purchase-orders/shipment.actions";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
 
 export type ShipDocRow = { id: string; type: string; status: string; docNumber: string | null; issueDate: string | null; formCode: string | null };
 export type CooOpt = { id: string; label: string };
@@ -14,6 +16,7 @@ export type CooOpt = { id: string; label: string };
 /** §20 import-document checklist — generate, mark received, VERIFIED via §19 signature. */
 export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: string; docs: ShipDocRow[]; cooForms: CooOpt[]; canAct: boolean }) {
   const t = useTranslations("shipdocs");
+  const tcm = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [cooId, setCooId] = useState(cooForms[0]?.id || "");
@@ -28,7 +31,8 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
     setError(null);
     setBusy(true);
     try {
-      await fn();
+      act(await fn());
+      toast(tcm("done"));
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));
@@ -125,7 +129,7 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
         meaningLabel={() => t("meaningVerified")}
         submitLabel={t("verify")}
         onConfirm={async (p) => {
-          await verifyShipmentDoc({ docId: verifyId!, password: p.password });
+          act(await verifyShipmentDoc({ docId: verifyId!, password: p.password }));
           setVerifyId(null);
           router.refresh();
         }}

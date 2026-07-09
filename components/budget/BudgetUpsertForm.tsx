@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { upsertBudget } from "@/app/(portal)/budgets/actions";
+import { act } from "@/lib/act";
 
 export type BudgetOpt = { id: string; label: string };
 
@@ -24,7 +25,7 @@ export function BudgetUpsertForm({ costCenters, categories, fiscalYear }: { cost
     setMsg(null);
     setBusy(true);
     try {
-      await upsertBudget({ costCenterId, categoryId, fiscalYear: fy, amountVnd: amount.replace(/[,.\s]/g, "") });
+      act(await upsertBudget({ costCenterId, categoryId, fiscalYear: fy, amountVnd: amount.replace(/[,.\s]/g, "") }));
       setMsg({ ok: true, text: t("saved") });
       setAmount("");
       router.refresh();

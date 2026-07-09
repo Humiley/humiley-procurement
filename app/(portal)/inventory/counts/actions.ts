@@ -11,11 +11,12 @@ import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { postMovement, StockError } from "@/lib/stock/post-movement";
 import { countCreateSchema, countEnterSchema, type CountCreatePayload, type CountEnterPayload } from "@/lib/schemas/transfer";
 import { assertWarehouseKeeper } from "@/lib/stock/keeper";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
 /** §10b stock count (Kiểm kê): snapshot systemQty → enter counted → DIRECTOR posts signed adjustments. */
-export async function createCount(input: CountCreatePayload) {
+async function _createCount(input: CountCreatePayload) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = countCreateSchema.parse(input);
 
@@ -49,7 +50,7 @@ export async function createCount(input: CountCreatePayload) {
   return { id: count.id };
 }
 
-export async function saveCounts(input: CountEnterPayload) {
+async function _saveCounts(input: CountEnterPayload) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = countEnterSchema.parse(input);
   const count = await db.stockCount.findUnique({ where: { id: values.countId }, include: { lines: true } });
@@ -76,7 +77,7 @@ export async function saveCounts(input: CountEnterPayload) {
 }
 
 /** DIRECTOR posts the count: COUNTED signature; variances become ADJUST_IN/OUT at current avg cost. */
-export async function postCount(params: { id: string; password: string; reason?: string }) {
+async function _postCount(params: { id: string; password: string; reason?: string }) {
   const user = await requireRoles("DIRECTOR", "ADMIN");
   const count = await db.stockCount.findUnique({
     where: { id: params.id },
@@ -144,3 +145,8 @@ export async function postCount(params: { id: string; password: string; reason?:
   revalidatePath("/inventory");
   return { id: count.id, adjustments };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createCount(...a: Parameters<typeof _createCount>) { return guard(_createCount, a); }
+export async function saveCounts(...a: Parameters<typeof _saveCounts>) { return guard(_saveCounts, a); }
+export async function postCount(...a: Parameters<typeof _postCount>) { return guard(_postCount, a); }

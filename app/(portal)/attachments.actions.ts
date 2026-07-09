@@ -6,8 +6,9 @@ import { db } from "@/lib/db";
 import { deleteStored } from "@/lib/storage";
 import { audit } from "@/lib/audit";
 import { canAccessAttachment } from "@/lib/attachment-authz";
+import { guard } from "@/lib/safe-action";
 
-export async function deleteAttachment(id: string, revalidate?: string) {
+async function _deleteAttachment(id: string, revalidate?: string) {
   const user = await requireUser();
   const att = await db.attachment.findUnique({ where: { id } });
   if (!att) throw new Error("Attachment not found.");
@@ -31,3 +32,6 @@ export async function deleteAttachment(id: string, revalidate?: string) {
   if (revalidate) revalidatePath(revalidate);
   return { ok: true };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function deleteAttachment(...a: Parameters<typeof _deleteAttachment>) { return guard(_deleteAttachment, a); }

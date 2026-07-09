@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPaymentRequest } from "@/app/(portal)/payment-requests/actions";
 import { PAYREQ_TYPES } from "@/lib/schemas/payreq";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
+
+/** Local (client) yyyy-mm-dd — do not use toISOString(): it shifts across the UTC boundary. */
+function todayLocalIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export type PayReqOpt = { id: string; label: string };
 export type PayReqInvoice = { id: string; vendorId: string; label: string; amount: number };
@@ -43,6 +51,8 @@ export function PayReqForm({
   const [lines, setLines] = useState<{ description: string; amount: string }[]>([{ description: "", amount: "" }]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   const vendorInvoices = useMemo(() => invoices.filter((i) => i.vendorId === vendorId), [invoices, vendorId]);
   const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -56,7 +66,7 @@ export function PayReqForm({
     setError(null);
     setBusy(true);
     try {
-      const res = await createPaymentRequest({
+      const res = act(await createPaymentRequest({
         type: type as never,
         costCenterId,
         vendorId: vendorId || null,
@@ -68,7 +78,8 @@ export function PayReqForm({
         reason,
         paymentMethod: method as never,
         lines: lines.filter((l) => l.description && Number(l.amount) > 0),
-      });
+      }));
+      setTouched(false);
       router.push(`/payment-requests/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -78,7 +89,7 @@ export function PayReqForm({
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
@@ -107,7 +118,7 @@ export function PayReqForm({
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("dueDate")}</span>
-          <input type="date" className={field} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <input type="date" className={field} min={todayLocalIso()} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </label>
         <label className="text-sm sm:col-span-3">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("reason")} *</span>

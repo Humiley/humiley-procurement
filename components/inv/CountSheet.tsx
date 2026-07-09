@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { Save, ClipboardCheck } from "lucide-react";
 import { SignatureDialog } from "@/components/shared/SignatureDialog";
 import { saveCounts, postCount } from "@/app/(portal)/inventory/counts/actions";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
 
 export type CountLineRow = { lineId: string; label: string; uom: string; systemQty: string; countedQty: string };
 
@@ -25,6 +27,7 @@ export function CountSheet({
   lines: CountLineRow[];
 }) {
   const t = useTranslations("cnt");
+  const tcm = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [counted, setCounted] = useState<Record<string, string>>(Object.fromEntries(lines.map((l) => [l.lineId, l.countedQty])));
@@ -38,7 +41,8 @@ export function CountSheet({
     setError(null);
     setBusy(true);
     try {
-      await saveCounts({ countId: id, lines: lines.map((l) => ({ lineId: l.lineId, countedQty: counted[l.lineId] || "0" })) });
+      act(await saveCounts({ countId: id, lines: lines.map((l) => ({ lineId: l.lineId, countedQty: counted[l.lineId] || "0" })) }));
+      toast(tcm("done"));
       router.refresh();
     } catch (e) {
       setError(fmtErr(e));
@@ -108,7 +112,8 @@ export function CountSheet({
         meaningLabel={() => t("meaningCounted")}
         submitLabel={t("post")}
         onConfirm={async (p) => {
-          await postCount({ id, password: p.password, reason: p.reason });
+          act(await postCount({ id, password: p.password, reason: p.reason }));
+          toast(tcm("done"));
           setSignOpen(false);
           router.refresh();
         }}

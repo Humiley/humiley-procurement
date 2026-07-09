@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { submitPaymentRequest, verifyPaymentRequest, markPaymentRequestPaid, cancelPaymentRequest } from "@/app/(portal)/payment-requests/actions";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
 
 /** §10a lifecycle actions: submit, accountant verify (VERIFIED), execute payment (PAID + bank ref), cancel. */
 export function PayReqDetailActions({
@@ -24,6 +26,8 @@ export function PayReqDetailActions({
   verified: boolean;
 }) {
   const t = useTranslations("payreq");
+  const tc = useTranslations("common");
+  const te = useTranslations("esign");
   const fmtErr = useActionError();
   const router = useRouter();
   const [dialog, setDialog] = useState<null | "verify" | "paid">(null);
@@ -31,11 +35,13 @@ export function PayReqDetailActions({
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
 
-  async function run(kind: string, fn: () => Promise<unknown>) {
+  async function run(kind: string, fn: () => Promise<unknown>, confirmFirst = false) {
+    if (confirmFirst && !window.confirm(tc("confirmIrreversible"))) return;
     setError(null);
     setBusy(kind);
     try {
-      await fn();
+      act(await fn());
+      toast(tc("done"));
       start(() => router.refresh());
     } catch (e) {
       setError(fmtErr(e));
@@ -45,15 +51,13 @@ export function PayReqDetailActions({
   }
 
   async function onSign(payload: SignaturePayload) {
-    try {
-      if (dialog === "verify") await verifyPaymentRequest({ id, password: payload.password, comment: payload.reason });
-      else await markPaymentRequestPaid({ id, password: payload.password, paymentRef: payload.reason || "" });
-      setDialog(null);
-      start(() => router.refresh());
-    } catch (e) {
-      setDialog(null);
-      setError(fmtErr(e));
-    }
+    // errors propagate to the SignatureDialog, which shows them inline and keeps
+    // the typed password/reference — closing here used to throw the input away
+    if (dialog === "verify") act(await verifyPaymentRequest({ id, password: payload.password, comment: payload.reason }));
+    else act(await markPaymentRequestPaid({ id, password: payload.password, paymentRef: payload.reason || "" }));
+    setDialog(null);
+    toast(tc("done"));
+    start(() => router.refresh());
   }
 
   const btn = "rounded-lg px-3 py-1.5 text-sm font-semibold disabled:opacity-50";
@@ -79,7 +83,7 @@ export function PayReqDetailActions({
         </button>
       ) : null}
       {(isRequester || isAccountant) && ["DRAFT", "SUBMITTED"].includes(status) ? (
-        <button className={`${btn} border border-danger/30 text-danger hover:bg-danger/5`} disabled={!!busy} onClick={() => run("cancel", () => cancelPaymentRequest(id))}>
+        <button className={`${btn} border border-danger/30 text-danger hover:bg-danger/5`} disabled={!!busy} onClick={() => run("cancel", () => cancelPaymentRequest(id), true)}>
           {busy === "cancel" ? "…" : t("cancel")}
         </button>
       ) : null}
@@ -92,6 +96,8 @@ export function PayReqDetailActions({
         meaningLabel={(m) => (m === "VERIFIED" ? t("meaningVerified") : t("meaningPaid"))}
         submitLabel={t("signSubmit")}
         requireReason={dialog === "paid"}
+        reasonLabel={dialog === "paid" ? te("bankRef") : undefined}
+        context={number}
       />
     </div>
   );

@@ -8,6 +8,10 @@
   --foreground: #1f2937; /* body */
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   height: 100%;
@@ -23,14 +27,14 @@ body {
 @layer components {
   /* Primary CTA (emerald ≤10% of surface) */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Secondary / navy action */
   .btn-navy {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/25 bg-white px-4 py-2 text-sm font-semibold text-navy transition hover:bg-panel disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/25 bg-white px-4 py-2 text-sm font-semibold text-navy transition hover:bg-panel active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-grey transition hover:bg-panel hover:text-body;
@@ -39,7 +43,8 @@ body {
     @apply rounded-card border border-black/5 bg-white shadow-card;
   }
   .field {
-    @apply w-full rounded-md border border-grey/30 bg-white px-3 py-2 text-sm text-body outline-none transition focus:border-navy focus:ring-1 focus:ring-navy;
+    /* text-base on touch viewports — below 16px iOS Safari auto-zooms every focused field */
+    @apply w-full rounded-md border border-grey/30 bg-white px-3 py-2 text-base text-body outline-none transition focus:border-navy focus:ring-1 focus:ring-navy sm:text-sm;
   }
   .label {
     @apply mb-1 block text-sm font-medium text-body;
@@ -56,5 +61,31 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  /* staggered entry for dashboard tiles — GPU transform+opacity only */
+  .fade-up {
+    opacity: 0;
+    animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fade-up {
+    animation: none;
+    opacity: 1;
   }
 }

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { ymdVn, ymdHmVn } from "@/lib/dates";
 import { resolveScan } from "@/lib/barcode";
+import { guard } from "@/lib/safe-action";
 
 export type ScanResult =
   | { kind: "none" }
@@ -32,7 +33,7 @@ export type ScanResult =
     };
 
 /** §21 scan hub resolver — documents open, lots/items return a stock + history panel. */
-export async function scanLookup(raw: string): Promise<ScanResult> {
+async function _scanLookup(raw: string): Promise<ScanResult> {
   await requireUser();
   const hit = await resolveScan(raw);
 
@@ -101,3 +102,6 @@ export async function scanLookup(raw: string): Promise<ScanResult> {
 
   return hit;
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function scanLookup(...a: Parameters<typeof _scanLookup>) { return guard(_scanLookup, a); }

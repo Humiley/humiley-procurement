@@ -12,11 +12,12 @@ import { grnCreateSchema, grnAcceptSchema, type GrnCreatePayload, type GrnAccept
 import { postMovement } from "@/lib/stock/post-movement";
 import { nextLotNumber, ensureItemBarcode, createLotBarcode } from "@/lib/barcode";
 import { assertWarehouseKeeper } from "@/lib/stock/keeper";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
 /** §9 GRN: WAREHOUSE receives against an open PO; over-receipt blocked (tolerance 0%). */
-export async function createGrn(input: GrnCreatePayload) {
+async function _createGrn(input: GrnCreatePayload) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = grnCreateSchema.parse(input);
 
@@ -68,7 +69,7 @@ export async function createGrn(input: GrnCreatePayload) {
  * lines; rejected quantities (reason required) leave the PO line open for a redelivery.
  * PO status auto-updates: RECEIVED when every line is fully received, else PARTIALLY_RECEIVED.
  */
-export async function acceptGrn(params: { payload: GrnAcceptPayload; password: string }) {
+async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = grnAcceptSchema.parse(params.payload);
 
@@ -199,3 +200,7 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
   revalidatePath(`/purchase-orders/${grn.poId}`);
   return { status: newStatus };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createGrn(...a: Parameters<typeof _createGrn>) { return guard(_createGrn, a); }
+export async function acceptGrn(...a: Parameters<typeof _acceptGrn>) { return guard(_acceptGrn, a); }

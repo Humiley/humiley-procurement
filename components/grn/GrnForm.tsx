@@ -5,6 +5,7 @@ import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createGrn } from "@/app/(portal)/goods-receipts/actions";
+import { act } from "@/lib/act";
 
 export type GrnPoOpt = { id: string; label: string };
 export type GrnPoLine = { poLineId: string; description: string; uom: string; ordered: string; outstanding: string };
@@ -22,6 +23,7 @@ export function GrnForm({
   lines: GrnPoLine[];
 }) {
   const t = useTranslations("grn");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
@@ -32,14 +34,19 @@ export function GrnForm({
 
   async function submit() {
     setError(null);
+    // Pre-submit check: at least one line must actually receive a quantity.
+    if (!lines.some((l) => Number(qty[l.poLineId] || "0") > 0)) {
+      setError(tc("required"));
+      return;
+    }
     setBusy(true);
     try {
-      const res = await createGrn({
+      const res = act(await createGrn({
         poId: selectedPoId!,
         warehouseId,
         notes,
         lines: lines.map((l) => ({ poLineId: l.poLineId, qtyReceived: qty[l.poLineId] || "0" })),
-      });
+      }));
       router.push(`/goods-receipts/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));

@@ -40,7 +40,12 @@
     "attachments": "Attachments",
     "audit": "Audit",
     "approvals": "Approvals & Signatures",
-    "actionFailed": "The action failed. Please try again."
+    "actionFailed": "The action failed. Please try again.",
+    "done": "Action completed.",
+    "confirmIrreversible": "This action cannot be undone. Continue?",
+    "deleteAttachmentConfirm": "Delete this attachment?",
+    "skipToContent": "Skip to content",
+    "unsavedWarn": "You have unsaved changes."
   },
   "auth": {
     "signIn": "Sign in",
@@ -87,7 +92,8 @@
     "groupProcure": "Procurement",
     "groupInventory": "Inventory",
     "groupTrade": "Trade & Reference",
-    "groupInsight": "Insights"
+    "groupInsight": "Insights",
+    "menu": "Open menu"
   },
   "dashboard": {
     "notifications": "Unread notifications",
@@ -912,7 +918,9 @@
     "close": "Close",
     "errPassword": "Enter your password to sign.",
     "errReason": "A reason is required.",
-    "errFailed": "Signing failed."
+    "errFailed": "Signing failed.",
+    "signing": "You are signing",
+    "bankRef": "Bank / payment reference"
   },
   "grn": {
     "lot": "Lot",
@@ -1089,5 +1097,24 @@
     "created": "Created",
     "updated": "Updated",
     "skipped": "Skipped"
+  },
+  "prereq": {
+    "title": "Setup needed first",
+    "prBody": "A requisition needs a cost center for your department, and none exist yet. Ask an administrator to create one, then come back.",
+    "poBody": "A purchase order needs an approved vendor, and none exist yet. Approve a vendor first, then come back.",
+    "grnBody": "Goods can only be received against a sent purchase order, and there are none open right now.",
+    "adminLink": "Open administration",
+    "backToList": "Back to the list"
+  },
+  "notif": {
+    "marking": "Marking…"
+  },
+  "shell": {
+    "searchHint": "Search document number — opens the scan hub"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist, was moved, or you do not have access to it.",
+    "home": "Back to dashboard"
   }
 }

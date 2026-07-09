@@ -14,6 +14,14 @@ import {
 } from "./PrLinesEditor";
 import { createPr, updatePr, submitPr } from "@/app/(portal)/requisitions/actions";
 import type { PrFormPayload } from "@/lib/schemas/pr";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
+
+/** Local (client) yyyy-mm-dd — do not use toISOString(): it shifts across the UTC boundary. */
+function todayLocalIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export type CostCenterOpt = { id: string; label: string };
 export type ExistingPr = {
@@ -52,6 +60,8 @@ export function PrForm({
   );
   const [busy, setBusy] = useState<"save" | "submit" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   function buildPayload(): PrFormPayload {
     return {
@@ -77,12 +87,13 @@ export function PrForm({
     try {
       let id = existing?.id;
       if (existing) {
-        await updatePr(existing.id, buildPayload());
+        act(await updatePr(existing.id, buildPayload()));
       } else {
-        const r = await createPr(buildPayload());
+        const r = act(await createPr(buildPayload()));
         id = r.id;
       }
-      if (thenSubmit && id) await submitPr(id);
+      if (thenSubmit && id) act(await submitPr(id));
+      setTouched(false);
       router.push(`/requisitions/${id}`);
       router.refresh();
     } catch (e) {
@@ -92,7 +103,7 @@ export function PrForm({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" onChange={() => setTouched(true)}>
       <div className="card p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-grey">{t("header")}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -119,6 +130,7 @@ export function PrForm({
             <input
               type="date"
               className="field"
+              min={todayLocalIso()}
               value={neededByDate}
               onChange={(e) => setNeededByDate(e.target.value)}
             />

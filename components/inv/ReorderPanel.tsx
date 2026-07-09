@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { FilePlus2 } from "lucide-react";
 import { generateReorderPr } from "@/app/(portal)/inventory/reorder/actions";
 import type { ReorderBreach } from "@/lib/stock/reorder";
+import { act } from "@/lib/act";
 
 export type ReorderOpt = { id: string; label: string };
 
@@ -37,7 +38,7 @@ export function ReorderPanel({ breaches, costCenters, canGenerate }: { breaches:
     try {
       let lastId = "";
       for (const [warehouseId, itemIds] of Array.from(byWh.entries())) {
-        const res = await generateReorderPr({ warehouseId, costCenterId, itemIds });
+        const res = act(await generateReorderPr({ warehouseId, costCenterId, itemIds }));
         lastId = res.id;
       }
       router.push(`/requisitions/${lastId}`);

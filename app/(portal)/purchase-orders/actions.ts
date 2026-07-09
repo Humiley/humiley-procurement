@@ -12,6 +12,7 @@ import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { sendMailRaw } from "@/lib/notify";
 import { poCreateSchema, type PoFormPayload } from "@/lib/schemas/po";
 import type { SignatureMeaning } from "@prisma/client";
+import { guard } from "@/lib/safe-action";
 
 function computeTotals(lines: { qty: string; unitPrice: string }[], vatPct: string) {
   const subtotal = lines
@@ -22,7 +23,7 @@ function computeTotals(lines: { qty: string; unitPrice: string }[], vatPct: stri
 }
 
 /** §8: create a PO — from an APPROVED PR (lines prefilled) or standalone. PURCHASER/ADMIN only. */
-export async function createPo(input: PoFormPayload) {
+async function _createPo(input: PoFormPayload) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const values = poCreateSchema.parse(input);
 
@@ -116,7 +117,7 @@ export async function createPo(input: PoFormPayload) {
 }
 
 /** Submit a draft PO into the §6 approval chain (same amount bands, entityType PO). */
-export async function submitPo(id: string) {
+async function _submitPo(id: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const po = await db.purchaseOrder.findUnique({
     where: { id },
@@ -148,7 +149,7 @@ export async function submitPo(id: string) {
 }
 
 /** §6 + §19: sign-then-decide the active PO approval step. */
-export async function decidePo(params: { poId: string; decision: Decision; password: string; comment?: string }) {
+async function _decidePo(params: { poId: string; decision: Decision; password: string; comment?: string }) {
   const user = await requireUser();
   const po = await db.purchaseOrder.findUnique({
     where: { id: params.poId },
@@ -224,7 +225,7 @@ let sig;
 }
 
 /** §8: APPROVED → SENT — emails the branded PDF to the vendor, CC the purchaser. */
-export async function sendPo(id: string) {
+async function _sendPo(id: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const po = await db.purchaseOrder.findUnique({ where: { id }, include: { vendor: true, createdBy: { select: { email: true } } } });
   if (!po) throw new Error("Purchase order not found.");
@@ -263,7 +264,7 @@ export async function sendPo(id: string) {
 }
 
 /** Manual close / cancel (§8) — cancel is blocked once any GRN exists. */
-export async function cancelPo(id: string) {
+async function _cancelPo(id: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const po = await db.purchaseOrder.findUnique({ where: { id }, include: { _count: { select: { goodsReceipts: true } } } });
   if (!po) throw new Error("Purchase order not found.");
@@ -275,7 +276,7 @@ export async function cancelPo(id: string) {
   revalidatePath("/purchase-orders");
 }
 
-export async function closePo(id: string) {
+async function _closePo(id: string) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const po = await db.purchaseOrder.findUnique({ where: { id } });
   if (!po) throw new Error("Purchase order not found.");
@@ -286,3 +287,11 @@ export async function closePo(id: string) {
   revalidatePath(`/purchase-orders/${id}`);
   revalidatePath("/purchase-orders");
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createPo(...a: Parameters<typeof _createPo>) { return guard(_createPo, a); }
+export async function submitPo(...a: Parameters<typeof _submitPo>) { return guard(_submitPo, a); }
+export async function decidePo(...a: Parameters<typeof _decidePo>) { return guard(_decidePo, a); }
+export async function sendPo(...a: Parameters<typeof _sendPo>) { return guard(_sendPo, a); }
+export async function cancelPo(...a: Parameters<typeof _cancelPo>) { return guard(_cancelPo, a); }
+export async function closePo(...a: Parameters<typeof _closePo>) { return guard(_closePo, a); }

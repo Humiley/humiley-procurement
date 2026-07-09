@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
@@ -6,6 +9,7 @@ import { PoForm, type PoFormLine, type PoFormOpt, type PoVendorContract } from "
 /** §8: new PO — standalone, or prefilled from an APPROVED PR via ?fromPr=<id>. PURCHASER/ADMIN. */
 export default async function NewPoPage({ searchParams }: { searchParams: { fromPr?: string } }) {
   await requireRoles("PURCHASER", "ADMIN");
+  const tc = await getTranslations("common");
 
   const now = new Date();
   const [vendors, uoms, activeContracts] = await Promise.all([
@@ -13,6 +17,25 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
     db.uom.findMany({ orderBy: { code: "asc" } }),
     db.contract.findMany({ where: { status: "ACTIVE", startDate: { lte: now }, endDate: { gte: now } } }),
   ]);
+  // §22 prerequisite empty state: a PO cannot be drafted without an approved vendor.
+  if (vendors.length === 0) {
+    const tp = await getTranslations("prereq");
+    return (
+      <div className="space-y-4">
+        <Link href="/purchase-orders" className="btn-ghost -ml-3 w-fit">
+          <ArrowLeft className="h-4 w-4" /> {tc("back")}
+        </Link>
+        <div className="card mx-auto max-w-lg p-6 text-center">
+          <h1 className="text-lg font-bold text-navy">{tp("title")}</h1>
+          <p className="mt-2 text-sm text-grey">{tp("poBody")}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Link href="/purchase-orders" className="btn-ghost">{tp("backToList")}</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const contracts: Record<string, PoVendorContract> = {};
   for (const c of activeContracts) {
     contracts[c.vendorId] = { contractNumber: c.contractNumber, prices: (c.priceListJson ?? {}) as Record<string, string> };
@@ -41,5 +64,12 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
   const vendorOpts: PoFormOpt[] = vendors.map((v) => ({ id: v.id, label: `${v.code} · ${v.nameEn}` }));
   const uomOpts: PoFormOpt[] = uoms.map((u) => ({ id: u.id, label: u.code }));
 
-  return <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} contracts={contracts} />;
+  return (
+    <div className="space-y-4">
+      <Link href="/purchase-orders" className="btn-ghost -ml-3 w-fit">
+        <ArrowLeft className="h-4 w-4" /> {tc("back")}
+      </Link>
+      <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} contracts={contracts} />
+    </div>
+  );
 }

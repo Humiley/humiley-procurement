@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
@@ -6,6 +9,7 @@ import { RfqForm, type RfqFormLine, type RfqFormOpt } from "@/components/rfq/Rfq
 /** §8: new RFQ — standalone or prefilled from an APPROVED PR via ?fromPr=<id>. */
 export default async function NewRfqPage({ searchParams }: { searchParams: { fromPr?: string } }) {
   await requireRoles("PURCHASER", "ADMIN");
+  const tc = await getTranslations("common");
 
   const [vendors, uoms] = await Promise.all([
     db.vendor.findMany({ where: { status: "APPROVED" }, orderBy: { code: "asc" } }),
@@ -31,11 +35,16 @@ export default async function NewRfqPage({ searchParams }: { searchParams: { fro
   }
 
   return (
-    <RfqForm
-      vendors={vendors.map((v): RfqFormOpt => ({ id: v.id, label: `${v.code} · ${v.nameEn}` }))}
-      uoms={uoms.map((u): RfqFormOpt => ({ id: u.id, label: u.code }))}
-      fromPr={fromPr}
-      initialLines={initialLines}
-    />
+    <div className="space-y-4">
+      <Link href="/rfqs" className="btn-ghost -ml-3 w-fit">
+        <ArrowLeft className="h-4 w-4" /> {tc("back")}
+      </Link>
+      <RfqForm
+        vendors={vendors.map((v): RfqFormOpt => ({ id: v.id, label: `${v.code} · ${v.nameEn}` }))}
+        uoms={uoms.map((u): RfqFormOpt => ({ id: u.id, label: u.code }))}
+        fromPr={fromPr}
+        initialLines={initialLines}
+      />
+    </div>
   );
 }

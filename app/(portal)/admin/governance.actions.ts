@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { notifyUser } from "@/lib/notify";
 import { verifyChain } from "@/lib/esign/sign";
+import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
 
@@ -23,7 +24,7 @@ const matrixRowSchema = z.object({
 });
 export type MatrixRowPayload = z.input<typeof matrixRowSchema>;
 
-export async function addMatrixRow(input: MatrixRowPayload) {
+async function _addMatrixRow(input: MatrixRowPayload) {
   const admin = await requireRoles("ADMIN");
   const v = matrixRowSchema.parse(input);
   const row = await db.approvalMatrix.create({
@@ -40,7 +41,7 @@ export async function addMatrixRow(input: MatrixRowPayload) {
   return { id: row.id };
 }
 
-export async function deleteMatrixRow(id: string) {
+async function _deleteMatrixRow(id: string) {
   const admin = await requireRoles("ADMIN");
   const row = await db.approvalMatrix.delete({ where: { id } });
   await audit({
@@ -56,7 +57,7 @@ export async function deleteMatrixRow(id: string) {
 
 /* ── §15 delegation: ADMIN reassigns a PENDING approval step (audited, approver notified) ── */
 
-export async function reassignStep(params: { stepId: string; newApproverId: string }) {
+async function _reassignStep(params: { stepId: string; newApproverId: string }) {
   const admin = await requireRoles("ADMIN");
   const step = await db.approvalStep.findUnique({ where: { id: params.stepId }, include: { approver: { select: { name: true } } } });
   if (!step) throw new Error("Approval step not found.");
@@ -110,7 +111,7 @@ export type IntegrityResult = {
   checkedAt: string;
 };
 
-export async function verifyAllChains(): Promise<IntegrityResult> {
+async function _verifyAllChains(): Promise<IntegrityResult> {
   const admin = await requireRoles("ADMIN");
   const groups = await db.electronicSignature.groupBy({ by: ["entityType", "entityId"], _count: { id: true } });
   const broken: IntegrityResult["broken"] = [];
@@ -124,3 +125,9 @@ export async function verifyAllChains(): Promise<IntegrityResult> {
   await audit({ userId: admin.id, action: "CHAIN_VERIFY", entityType: "ElectronicSignature", entityId: "ALL", after: { chains: result.chains, signatures, broken: broken.length } });
   return result;
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function addMatrixRow(...a: Parameters<typeof _addMatrixRow>) { return guard(_addMatrixRow, a); }
+export async function deleteMatrixRow(...a: Parameters<typeof _deleteMatrixRow>) { return guard(_deleteMatrixRow, a); }
+export async function reassignStep(...a: Parameters<typeof _reassignStep>) { return guard(_reassignStep, a); }
+export async function verifyAllChains(...a: Parameters<typeof _verifyAllChains>) { return guard(_verifyAllChains, a); }

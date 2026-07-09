@@ -5,6 +5,8 @@ import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createInvoice } from "@/app/(portal)/invoices/actions";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
 
 export type InvPoOpt = { id: string; label: string };
 export type InvPoLine = { poLineId: string; description: string; uom: string; poPrice: string; toInvoice: string };
@@ -20,6 +22,7 @@ export function InvoiceForm({
   lines: InvPoLine[];
 }) {
   const t = useTranslations("invoice");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [vendorInvoiceNo, setVendorInvoiceNo] = useState("");
@@ -29,17 +32,33 @@ export function InvoiceForm({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   async function submit() {
     setError(null);
+    // Pre-submit check: at least one line invoices a qty > 0, and no line has a
+    // negative / non-numeric quantity or price.
+    const vals = lines.map((l) => ({
+      q: Number(rows[l.poLineId]?.qty || "0"),
+      p: Number(rows[l.poLineId]?.price || "0"),
+    }));
+    if (
+      !vals.some((v) => v.q > 0) ||
+      vals.some((v) => !Number.isFinite(v.q) || v.q < 0 || !Number.isFinite(v.p) || v.p < 0)
+    ) {
+      setError(tc("required"));
+      return;
+    }
     setBusy(true);
     try {
-      const res = await createInvoice({
+      const res = act(await createInvoice({
         poId: selectedPoId!,
         vendorInvoiceNo,
         invoiceDate,
         lines: lines.map((l) => ({ poLineId: l.poLineId, qty: rows[l.poLineId]?.qty || "0", unitPrice: rows[l.poLineId]?.price || "0" })),
-      });
+      }));
+      setTouched(false);
       router.push(`/invoices/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -49,7 +68,7 @@ export function InvoiceForm({
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 

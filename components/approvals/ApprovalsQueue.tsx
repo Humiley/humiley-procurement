@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,7 @@ import { CheckSquare, AlertTriangle } from "lucide-react";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { decideEntity } from "@/app/(portal)/approvals/actions";
 import type { Decision } from "@/lib/workflow/engine";
+import { act } from "@/lib/act";
 
 export type QueueRow = {
   stepId: string;
@@ -28,22 +29,28 @@ export type QueueRow = {
 };
 
 /** "Waiting for me" queue (§6) — PRs, POs and vendors; every decision is a §19 signing ceremony. */
-export function ApprovalsQueue({ rows }: { rows: QueueRow[] }) {
+export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; highlightStepId?: string | null }) {
   const t = useTranslations("approvals");
   const router = useRouter();
   const [target, setTarget] = useState<{ row: QueueRow; decision: Decision } | null>(null);
   const [, startTransition] = useTransition();
   const [notice, setNotice] = useState<string | null>(null);
 
+  // §15 SLA deep-link (?overdue=<stepId>): scroll the breached step into view once.
+  const highlightRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (highlightStepId) highlightRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlightStepId]);
+
   async function onSign(payload: SignaturePayload) {
     if (!target) return;
-    await decideEntity({
+    act(await decideEntity({
       entityType: target.row.entityType,
       entityId: target.row.entityId,
       decision: target.decision,
       password: payload.password,
       comment: payload.reason,
-    });
+    }));
     setTarget(null);
     setNotice(t("decided", { ref: target.row.ref }));
     startTransition(() => router.refresh());
@@ -82,12 +89,18 @@ export function ApprovalsQueue({ rows }: { rows: QueueRow[] }) {
                 <th className="px-3 py-2.5 text-right">{t("colAmount")}</th>
                 <th className="px-3 py-2.5">{t("colLevel")}</th>
                 <th className="px-3 py-2.5">{t("colAge")}</th>
-                <th className="px-3 py-2.5" />
+                <th className="sticky right-0 bg-white px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(32,80,144,0.15)]" />
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.stepId} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr
+                  key={r.stepId}
+                  ref={r.stepId === highlightStepId ? highlightRef : undefined}
+                  className={`border-b border-grey/10 last:border-0 ${
+                    r.stepId === highlightStepId ? "bg-warning/10" : "hover:bg-grey/5"
+                  }`}
+                >
                   <td className="px-3 py-2.5">
                     <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{t(`type.${r.entityType}`)}</span>
                   </td>
@@ -106,7 +119,7 @@ export function ApprovalsQueue({ rows }: { rows: QueueRow[] }) {
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="sticky right-0 bg-white px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(32,80,144,0.15)]">
                     <div className="flex justify-end gap-1.5">
                       {decideBtn(r, "APPROVED", "bg-emerald text-white hover:opacity-90", t("approve"))}
                       {decideBtn(r, "RETURNED", "bg-warning/15 text-warning hover:bg-warning/25", t("return"))}

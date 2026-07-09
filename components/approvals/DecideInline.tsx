@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { decideEntity } from "@/app/(portal)/approvals/actions";
 import type { Decision } from "@/lib/workflow/engine";
+import { act } from "@/lib/act";
+import { toast } from "@/components/shared/Toaster";
 
 /** The decision bar shown on a document page to the approver whose turn it is (§6 + §19). */
 export function DecideInline({
@@ -18,14 +20,16 @@ export function DecideInline({
   refLabel: string;
 }) {
   const t = useTranslations("approvals");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [decision, setDecision] = useState<Decision | null>(null);
   const [, startTransition] = useTransition();
 
   async function onSign(payload: SignaturePayload) {
     if (!decision) return;
-    await decideEntity({ entityType, entityId, decision, password: payload.password, comment: payload.reason });
+    act(await decideEntity({ entityType, entityId, decision, password: payload.password, comment: payload.reason }));
     setDecision(null);
+    toast(tc("done"));
     startTransition(() => router.refresh());
   }
 
@@ -47,7 +51,8 @@ export function DecideInline({
         open={!!decision}
         onClose={() => setDecision(null)}
         onConfirm={onSign}
-        title={`${t("signTitle")} — ${refLabel}`}
+        title={t("signTitle")}
+        context={refLabel}
         meanings={decision ? [decision] : []}
         meaningLabel={(m) => t(`meaning.${m}`)}
         submitLabel={t("signSubmit")}

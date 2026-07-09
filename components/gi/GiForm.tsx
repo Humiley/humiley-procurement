@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { createGoodsIssue } from "@/app/(portal)/inventory/issues/actions";
+import { act } from "@/lib/act";
+import { useUnsavedGuard } from "@/lib/use-unsaved";
 
 export type GiOpt = { id: string; label: string };
 export type GiItemOpt = { id: string; label: string; uom: string };
@@ -26,6 +28,7 @@ export function GiForm({
   stock: GiStockRow[];
 }) {
   const t = useTranslations("gi");
+  const tc = useTranslations("common");
   const fmtErr = useActionError();
   const router = useRouter();
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
@@ -35,15 +38,23 @@ export function GiForm({
   const [lines, setLines] = useState<Line[]>([{ itemId: items[0]?.id || "", qty: "" }]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  useUnsavedGuard(touched);
 
   const onHand = (itemId: string) =>
     String(stock.filter((s) => s.warehouseId === warehouseId && s.itemId === itemId).reduce((sum, s) => sum + Number(s.onHand), 0));
 
   async function submit() {
     setError(null);
+    // Lines can be deleted down to zero (like the PR editor) — block submit instead.
+    if (lines.length === 0) {
+      setError(tc("required"));
+      return;
+    }
     setBusy(true);
     try {
-      const res = await createGoodsIssue({ warehouseId, costCenterId, projectCode, purpose, lines });
+      const res = act(await createGoodsIssue({ warehouseId, costCenterId, projectCode, purpose, lines }));
+      setTouched(false);
       router.push(`/inventory/issues/${res.id}`);
     } catch (e) {
       setError(fmtErr(e));
@@ -53,7 +64,7 @@ export function GiForm({
 
   const field = "field w-full";
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onChange={() => setTouched(true)}>
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
@@ -126,7 +137,7 @@ export function GiForm({
                       type="button"
                       className="text-grey hover:text-danger"
                       onClick={() => setLines(lines.filter((_, j) => j !== i))}
-                      disabled={lines.length === 1}
+                      title={t("removeLine")}
                       aria-label={t("removeLine")}
                     >
                       <Trash2 className="h-4 w-4" />

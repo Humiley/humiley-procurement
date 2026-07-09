@@ -12,8 +12,9 @@ import {
   type UserInput,
   type UserUpdateInput,
 } from "@/lib/schemas/user";
+import { guard } from "@/lib/safe-action";
 
-export async function createUser(input: UserInput) {
+async function _createUser(input: UserInput) {
   const admin = await requireRoles("ADMIN");
   const data = userSchema.parse(input);
   const email = data.email.toLowerCase();
@@ -44,7 +45,7 @@ export async function createUser(input: UserInput) {
   return { id: user.id };
 }
 
-export async function updateUser(id: string, input: UserUpdateInput) {
+async function _updateUser(id: string, input: UserUpdateInput) {
   const admin = await requireRoles("ADMIN");
   const data = userUpdateSchema.parse(input);
 
@@ -73,7 +74,7 @@ export async function updateUser(id: string, input: UserUpdateInput) {
   return { id: user.id };
 }
 
-export async function resetUserPassword(id: string) {
+async function _resetUserPassword(id: string) {
   const admin = await requireRoles("ADMIN");
   await db.user.update({
     where: { id },
@@ -93,3 +94,8 @@ export async function resetUserPassword(id: string) {
   revalidatePath("/admin/users");
   return { ok: true };
 }
+
+/* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */
+export async function createUser(...a: Parameters<typeof _createUser>) { return guard(_createUser, a); }
+export async function updateUser(...a: Parameters<typeof _updateUser>) { return guard(_updateUser, a); }
+export async function resetUserPassword(...a: Parameters<typeof _resetUserPassword>) { return guard(_resetUserPassword, a); }

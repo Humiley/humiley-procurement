@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Download, FileSpreadsheet } from "lucide-react";
 import { exportAccountingBatch } from "@/app/(portal)/admin/export.actions";
+import { act } from "@/lib/act";
 
 export type ExportBatchRow = { batchNumber: string; kind: string; rowCount: number; by: string; at: string };
 
@@ -23,7 +24,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
     setMsg(null);
     setBusy(true);
     try {
-      const res = await exportAccountingBatch(kind);
+      const res = act(await exportAccountingBatch(kind));
       const blob = new Blob(["﻿" + res.csv], { type: "text/csv;charset=utf-8" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
