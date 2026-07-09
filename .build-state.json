@@ -20,9 +20,10 @@
     16,
     17
   ],
-  "currentTask": "Phase 9 — Inventory core per §10b",
+  "currentTask": "Phase 9 \u2014 Inventory core per \u00a710b",
   "completedTasks": [],
-  "nextAction": "BUILD COMPLETE — all 17 phases done and E2E-verified. See docs/FINAL-REPORT.md. Next milestones live OUTSIDE this build loop: (a) portal integration rollout per docs/PORTAL-INTEGRATION.md (Entra SSO switch-on, launcher tile, production deploy at procurement.humiley.com); (b) the consolidated deferred backlog in FINAL-REPORT.md.",
+  "nextAction": "Portal M365 SSO integration per docs/PORTAL-INTEGRATION.md (awaiting user decision on Entra app reuse + signing mode); deferred backlog in docs/FINAL-REPORT.md + VALIDATION.md \u00a78 (incl. EN-only server error catalog)",
   "lastCheckpointCommit": "phase-17",
-  "updatedAt": "2026-07-09T02:00:00+07:00"
+  "updatedAt": "2026-07-09T02:00:00+07:00",
+  "lastAction": "QA/QC deep pass committed (6af303c): 53 confirmed findings fixed, npm run check green, 9/9 Playwright green on dynamic-year seed, browser-verified; portal-side hardening committed in parent repo (3752604)"
 }
