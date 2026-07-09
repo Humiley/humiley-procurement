@@ -16,7 +16,7 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ prefillEmail = "" }: { prefillEmail?: string }) {
   const t = useTranslations("auth");
   const [state, action] = useFormState(loginAction, null);
 
@@ -32,6 +32,7 @@ export function LoginForm() {
           type="email"
           autoComplete="username"
           required
+          defaultValue={prefillEmail}
           className="field"
         />
       </div>
@@ -45,6 +46,7 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
+          autoFocus={!!prefillEmail}
           className="field"
         />
       </div>
