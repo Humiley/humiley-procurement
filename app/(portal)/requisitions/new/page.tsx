@@ -65,7 +65,7 @@ export default async function NewRequisitionPage() {
       <Link href="/requisitions" className="btn-ghost -ml-3 w-fit">
         <ArrowLeft className="h-4 w-4" /> {tc("back")}
       </Link>
-      <h1 className="text-xl font-bold text-navy">{t("new")}</h1>
+      <h1 className="text-[22px] font-bold text-navy">{t("new")}</h1>
       <PrForm costCenters={ccOpts} items={itemOpts} uoms={uomOpts} departmentLabel={deptLabel} />
     </div>
   );

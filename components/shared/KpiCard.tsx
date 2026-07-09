@@ -16,7 +16,7 @@ export function KpiCard({
   accent?: "navy" | "emerald";
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 p-4 transition hover:shadow-md">
+    <div className="card flex items-center gap-4 px-5 py-[18px] transition hover:shadow-card-hover">
       {Icon && (
         <span
           className={cn(

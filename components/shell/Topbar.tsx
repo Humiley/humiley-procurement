@@ -30,7 +30,7 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-black/5 bg-white px-4 sm:gap-3">
+    <header className="sticky top-0 z-20 flex h-[52px] items-center gap-2 border-b border-line bg-white px-4 shadow-topbar sm:gap-3 sm:px-6">
       <button
         type="button"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-grey transition hover:bg-panel hover:text-body lg:hidden"

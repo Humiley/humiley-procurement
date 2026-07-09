@@ -26,35 +26,41 @@ body {
 
 @layer components {
   /* Primary CTA (emerald ≤10% of surface) */
+  /* Portal semantics: primary = NAVY; emerald is the success/commit accent (.btn-emerald) */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] bg-navy px-3.5 py-[7px] text-[13px] font-semibold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-emerald {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] bg-emerald px-3.5 py-[7px] text-[13px] font-semibold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Secondary / navy action */
   .btn-navy {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply btn-primary;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-navy/25 bg-white px-4 py-2 text-sm font-semibold text-navy transition hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] border-[1.5px] border-navy bg-white px-3.5 py-[7px] text-[13px] font-semibold text-navy transition hover:bg-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-grey transition hover:bg-panel hover:text-body;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] px-3 py-[7px] text-[13px] font-semibold text-grey transition hover:bg-panel hover:text-body;
   }
   .card {
-    @apply rounded-card border border-black/5 bg-white shadow-card;
+    @apply rounded-card border border-line bg-white shadow-card;
   }
   .field {
-    /* text-base on touch viewports — below 16px iOS Safari auto-zooms every focused field */
-    @apply w-full rounded-md border border-grey/30 bg-white px-3 py-2 text-base text-body outline-none transition focus:border-navy focus:ring-1 focus:ring-navy sm:text-sm;
+    /* portal .form-control (1.5px --line border, radius 8); text-base on touch viewports —
+       below 16px iOS Safari auto-zooms every focused field */
+    @apply w-full rounded-lg border-[1.5px] border-line bg-white px-3 py-[9px] text-base text-body outline-none transition focus:border-navy sm:text-[13px];
   }
   .label {
-    @apply mb-1 block text-sm font-medium text-body;
+    /* portal .form-label */
+    @apply mb-1 block text-xs font-bold uppercase tracking-[0.4px] text-body;
   }
-  /* table header — navy */
+  /* table header — the portal's soft-grey header, not navy */
   .th {
-    @apply bg-navy px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-white;
+    @apply border-b-2 border-line bg-panel px-3.5 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.6px] text-grey;
   }
   .td {
-    @apply border-b border-black/5 px-3 py-2 text-sm text-body;
+    @apply border-b border-line px-3.5 py-[11px] text-[13px] text-body;
   }
 }
 

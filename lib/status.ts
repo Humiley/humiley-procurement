@@ -51,11 +51,11 @@ export function statusTone(status: string): Tone {
 }
 
 export const TONE_CLASSES: Record<Tone, string> = {
-  navy: "bg-navy/10 text-navy ring-navy/20",
-  emerald: "bg-emerald/10 text-emerald ring-emerald/25",
-  grey: "bg-grey/10 text-grey ring-grey/20",
-  red: "bg-danger/10 text-danger ring-danger/20",
-  amber: "bg-warning/10 text-warning ring-warning/25",
+  navy: "bg-navy/10 text-navy",
+  emerald: "bg-emerald/10 text-emeraldDeep",
+  grey: "bg-grey/10 text-grey",
+  red: "bg-danger/10 text-danger",
+  amber: "bg-warning/15 text-warning",
 };
 
 /** "PARTIALLY_PAID" → "Partially paid" (fallback when no i18n label supplied). */

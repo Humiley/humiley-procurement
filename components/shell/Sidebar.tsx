@@ -88,7 +88,7 @@ export function Sidebar({
       <aside
         ref={asideRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-navy text-white transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-[228px] flex-col bg-[linear-gradient(170deg,#0f2040_0%,#162f5a_30%,#1e4a90_70%,#1a5878_100%)] text-white transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -106,18 +106,18 @@ export function Sidebar({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-6 pt-2">
+        <nav className="flex-1 overflow-y-auto pb-6">
           {NAV.map((group, gi) => {
             const items = group.items.filter((it) => canSeeNav(it, roles));
             if (items.length === 0) return null;
             return (
               <div key={gi}>
                 {group.titleKey && (
-                  <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+                  <p className="px-4 pb-[5px] pt-3.5 text-[9px] uppercase tracking-[1.5px] text-white/35">
                     {t(group.titleKey)}
                   </p>
                 )}
-                <ul className="space-y-0.5">
+                <ul>
                   {items.map((it) => {
                     const active = it.href === current;
                     const Icon = it.icon;
@@ -128,18 +128,12 @@ export function Sidebar({
                           onClick={onClose}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
+                            "flex items-center gap-[11px] border-l-[3px] px-4 py-[9px] text-[13.5px] transition",
                             active
-                              ? "bg-white/10 text-white"
-                              : "text-white/75 hover:bg-white/5 hover:text-white",
+                              ? "border-emerald bg-white/[0.12] text-white"
+                              : "border-transparent text-white/65 hover:bg-white/[0.09] hover:text-white",
                           )}
                         >
-                          <span
-                            className={cn(
-                              "flex h-5 w-1 shrink-0 rounded-full",
-                              active ? "bg-emerald" : "bg-transparent",
-                            )}
-                          />
                           <Icon className="h-[18px] w-[18px] shrink-0" />
                           <span className="truncate">{t(it.labelKey)}</span>
                         </Link>

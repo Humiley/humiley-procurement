@@ -112,13 +112,13 @@ export function SignatureDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-body/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(22,56,102,0.45)] p-4">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${uid}-title`}
-        className="card max-h-[90dvh] w-full max-w-md overflow-y-auto p-5"
+        className="card max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl p-7"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 id={`${uid}-title`} className="flex items-center gap-2 text-base font-semibold text-navy">

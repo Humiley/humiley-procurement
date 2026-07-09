@@ -49,7 +49,7 @@ export function DocDetailLayout({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-xl font-bold text-navy">{title}</h1>
+              <h1 className="text-[22px] font-bold text-navy">{title}</h1>
               {statusSlot}
             </div>
             {subtitle && <p className="mt-1 text-sm text-grey">{subtitle}</p>}

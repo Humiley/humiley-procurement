@@ -13,26 +13,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: "#205090", // primary — headers, primary buttons, table headers
-        emerald: "#00B060", // accent — success, highlights, CTAs (≤10% of surface)
-        body: "#1F2937", // body text
-        grey: "#5C6470", // secondary text, VN sublines
-        panel: "#F7F9FC", // panel/card backgrounds
+        // === the Humiley Portal's exact :root tokens (templates/index.html) ===
+        navy: "#205090",
+        navyDeep: "#163866",
+        navyLight: "#3168A8",
+        emerald: "#00B060",
+        emeraldDeep: "#008548",
+        body: "#1F2937",   // --text-dark
+        grey: "#5C6470",   // --text-light
+        line: "#dde2ee",   // --line: borders, dividers, table rules
+        panel: "#f0f2f8",  // --soft-bg: page/table-header ground
+        tint: "#e8edf6",   // --light-tint: icon tiles, soft chips
         tintNavy: "#3168A8",
         tintLight: "#B5C8E5",
-        // functional status colors (not brand — semantics only)
-        danger: "#DC2626",
-        warning: "#D97706",
+        danger: "#C00000",
+        warning: "#F59E0B",
+        info: "#8B5CF6",
+        success: "#10B981",
       },
       fontFamily: {
-        sans: ["Calibri", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Calibri", "Segoe UI", "system-ui", "Arial", "sans-serif"],
       },
       borderRadius: {
-        card: "0.5rem",
+        card: "10px",
       },
       boxShadow: {
-        card: "0 1px 3px rgba(31,41,55,0.08), 0 1px 2px rgba(31,41,55,0.04)",
-        "card-hover": "0 6px 16px rgba(31,41,55,0.12), 0 2px 4px rgba(31,41,55,0.06)",
+        card: "0 1px 4px rgba(32,80,144,0.08)",
+        "card-hover": "0 6px 16px rgba(32,80,144,0.14), 0 2px 4px rgba(32,80,144,0.08)",
+        topbar: "0 1px 3px rgba(32,80,144,0.06)",
       },
     },
   },

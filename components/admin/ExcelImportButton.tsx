@@ -90,7 +90,7 @@ export function ExcelImportButton({
       </div>
 
       {(result || error) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-body/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(22,56,102,0.45)] p-4">
           <div className="card w-full max-w-md p-5">
             {error ? (
               <div className="flex items-start gap-3">
