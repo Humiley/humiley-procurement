@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useTranslations } from "next-intl";
 import { Search, Calculator, Loader2 } from "lucide-react";
 import { searchTrade, estimateLanded, type TradeHit, type EstimateResult } from "@/app/(portal)/trade/estimator/actions";
@@ -8,6 +9,7 @@ import { searchTrade, estimateLanded, type TradeHit, type EstimateResult } from 
 /** §20 landed-cost estimator — search an item/HS code, enter commercials, compare duty routes. */
 export function Estimator({ rates }: { rates: Record<string, number> }) {
   const t = useTranslations("estimator");
+  const fmtErr = useActionError();
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<TradeHit[]>([]);
   const [picked, setPicked] = useState<TradeHit | null>(null);
@@ -54,7 +56,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
         }),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Estimate failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

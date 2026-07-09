@@ -22,6 +22,20 @@ export function isoVn(d: Date | string): string {
   return formatInTimeZone(new Date(d), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
 }
 
+/** Plain calendar date in Vietnam time, e.g. "2026-07-09" — for CSV/reports/date inputs.
+ *  NEVER use toISOString().slice(0,10) for display: on a +07 server, local-midnight dates
+ *  render as the PREVIOUS day. This helper is timezone-independent. */
+export function ymdVn(d: Date | string | null | undefined): string {
+  if (!d) return "";
+  return formatInTimeZone(new Date(d), TZ, "yyyy-MM-dd");
+}
+
+/** Date + minutes in Vietnam time, e.g. "2026-07-09 14:30". */
+export function ymdHmVn(d: Date | string | null | undefined): string {
+  if (!d) return "";
+  return formatInTimeZone(new Date(d), TZ, "yyyy-MM-dd HH:mm");
+}
+
 /** Canonical ISO-UTC string (used in signature snapshot hashing). */
 export function isoUtc(d: Date | string): string {
   return new Date(d).toISOString();
@@ -45,6 +59,11 @@ export function addDays(d: Date, days: number): Date {
 export function daysBetween(a: Date | string, b: Date | string): number {
   const ms = new Date(b).getTime() - new Date(a).getTime();
   return Math.floor(ms / 86_400_000);
+}
+
+/** Fiscal year a document belongs to (VN calendar year of its date, in VN time). */
+export function fiscalYearOf(d: Date | string): number {
+  return Number(formatInTimeZone(new Date(d), TZ, "yyyy"));
 }
 
 /** Current fiscal year in VN — calendar-year based (Jan–Dec). */

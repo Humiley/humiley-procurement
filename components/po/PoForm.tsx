@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPo } from "@/app/(portal)/purchase-orders/actions";
@@ -32,6 +33,7 @@ export function PoForm({
   contracts?: Record<string, PoVendorContract>;
 }) {
   const t = useTranslations("po");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [vendorId, setVendorId] = useState(vendors[0]?.id || "");
   const [currency, setCurrency] = useState("VND");
@@ -88,7 +90,7 @@ export function PoForm({
       });
       router.push(`/purchase-orders/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the purchase order.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

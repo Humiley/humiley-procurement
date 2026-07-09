@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { currentFiscalYear } from "@/lib/dates";
+import { fiscalYearOf } from "@/lib/dates";
 
 /**
  * §9 budget control — commitment/spend ledger on Budget rows (costCenter × category × FY).
@@ -21,11 +21,12 @@ const D = Prisma.Decimal;
 
 async function addToBudget(tx: Tx, budgetId: string, field: "committedVnd" | "spentVnd", delta: Prisma.Decimal) {
   if (delta.isZero()) return;
-  const row = await tx.budget.findUnique({ where: { id: budgetId } });
-  if (!row) return;
-  let next = row[field].plus(delta);
-  if (next.isNegative()) next = new D(0);   // never negative — releases clamp at zero
-  await tx.budget.update({ where: { id: budgetId }, data: { [field]: next } });
+  // Atomic zero-clamped increment in ONE statement — a JS read-modify-write loses concurrent
+  // postings under read-committed (two ledger effects on the same row = one silently dropped).
+  const col = field === "committedVnd" ? Prisma.sql`"committedVnd"` : Prisma.sql`"spentVnd"`;
+  await tx.$executeRaw`
+    UPDATE "Budget" SET ${col} = GREATEST(0, ${col} + ${delta.toString()}::numeric)
+    WHERE "id" = ${budgetId}`;
 }
 
 /** Resolve the budget row id for one PR line (explicit budgetId, else costCenter+category+FY). */
@@ -48,10 +49,10 @@ async function budgetIdForPrLine(
 
 /** PR approved: commit each line amount. sign=-1 reverses (e.g. a returned/cancelled PR). */
 export async function commitPr(prId: string, sign: 1 | -1 = 1) {
-  const fy = currentFiscalYear();
   await db.$transaction(async (tx) => {
     const pr = await tx.purchaseRequisition.findUnique({ where: { id: prId }, include: { lines: true } });
     if (!pr) return;
+    const fy = fiscalYearOf(pr.createdAt);   // the document's year, not the processing year
     for (const l of pr.lines) {
       const budgetId = await budgetIdForPrLine(tx, l, pr.costCenterId, fy);
       if (!budgetId) continue;
@@ -63,13 +64,13 @@ export async function commitPr(prId: string, sign: 1 | -1 = 1) {
 
 /** PO approved: swap the source-PR commitment for the PO's actual amounts (PR-linked POs only). */
 export async function moveCommitmentPrToPo(poId: string) {
-  const fy = currentFiscalYear();
   await db.$transaction(async (tx) => {
     const po = await tx.purchaseOrder.findUnique({
       where: { id: poId },
-      include: { lines: { include: { prLine: true } }, pr: { select: { costCenterId: true } } },
+      include: { lines: { include: { prLine: true } }, pr: { select: { costCenterId: true, createdAt: true } } },
     });
     if (!po?.pr) return;
+    const fy = fiscalYearOf(po.pr.createdAt);
     for (const l of po.lines) {
       const src = l.prLine ?? { budgetId: null, itemId: l.itemId };
       const budgetId = await budgetIdForPrLine(tx, src, po.pr.costCenterId, fy);
@@ -79,25 +80,26 @@ export async function moveCommitmentPrToPo(poId: string) {
         const est = new D(l.prLine.qty).times(l.prLine.estUnitPriceVnd).toDecimalPlaces(2);
         await addToBudget(tx, budgetId, "committedVnd", est.negated());
       }
-      await addToBudget(tx, budgetId, "committedVnd", new D(l.amount));
+      // §20: budgets are VND — convert foreign-currency PO amounts at the PO's captured rate
+      await addToBudget(tx, budgetId, "committedVnd", new D(l.amount).times(po.fxRate).toDecimalPlaces(2));
     }
   });
 }
 
 /** Invoice verified as matched: move commitment to spend for the invoiced amounts. */
 export async function spendOnInvoice(invoiceId: string) {
-  const fy = currentFiscalYear();
   await db.$transaction(async (tx) => {
     const inv = await tx.invoice.findUnique({
       where: { id: invoiceId },
-      include: { lines: { include: { poLine: { include: { prLine: true } } } }, po: { include: { pr: { select: { costCenterId: true } } } } },
+      include: { lines: { include: { poLine: { include: { prLine: true } } } }, po: { include: { pr: { select: { costCenterId: true, createdAt: true } } } } },
     });
     if (!inv?.po.pr) return;
+    const fy = fiscalYearOf(inv.po.pr.createdAt);
     for (const l of inv.lines) {
       const src = l.poLine.prLine ?? { budgetId: null, itemId: l.poLine.itemId };
       const budgetId = await budgetIdForPrLine(tx, src, inv.po.pr.costCenterId, fy);
       if (!budgetId) continue;
-      const amount = new D(l.amount);
+      const amount = new D(l.amount).times(inv.fxRate).toDecimalPlaces(2);   // VND ledger
       await addToBudget(tx, budgetId, "spentVnd", amount);
       await addToBudget(tx, budgetId, "committedVnd", amount.negated());
     }
@@ -106,10 +108,10 @@ export async function spendOnInvoice(invoiceId: string) {
 
 /** Goods issue executed (§10b): the issued cost (qty × avgCost from the OUT movements) hits spend. */
 export async function spendFromStock(goodsIssueId: string) {
-  const fy = currentFiscalYear();
   await db.$transaction(async (tx) => {
-    const gi = await tx.goodsIssue.findUnique({ where: { id: goodsIssueId }, select: { costCenterId: true } });
+    const gi = await tx.goodsIssue.findUnique({ where: { id: goodsIssueId }, select: { costCenterId: true, createdAt: true } });
     if (!gi) return;
+    const fy = fiscalYearOf(gi.createdAt);
     const movements = await tx.stockMovement.findMany({
       where: { refEntityType: "GoodsIssue", refEntityId: goodsIssueId, type: "ISSUE_OUT" },
       select: { itemId: true, qty: true, unitCostVnd: true },
@@ -124,20 +126,20 @@ export async function spendFromStock(goodsIssueId: string) {
 
 /** PO closed: release whatever commitment remains (ordered − invoiced, per line). */
 export async function releaseOnPoClose(poId: string) {
-  const fy = currentFiscalYear();
   await db.$transaction(async (tx) => {
     const po = await tx.purchaseOrder.findUnique({
       where: { id: poId },
-      include: { lines: { include: { prLine: true } }, pr: { select: { costCenterId: true } } },
+      include: { lines: { include: { prLine: true } }, pr: { select: { costCenterId: true, createdAt: true } } },
     });
     if (!po?.pr) return;
+    const fy = fiscalYearOf(po.pr.createdAt);
     for (const l of po.lines) {
       const src = l.prLine ?? { budgetId: null, itemId: l.itemId };
       const budgetId = await budgetIdForPrLine(tx, src, po.pr.costCenterId, fy);
       if (!budgetId) continue;
       const remaining = new D(l.qty).minus(l.invoicedQty);
       if (remaining.lessThanOrEqualTo(0)) continue;
-      const release = remaining.times(l.unitPrice).toDecimalPlaces(2);
+      const release = remaining.times(l.unitPrice).times(po.fxRate).toDecimalPlaces(2);
       await addToBudget(tx, budgetId, "committedVnd", release.negated());
     }
   });

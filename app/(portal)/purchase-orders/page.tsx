@@ -54,7 +54,7 @@ export default async function PurchaseOrdersPage() {
                   <td className="px-3 py-2.5">{p.vendor.code} · {p.vendor.nameEn}</td>
                   <td className="px-3 py-2.5 font-mono text-xs">{p.pr?.prNumber || "—"}</td>
                   <td className="px-3 py-2.5">{p.expectedDate ? formatVnDate(p.expectedDate) : "—"}</td>
-                  <td className="px-3 py-2.5 text-right font-semibold text-navy">{decToString(p.total, 0)} ₫</td>
+                  <td className="px-3 py-2.5 text-right font-semibold text-navy">{Number(decToString(p.total, 0)).toLocaleString("en-US")} ₫</td>
                   <td className="px-3 py-2.5"><StatusBadge status={p.status} label={st.has(p.status) ? st(p.status) : p.status} /></td>
                 </tr>
               ))}

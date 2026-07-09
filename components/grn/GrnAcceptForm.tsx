@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
@@ -11,6 +12,7 @@ export type GrnQcLine = { grnLineId: string; description: string; received: stri
 /** §9 QC + acceptance — accepted/rejected split per line, signed as RECEIVED (§19). */
 export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnNumber: string; lines: GrnQcLine[] }) {
   const t = useTranslations("grn");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [qc, setQc] = useState<Record<string, { a: string; r: string; reason: string; lot: string; exp: string }>>(
     Object.fromEntries(lines.map((l) => [l.grnLineId, { a: l.received, r: "0", reason: "", lot: "", exp: "" }])),
@@ -43,7 +45,8 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
     <div className="rounded-xl border border-navy/20 bg-navy/5 p-4">
       <h3 className="mb-2 text-sm font-bold text-navy">{t("qcTitle")}</h3>
       {error ? <p className="mb-2 rounded bg-danger/10 px-2 py-1 text-xs text-danger">{error}</p> : null}
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-grey">
             <th className="py-1 pr-2">{t("lineDesc")}</th>
@@ -69,6 +72,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
           ))}
         </tbody>
       </table>
+      </div>
       <div className="mt-3 flex justify-end">
         <button type="button" className="rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90" onClick={() => { setError(null); setSignOpen(true); }}>
           {t("acceptSign")}
@@ -77,7 +81,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
       <SignatureDialog
         open={signOpen}
         onClose={() => setSignOpen(false)}
-        onConfirm={async (p) => { try { await onSign(p); } catch (e) { setError(e instanceof Error ? e.message : "Failed"); setSignOpen(false); } }}
+        onConfirm={async (p) => { try { await onSign(p); } catch (e) { setError(fmtErr(e)); setSignOpen(false); } }}
         title={`${t("signTitle")} — ${grnNumber}`}
         meanings={["RECEIVED"]}
         meaningLabel={() => t("meaningReceived")}

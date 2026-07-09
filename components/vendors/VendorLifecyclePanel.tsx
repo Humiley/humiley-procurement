@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ShieldCheck } from "lucide-react";
@@ -11,6 +12,7 @@ export type VendorLcRow = { id: string; code: string; nameEn: string; status: st
 /** §7 vendor lifecycle panel: submit drafts for Director approval; blacklist approved vendors. */
 export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[]; canManage: boolean }) {
   const t = useTranslations("vendors.lifecycle");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
       await fn();
       start(() => router.refresh());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(null);
     }

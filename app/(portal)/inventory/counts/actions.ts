@@ -10,6 +10,7 @@ import { staleError } from "@/lib/workflow/transition";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { postMovement, StockError } from "@/lib/stock/post-movement";
 import { countCreateSchema, countEnterSchema, type CountCreatePayload, type CountEnterPayload } from "@/lib/schemas/transfer";
+import { assertWarehouseKeeper } from "@/lib/stock/keeper";
 
 const D = Prisma.Decimal;
 
@@ -18,6 +19,7 @@ export async function createCount(input: CountCreatePayload) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = countCreateSchema.parse(input);
 
+  await assertWarehouseKeeper(user, values.warehouseId);
   const balances = await db.stockBalance.findMany({ where: { warehouseId: values.warehouseId } });
   if (!balances.length) throw new Error("This warehouse has no stock lines to count.");
 
@@ -53,6 +55,7 @@ export async function saveCounts(input: CountEnterPayload) {
   const count = await db.stockCount.findUnique({ where: { id: values.countId }, include: { lines: true } });
   if (!count) throw new Error("Stock count not found.");
   if (count.status !== "COUNTING") throw new Error("Only an open count can be edited.");
+  await assertWarehouseKeeper(user, count.warehouseId);
   const lineById = new Map(count.lines.map((l) => [l.id, l]));
 
   await db.$transaction(async (tx) => {
@@ -98,45 +101,34 @@ export async function postCount(params: { id: string; password: string; reason?:
     throw e;
   }
 
-  const variances = count.lines.filter((l) => !new D(l.varianceQty).isZero());
+  // The counted quantity is the physical TRUTH: the adjustment must bring the CURRENT balance
+  // to countedQty, not replay a variance computed against the snapshot taken at count creation
+  // (stock that moved between snapshot and posting would otherwise be silently re-added/removed).
+  let adjustments = 0;
   try {
     await db.$transaction(async (tx) => {
-      for (const l of variances) {
-        const v = new D(l.varianceQty);
-        if (v.greaterThan(0)) {
-          // gain adjusts IN at the line's current average cost so stock value stays consistent
-          const bal = await tx.stockBalance.findFirst({ where: { warehouseId: count.warehouseId, itemId: l.itemId, lotId: l.lotId } });
-          await postMovement(
-            {
-              type: "ADJUST_IN",
-              warehouseId: count.warehouseId,
-              itemId: l.itemId,
-              lotId: l.lotId,
-              qty: v,
-              unitCostVnd: bal?.avgCostVnd ?? 0,
-              refEntityType: "StockCount",
-              refEntityId: count.id,
-              note: count.countNumber,
-              createdById: user.id,
-            },
-            tx,
-          );
-        } else {
-          await postMovement(
-            {
-              type: "ADJUST_OUT",
-              warehouseId: count.warehouseId,
-              itemId: l.itemId,
-              lotId: l.lotId,
-              qty: v.negated(),
-              refEntityType: "StockCount",
-              refEntityId: count.id,
-              note: count.countNumber,
-              createdById: user.id,
-            },
-            tx,
-          );
-        }
+      for (const l of count.lines) {
+        const bal = await tx.stockBalance.findFirst({ where: { warehouseId: count.warehouseId, itemId: l.itemId, lotId: l.lotId } });
+        const current = new D(bal?.qtyOnHand ?? 0);
+        const delta = new D(l.countedQty).minus(current);
+        if (delta.isZero()) continue;
+        adjustments += 1;
+        await postMovement(
+          {
+            type: delta.greaterThan(0) ? "ADJUST_IN" : "ADJUST_OUT",
+            warehouseId: count.warehouseId,
+            itemId: l.itemId,
+            lotId: l.lotId,
+            qty: delta.abs(),
+            // gains enter at the line's current average cost so stock value stays consistent
+            unitCostVnd: delta.greaterThan(0) ? bal?.avgCostVnd ?? 0 : undefined,
+            refEntityType: "StockCount",
+            refEntityId: count.id,
+            note: count.countNumber,
+            createdById: user.id,
+          },
+          tx,
+        );
       }
       const ok = await tx.stockCount.updateMany({ where: { id: count.id, status: "COUNTING" }, data: { status: "POSTED" } });
       if (!ok.count) throw staleError();
@@ -146,9 +138,9 @@ export async function postCount(params: { id: string; password: string; reason?:
     throw e;
   }
 
-  await audit({ userId: user.id, action: "CNT_POST", entityType: "StockCount", entityId: count.id, after: { adjustments: variances.length, signatureId: sig.id } });
+  await audit({ userId: user.id, action: "CNT_POST", entityType: "StockCount", entityId: count.id, after: { adjustments, signatureId: sig.id } });
   revalidatePath(`/inventory/counts/${count.id}`);
   revalidatePath("/inventory/counts");
   revalidatePath("/inventory");
-  return { id: count.id, adjustments: variances.length };
+  return { id: count.id, adjustments };
 }

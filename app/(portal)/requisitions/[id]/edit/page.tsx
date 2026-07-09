@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/rbac";
+import { ymdVn } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { PrForm, type CostCenterOpt, type ExistingPr } from "@/components/pr/PrForm";
@@ -49,7 +50,7 @@ export default async function EditRequisitionPage({ params }: { params: { id: st
   const existing: ExistingPr = {
     id: pr.id,
     costCenterId: pr.costCenterId,
-    neededByDate: pr.neededByDate.toISOString().slice(0, 10),
+    neededByDate: ymdVn(pr.neededByDate),
     purpose: pr.purpose,
     projectCode: pr.projectCode ?? "",
     lines: pr.lines.map<PrEditorLine>((l) => ({

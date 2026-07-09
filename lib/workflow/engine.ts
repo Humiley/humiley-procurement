@@ -115,12 +115,15 @@ export async function createSteps(params: {
   link: string; // in-app link for notifications, e.g. /requisitions/<id>
   refLabel: string; // e.g. PR-2026-00012
 }) {
+  // Match by minAmountVnd only and prefer the TIGHTEST band per level (greatest min ≤ amount).
+  // Matching min..max as an interval left 1-VND gaps between seeded bands (e.g. an amount of
+  // 19,999,999.50 matched nothing) — resolving by min is gap-free by construction, and the
+  // tightest band containing the amount is always the intended one.
   const rows = await db.approvalMatrix.findMany({
     where: {
       entityType: params.entityType,
       isActive: true,
       minAmountVnd: { lte: params.amountVnd },
-      OR: [{ maxAmountVnd: null }, { maxAmountVnd: { gte: params.amountVnd } }],
     },
     orderBy: { level: "asc" },
   });
@@ -128,35 +131,42 @@ export async function createSteps(params: {
     throw new Error("No approval matrix band matches this amount — ask an admin to configure the matrix.");
   }
 
+  const bandMin = rows.reduce((m, r) => (Number(r.minAmountVnd) > m ? Number(r.minAmountVnd) : m), 0);
+  const inBand = rows.filter((r) => Number(r.minAmountVnd) === bandMin);
   // one step per distinct level (matrix may hold dept-scoped variants — prefer dept match)
   const byLevel = new Map<number, (typeof rows)[number]>();
-  for (const r of rows) {
+  for (const r of inBand) {
     const cur = byLevel.get(r.level);
     if (!cur || (r.departmentId === params.departmentId && cur.departmentId !== params.departmentId)) {
       byLevel.set(r.level, r);
     }
   }
 
-  const steps = [];
+  // resolve every approver first, then create ALL steps in one transaction — a mid-chain
+  // resolution failure must not strand a partial PENDING chain on the document
+  const resolved: { level: number; approverId: string }[] = [];
   for (const [level, row] of Array.from(byLevel.entries()).sort((a, b) => a[0] - b[0])) {
     const approver = await resolveApprover(
       { approverUserId: row.approverUserId, approverRole: row.approverRole, level },
       { departmentId: params.departmentId, requesterId: params.requesterId, entityType: params.entityType, entityId: params.entityId },
     );
     if (!approver) throw new Error(`No eligible approver found for level ${level} (${LEVEL_LABELS[level] || "level " + level}).`);
-    steps.push(
-      await db.approvalStep.create({
+    resolved.push({ level, approverId: approver.id });
+  }
+  const steps = await db.$transaction(
+    resolved.map((r) =>
+      db.approvalStep.create({
         data: {
           entityType: params.entityType,
           entityId: params.entityId,
-          level,
-          approverId: approver.id,
+          level: r.level,
+          approverId: r.approverId,
           status: "PENDING",
           slaDueAt: addBusinessDays(new Date(), SLA_BUSINESS_DAYS),
         },
       }),
-    );
-  }
+    ),
+  );
 
   // hand the document to level 1
   const first = steps[0];
@@ -171,6 +181,23 @@ export async function createSteps(params: {
 }
 
 export type Decision = "APPROVED" | "REJECTED" | "RETURNED";
+
+/**
+ * §19 order-of-operations guard: decide actions call this BEFORE signRecord so an
+ * unauthorized caller is refused before any signature row is written (no orphan
+ * signatures, no unauthorized signing). applyDecision re-checks afterwards.
+ */
+export async function assertCurrentApprover(entityType: ApprovalEntityType, entityId: string, userId: string) {
+  const active = await db.approvalStep.findFirst({
+    where: { entityType, entityId, status: "PENDING" },
+    orderBy: { level: "asc" },
+  });
+  if (!active) throw new Error("Nothing is waiting for approval on this document.");
+  if (active.approverId !== userId) {
+    throw new Error("This document is waiting for a different approver at the current level.");
+  }
+  return active;
+}
 
 /**
  * Record a decision on the entity's ACTIVE step (the pending step at the lowest level).
@@ -202,8 +229,8 @@ export async function applyDecision(params: {
     throw new Error("A comment is required to reject or return a document.");
   }
 
-  await db.approvalStep.update({
-    where: { id: active.id },
+  const decided = await db.approvalStep.updateMany({
+    where: { id: active.id, status: "PENDING" },
     data: {
       status: params.decision as ApprovalStepStatus,
       decidedAt: new Date(),
@@ -211,6 +238,9 @@ export async function applyDecision(params: {
       snapshotHash: params.snapshotHash,
     },
   });
+  if (decided.count === 0) {
+    throw new Error("This step was already decided by a concurrent action — reload the document.");
+  }
 
   if (params.decision === "APPROVED") {
     const next = pending[1];

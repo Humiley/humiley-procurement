@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
+import { ymdVn } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
@@ -105,7 +106,7 @@ export async function sendRfq(id: string, justification?: string) {
         text:
           `Dear ${rv.vendor.contactName || rv.vendor.nameEn},\n\n` +
           `Please find attached our request for quotation ${rfq.rfqNumber} ("${rfq.title}").\n` +
-          `Kindly return your best offer by ${rfq.dueDate.toISOString().slice(0, 10)}.\n\n` +
+          `Kindly return your best offer by ${ymdVn(rfq.dueDate)}.\n\n` +
           `Best regards,\nHumiley Procurement`,
         attachments: [{ filename: `${rfq.rfqNumber}.pdf`, content: buf }],
       });

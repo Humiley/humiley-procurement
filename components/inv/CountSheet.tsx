@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Save, ClipboardCheck } from "lucide-react";
@@ -24,6 +25,7 @@ export function CountSheet({
   lines: CountLineRow[];
 }) {
   const t = useTranslations("cnt");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [counted, setCounted] = useState<Record<string, string>>(Object.fromEntries(lines.map((l) => [l.lineId, l.countedQty])));
   const [busy, setBusy] = useState(false);
@@ -39,7 +41,7 @@ export function CountSheet({
       await saveCounts({ countId: id, lines: lines.map((l) => ({ lineId: l.lineId, countedQty: counted[l.lineId] || "0" })) });
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

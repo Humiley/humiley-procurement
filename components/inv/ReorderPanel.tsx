@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { FilePlus2 } from "lucide-react";
@@ -12,6 +13,7 @@ export type ReorderOpt = { id: string; label: string };
 /** §10b one-click reorder: pick breached items → draft PR (source=REORDER). */
 export function ReorderPanel({ breaches, costCenters, canGenerate }: { breaches: ReorderBreach[]; costCenters: ReorderOpt[]; canGenerate: boolean }) {
   const t = useTranslations("reorder");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set(breaches.map((b) => `${b.warehouseId}|${b.itemId}`)));
   const [costCenterId, setCostCenterId] = useState(costCenters[0]?.id || "");
@@ -40,7 +42,7 @@ export function ReorderPanel({ breaches, costCenters, canGenerate }: { breaches:
       }
       router.push(`/requisitions/${lastId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the requisition.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

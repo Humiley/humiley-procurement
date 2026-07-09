@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createGrn } from "@/app/(portal)/goods-receipts/actions";
@@ -21,6 +22,7 @@ export function GrnForm({
   lines: GrnPoLine[];
 }) {
   const t = useTranslations("grn");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
   const [notes, setNotes] = useState("");
@@ -40,7 +42,7 @@ export function GrnForm({
       });
       router.push(`/goods-receipts/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the GRN.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

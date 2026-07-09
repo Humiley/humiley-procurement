@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
+import { ymdVn } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
@@ -85,8 +86,8 @@ export async function checkContractRenewals() {
     const payload = {
       titleEn: `Contract ${c.contractNumber} (${c.vendor.code}) expires in ${daysLeft} day(s)`,
       titleVn: `Hợp đồng ${c.contractNumber} (${c.vendor.code}) hết hạn sau ${daysLeft} ngày`,
-      bodyEn: `${c.title} — valid to ${c.endDate.toISOString().slice(0, 10)}. Review for renewal.`,
-      bodyVn: `${c.title} — hiệu lực đến ${c.endDate.toISOString().slice(0, 10)}. Xem xét gia hạn.`,
+      bodyEn: `${c.title} — valid to ${ymdVn(c.endDate)}. Review for renewal.`,
+      bodyVn: `${c.title} — hiệu lực đến ${ymdVn(c.endDate)}. Xem xét gia hạn.`,
       link,
     };
     await notifyRole("PURCHASER", payload);

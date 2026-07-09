@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createCount } from "@/app/(portal)/inventory/counts/actions";
@@ -8,6 +9,7 @@ import { createCount } from "@/app/(portal)/inventory/counts/actions";
 /** Pick a warehouse → snapshot a new count sheet. */
 export function NewCountButton({ warehouses }: { warehouses: { id: string; label: string }[] }) {
   const t = useTranslations("cnt");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
   const [busy, setBusy] = useState(false);
@@ -20,7 +22,7 @@ export function NewCountButton({ warehouses }: { warehouses: { id: string; label
       const res = await createCount({ warehouseId });
       router.push(`/inventory/counts/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the count.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

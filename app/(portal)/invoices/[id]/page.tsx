@@ -50,7 +50,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
         <span className="text-sm text-grey">
           {t("subtotal")}: <b className="text-body">{decToString(inv.subtotal, 0)}</b> · VAT: <b className="text-body">{decToString(inv.vatAmount, 0)}</b>
         </span>
-        <span className="text-lg font-bold text-navy">{decToString(inv.total, 0)} ₫</span>
+        <span className="text-lg font-bold text-navy">{Number(decToString(inv.total, 0)).toLocaleString("en-US")} ₫</span>
       </div>
 
       {hasAnyRole(user, ["ACCOUNTANT", "ADMIN"]) ? (

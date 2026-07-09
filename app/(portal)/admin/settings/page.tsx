@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { ScrollText, AlertTriangle } from "lucide-react";
+import { ymdHmVn } from "@/lib/dates";
 import { IntegrityPanel } from "@/components/admin/IntegrityPanel";
 import { IntegrationPanels, type ApiKeyRow, type WebhookRow } from "@/components/admin/IntegrationPanels";
 import { FileSpreadsheet } from "lucide-react";
@@ -21,7 +22,7 @@ export default async function SettingsPage() {
   ]);
   const keyRows: ApiKeyRow[] = apiKeys.map((k) => ({
     id: k.id, name: k.name, prefix: k.prefix, isActive: k.isActive,
-    lastUsedAt: k.lastUsedAt ? k.lastUsedAt.toISOString().slice(0, 16).replace("T", " ") : null,
+    lastUsedAt: k.lastUsedAt ? ymdHmVn(k.lastUsedAt) : null,
   }));
   const hookRows: WebhookRow[] = webhooks.map((w) => ({ id: w.id, url: w.url, events: w.events, hasSecret: !!w.secret }));
 

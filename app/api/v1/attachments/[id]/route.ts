@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { readStored } from "@/lib/storage";
+import { canAccessAttachment } from "@/lib/attachment-authz";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,9 @@ export async function GET(
 
   const att = await db.attachment.findUnique({ where: { id: params.id } });
   if (!att) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!(await canAccessAttachment(user, att))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     const buf = await readStored(att.storagePath);

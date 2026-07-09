@@ -81,11 +81,11 @@ export function PrLinesEditor({
           <thead>
             <tr>
               <th className="th w-8 text-center">#</th>
-              <th className="th">Item / description</th>
-              <th className="th w-28">UoM</th>
-              <th className="th w-24 text-right">Qty</th>
-              <th className="th w-40 text-right">Unit price</th>
-              <th className="th w-40 text-right">Amount</th>
+              <th className="th">{t("thItem")}</th>
+              <th className="th w-28">{t("thUom")}</th>
+              <th className="th w-24 text-right">{t("qty")}</th>
+              <th className="th w-40 text-right">{t("unitPrice")}</th>
+              <th className="th w-40 text-right">{t("amount")}</th>
               <th className="th w-10" />
             </tr>
           </thead>
@@ -93,7 +93,7 @@ export function PrLinesEditor({
             {lines.length === 0 && (
               <tr>
                 <td className="td text-center text-grey" colSpan={7}>
-                  No lines yet.
+                  {t("linesEmpty")}
                 </td>
               </tr>
             )}
@@ -106,7 +106,7 @@ export function PrLinesEditor({
                     value={l.itemId}
                     onChange={(e) => pickItem(l.key, e.target.value)}
                   >
-                    <option value="">— Free text —</option>
+                    <option value="">{t("freeText")}</option>
                     {items.map((it) => (
                       <option key={it.id} value={it.id}>
                         {it.label}
@@ -116,7 +116,7 @@ export function PrLinesEditor({
                   {!l.itemId && (
                     <input
                       className="field mt-1"
-                      placeholder="Describe the item / service"
+                      placeholder={t("freeTextPlaceholder")}
                       value={l.freeTextDescription}
                       onChange={(e) => update(l.key, { freeTextDescription: e.target.value })}
                     />
@@ -165,7 +165,7 @@ export function PrLinesEditor({
                     type="button"
                     className="btn-ghost text-danger"
                     onClick={() => onChange(lines.filter((x) => x.key !== l.key))}
-                    aria-label="Remove line"
+                    aria-label={t("removeLine")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -177,7 +177,7 @@ export function PrLinesEditor({
             <tfoot>
               <tr>
                 <td className="td text-right font-semibold text-navy" colSpan={5}>
-                  Estimated total
+                  {t("estimatedTotal")}
                 </td>
                 <td className="td text-right font-bold text-navy tabular-nums">{vnd.format(total)}</td>
                 <td className="td" />
@@ -187,7 +187,7 @@ export function PrLinesEditor({
         </table>
       </div>
       <button type="button" className="btn-outline" onClick={() => onChange([...lines, newPrLine()])}>
-        <Plus className="h-4 w-4" /> Add line
+        <Plus className="h-4 w-4" /> {t("addLine")}
       </button>
     </div>
   );

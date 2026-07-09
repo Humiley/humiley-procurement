@@ -2,6 +2,7 @@ import { PrismaClient, type Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
+const YEAR = new Date().getFullYear();   // demo docs follow the current year
 
 /**
  * Seed (spec §13). Grows per phase: Phase 1 seeds departments + the full set of demo login
@@ -574,7 +575,7 @@ async function seedDemoPr() {
   console.log(`Seeded demo PR ${prNumber} (3 lines, SUBMITTED, approval steps L1+L2).`);
 
   // A second demo PR already APPROVED (steps completed) so "Create PO from PR" is demoable at once.
-  const pr2Number = "HML-PR-2026-0002";
+  const pr2Number = `HML-PR-${YEAR}-0002`;
   if (!(await db.purchaseRequisition.findUnique({ where: { prNumber: pr2Number } })) && requester && cc && mgrEng && dirFin) {
     const itm = await db.item.findFirst({ where: { code: "CONS-BOLT-M8" } });
     const uomAny = await db.uom.findFirst({ where: { code: "BOX" } });
@@ -603,14 +604,14 @@ async function seedDemoPr() {
           { entityType: "PR", entityId: pr2.id, level: 2, approverId: dirFin.id, status: "APPROVED", decidedAt: new Date() },
         ],
       });
-      await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 2 }, create: { key: "PR", year: 2026, lastValue: 2 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PR", year: YEAR } }, update: { lastValue: 2 }, create: { key: "PR", year: YEAR, lastValue: 2 } });
       console.log(`Seeded demo PR ${pr2Number} (APPROVED — ready for Create PO).`);
     }
   }
 
   // A CONVERTED PR + SENT PO pair so Phase-7 receiving/invoicing is demoable immediately.
-  const pr3Number = "HML-PR-2026-0003";
-  const po1Number = "HML-PO-2026-0001";
+  const pr3Number = `HML-PR-${YEAR}-0003`;
+  const po1Number = `HML-PO-${YEAR}-0001`;
   if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po1Number } })) && requester && cc && mgrEng && dirFin) {
     const itm = await db.item.findFirst({ where: { code: "CONS-BOLT-M8" } });
     const uomAny = await db.uom.findFirst({ where: { code: "BOX" } });
@@ -659,8 +660,8 @@ async function seedDemoPr() {
           },
         },
       });
-      await db.sequence.upsert({ where: { key_year: { key: "PR", year: 2026 } }, update: { lastValue: 3 }, create: { key: "PR", year: 2026, lastValue: 3 } });
-      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 1 }, create: { key: "PO", year: 2026, lastValue: 1 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PR", year: YEAR } }, update: { lastValue: 3 }, create: { key: "PR", year: YEAR, lastValue: 3 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: YEAR } }, update: { lastValue: 1 }, create: { key: "PO", year: YEAR, lastValue: 1 } });
       // Two MATCHED, UNPAID invoices on this PO (goods fully received) so the §10a acceptance —
       // "two matched invoices combine into one payment request; PAID cascades to both" — is
       // demoable immediately.
@@ -673,7 +674,7 @@ async function seedDemoPr() {
           invNo += 1;
           await db.invoice.create({
             data: {
-              invoiceNumber: `HML-INV-2026-000${invNo}`,
+              invoiceNumber: `HML-INV-${YEAR}-000${invNo}`,
               vendorInvoiceNo: `000120${invNo}/HD-2026`,
               vendorId: po1.vendorId,
               poId: po1.id,
@@ -688,7 +689,7 @@ async function seedDemoPr() {
             },
           });
         }
-        await db.sequence.upsert({ where: { key_year: { key: "INV", year: 2026 } }, update: { lastValue: 2 }, create: { key: "INV", year: 2026, lastValue: 2 } });
+        await db.sequence.upsert({ where: { key_year: { key: "INV", year: YEAR } }, update: { lastValue: 2 }, create: { key: "INV", year: YEAR, lastValue: 2 } });
       }
       console.log(`Seeded ${pr3Number} (CONVERTED) + ${po1Number} (RECEIVED) + 2 MATCHED invoices — ready for payment-request demo.`);
     }
@@ -696,7 +697,7 @@ async function seedDemoPr() {
 
   // A SENT PO with nothing received — drives the §10b acceptance (GRN of 10 pcs @ 1,000,000
   // raises stock by 10 / value by 10M; issuing 4 posts OUT at avg cost).
-  const po2Number = "HML-PO-2026-0002";
+  const po2Number = `HML-PO-${YEAR}-0002`;
   if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po2Number } }))) {
     const damper = await db.item.findFirst({ where: { code: "HVAC-DMPR-30" }, include: { uom: true } });
     const vendor2 = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
@@ -722,20 +723,20 @@ async function seedDemoPr() {
           },
         },
       });
-      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 2 }, create: { key: "PO", year: 2026, lastValue: 2 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: YEAR } }, update: { lastValue: 2 }, create: { key: "PO", year: YEAR, lastValue: 2 } });
       console.log(`Seeded ${po2Number} (SENT, 10 pcs @ 1,000,000) — ready for the §10b GRN→stock→issue demo.`);
     }
   }
 
   // Phase 11: an ACTIVE framework agreement expiring inside its alert window (drives §9
   // contracted-price auto-fill on POs + the renewal notification).
-  if (!(await db.contract.findUnique({ where: { contractNumber: "HML-CTR-2026-0001" } }))) {
+  if (!(await db.contract.findUnique({ where: { contractNumber: `HML-CTR-${YEAR}-0001` } }))) {
     const vendorC = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
     const bolt = await db.item.findUnique({ where: { code: "CONS-BOLT-M8" } });
     if (vendorC && bolt) {
       await db.contract.create({
         data: {
-          contractNumber: "HML-CTR-2026-0001",
+          contractNumber: `HML-CTR-${YEAR}-0001`,
           vendorId: vendorC.id,
           title: "2026 consumables framework agreement / Hợp đồng nguyên tắc vật tư tiêu hao 2026",
           startDate: new Date(Date.now() - 180 * 24 * 3600 * 1000),
@@ -746,14 +747,14 @@ async function seedDemoPr() {
           status: "ACTIVE",
         },
       });
-      await db.sequence.upsert({ where: { key_year: { key: "CTR", year: 2026 } }, update: { lastValue: 1 }, create: { key: "CTR", year: 2026, lastValue: 1 } });
-      console.log("Seeded HML-CTR-2026-0001 (ACTIVE, expires in 30d < 60d alert) — CONS-BOLT-M8 @ 280,000.");
+      await db.sequence.upsert({ where: { key_year: { key: "CTR", year: YEAR } }, update: { lastValue: 1 }, create: { key: "CTR", year: YEAR, lastValue: 1 } });
+      console.log("Seeded HML-CTR-${YEAR}-0001 (ACTIVE, expires in 30d < 60d alert) — CONS-BOLT-M8 @ 280,000.");
     }
   }
 
   // Phase 13: a SENT PO for a LOT-TRACKED item so the §21 receive-with-lot → label → FEFO →
   // trace chain is demoable immediately.
-  const po3Number = "HML-PO-2026-0003";
+  const po3Number = `HML-PO-${YEAR}-0003`;
   if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po3Number } }))) {
     const hepa = await db.item.findFirst({ where: { code: "HVAC-HEPA-14" } });
     const vendor3 = await db.vendor.findFirst({ where: { code: "V-CLEAN01" } });
@@ -779,7 +780,7 @@ async function seedDemoPr() {
           },
         },
       });
-      await db.sequence.upsert({ where: { key_year: { key: "PO", year: 2026 } }, update: { lastValue: 3 }, create: { key: "PO", year: 2026, lastValue: 3 } });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: YEAR } }, update: { lastValue: 3 }, create: { key: "PO", year: YEAR, lastValue: 3 } });
       console.log(`Seeded ${po3Number} (SENT, 6 pcs lot-tracked HVAC-HEPA-14 @ 2,800,000) — drives the §21 demo.`);
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
@@ -15,6 +16,7 @@ type Line = { itemId: string; qty: string };
 /** §10b transfer request — source/destination warehouses + item lines with source on-hand hints. */
 export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[]; items: TrfItemOpt[]; stock: TrfStockRow[] }) {
   const t = useTranslations("trf");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [fromId, setFromId] = useState(warehouses[0]?.id || "");
   const [toId, setToId] = useState(warehouses[1]?.id || "");
@@ -32,7 +34,7 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
       const res = await createTransfer({ fromWarehouseId: fromId, toWarehouseId: toId, lines });
       router.push(`/inventory/transfers/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the transfer.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

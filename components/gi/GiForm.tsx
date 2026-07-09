@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
@@ -25,6 +26,7 @@ export function GiForm({
   stock: GiStockRow[];
 }) {
   const t = useTranslations("gi");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
   const [costCenterId, setCostCenterId] = useState(costCenters[0]?.id || "");
@@ -44,7 +46,7 @@ export function GiForm({
       const res = await createGoodsIssue({ warehouseId, costCenterId, projectCode, purpose, lines });
       router.push(`/inventory/issues/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the goods issue.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

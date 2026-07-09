@@ -55,13 +55,13 @@ export async function managerDashboard(userId: string): Promise<ManagerDashboard
   const byVendor = new Map<string, Prisma.Decimal>();
   for (let m = 0; m <= now.getMonth(); m++) trend.set(`${String(m + 1).padStart(2, "0")}/${now.getFullYear()}`, new D(0));
   for (const i of invoices) {
-    spendYtd = spendYtd.plus(i.total);
-    if (i.invoiceDate >= mStart) spendMtd = spendMtd.plus(i.total);
+    spendYtd = spendYtd.plus(i.subtotal);   // ex-VAT, consistent with the category donut
+    if (i.invoiceDate >= mStart) spendMtd = spendMtd.plus(i.subtotal);
     const mk = `${String(i.invoiceDate.getMonth() + 1).padStart(2, "0")}/${i.invoiceDate.getFullYear()}`;
-    trend.set(mk, (trend.get(mk) ?? new D(0)).plus(i.total));
+    trend.set(mk, (trend.get(mk) ?? new D(0)).plus(i.subtotal));
     const dept = i.po.pr?.department.code ?? "—";
-    byDept.set(dept, (byDept.get(dept) ?? new D(0)).plus(i.total));
-    byVendor.set(i.vendor.code, (byVendor.get(i.vendor.code) ?? new D(0)).plus(i.total));
+    byDept.set(dept, (byDept.get(dept) ?? new D(0)).plus(i.subtotal));
+    byVendor.set(i.vendor.code, (byVendor.get(i.vendor.code) ?? new D(0)).plus(i.subtotal));
     for (const l of i.lines) {
       const cat = l.poLine.item?.category.code ?? "—";
       byCat.set(cat, (byCat.get(cat) ?? new D(0)).plus(l.amount));

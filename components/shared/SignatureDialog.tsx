@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { PenLine, X, Loader2 } from "lucide-react";
 
 export type SignaturePayload = {
@@ -13,16 +14,16 @@ export type SignaturePayload = {
  * The §19 signing ceremony (spec §22.3 <SignatureDialog>) — one component reused for every
  * signature (PR/PO/payment/etc.). Collects password re-auth + meaning + reason and hands them
  * to `onConfirm`. The cryptographic snapshot/hash-chain lives in lib/esign/sign.ts (Phase 4);
- * this dialog only gathers the ceremony inputs.
+ * this dialog only gathers the ceremony inputs. Fully bilingual via the `esign` namespace.
  */
 export function SignatureDialog({
   open,
   onClose,
   onConfirm,
-  title = "Electronic signature",
+  title,
   meanings = ["APPROVED", "REVIEWED", "AUTHORED", "VERIFIED"],
   meaningLabel = (m) => m,
-  submitLabel = "Sign & continue",
+  submitLabel,
   requireReason = false,
 }: {
   open: boolean;
@@ -34,6 +35,7 @@ export function SignatureDialog({
   submitLabel?: string;
   requireReason?: boolean;
 }) {
+  const t = useTranslations("esign");
   const [password, setPassword] = useState("");
   const [meaning, setMeaning] = useState(meanings[0] ?? "APPROVED");
   const [reason, setReason] = useState("");
@@ -44,15 +46,15 @@ export function SignatureDialog({
 
   async function submit() {
     setError(null);
-    if (!password) return setError("Enter your password to sign.");
-    if (requireReason && !reason.trim()) return setError("A reason is required.");
+    if (!password) return setError(t("errPassword"));
+    if (requireReason && !reason.trim()) return setError(t("errReason"));
     setBusy(true);
     try {
       await onConfirm({ password, meaning, reason: reason.trim() });
       setPassword("");
       setReason("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Signing failed.");
+      setError(e instanceof Error ? e.message : t("errFailed"));
     } finally {
       setBusy(false);
     }
@@ -63,16 +65,16 @@ export function SignatureDialog({
       <div className="card w-full max-w-md p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-base font-semibold text-navy">
-            <PenLine className="h-4 w-4" /> {title}
+            <PenLine className="h-4 w-4" /> {title ?? t("title")}
           </h2>
-          <button className="btn-ghost" onClick={onClose} aria-label="Close">
+          <button className="btn-ghost" onClick={onClose} aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="label">Meaning</label>
+            <label className="label">{t("meaning")}</label>
             <select className="field" value={meaning} onChange={(e) => setMeaning(e.target.value)}>
               {meanings.map((m) => (
                 <option key={m} value={m}>
@@ -82,9 +84,7 @@ export function SignatureDialog({
             </select>
           </div>
           <div>
-            <label className="label">
-              Reason{requireReason ? "" : " (optional)"}
-            </label>
+            <label className="label">{requireReason ? t("reason") : t("reasonOptional")}</label>
             <textarea
               className="field min-h-[64px]"
               value={reason}
@@ -92,7 +92,7 @@ export function SignatureDialog({
             />
           </div>
           <div>
-            <label className="label">Confirm your password</label>
+            <label className="label">{t("password")}</label>
             <input
               type="password"
               autoComplete="current-password"
@@ -100,20 +100,18 @@ export function SignatureDialog({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="mt-1 text-xs text-grey">
-              Re-authenticating applies your legally-binding electronic signature (21 CFR Part 11).
-            </p>
+            <p className="mt-1 text-xs text-grey">{t("note")}</p>
           </div>
           {error && <p className="text-sm font-medium text-danger">{error}</p>}
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
           <button className="btn-outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {t("cancel")}
           </button>
           <button className="btn-primary" onClick={submit} disabled={busy}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {submitLabel}
+            {submitLabel ?? t("submit")}
           </button>
         </div>
       </div>

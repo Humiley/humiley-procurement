@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, PackageMinus } from "lucide-react";
@@ -24,6 +25,7 @@ export function GiDetailActions({
   execLines: GiExecLine[];
 }) {
   const t = useTranslations("gi");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function GiDetailActions({
       await submitGoodsIssue(id);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Submit failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

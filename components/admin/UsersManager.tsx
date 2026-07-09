@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Pencil, Plus, KeyRound, X, Loader2 } from "lucide-react";
@@ -141,6 +142,8 @@ function UserFormModal({
   const router = useRouter();
   const isEdit = !!user;
 
+  const fmtErr = useActionError();
+
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [roles, setRoles] = useState<Role[]>(user?.roles ?? ["REQUESTER"]);
@@ -179,7 +182,7 @@ function UserFormModal({
       router.refresh();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save user.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }
@@ -192,7 +195,7 @@ function UserFormModal({
       router.refresh();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

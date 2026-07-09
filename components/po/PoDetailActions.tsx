@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { submitPo, sendPo, cancelPo, closePo } from "@/app/(portal)/purchase-orders/actions";
@@ -16,6 +17,7 @@ export function PoDetailActions({
   canManage: boolean;
 }) {
   const t = useTranslations("po");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export function PoDetailActions({
       await fn();
       start(() => router.refresh());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(null);
     }

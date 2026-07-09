@@ -39,7 +39,8 @@
     "notes": "Notes",
     "attachments": "Attachments",
     "audit": "Audit",
-    "approvals": "Approvals & Signatures"
+    "approvals": "Approvals & Signatures",
+    "actionFailed": "The action failed. Please try again."
   },
   "auth": {
     "signIn": "Sign in",
@@ -110,8 +111,6 @@
     "myRequisitions": "My requisitions",
     "pendingApprovals": "Pending approvals",
     "openPos": "Open purchase orders",
-    "spendMtd": "Spend MTD",
-    "spendYtd": "Spend YTD",
     "recentActivity": "Recent activity",
     "nothingYet": "Nothing here yet."
   },
@@ -156,7 +155,9 @@
     "PARTIALLY_REJECTED": "Partially rejected",
     "UNMATCHED": "Unmatched",
     "MISMATCH": "Mismatch",
-    "UNPAID": "Unpaid"
+    "UNPAID": "Unpaid",
+    "EXPIRED": "Expired",
+    "TERMINATED": "Terminated"
   },
   "admin": {
     "users": {
@@ -177,9 +178,9 @@
     },
     "md": {
       "fields": {
-    "overBudgetPolicy": "Over-budget policy",
-    "policyWarn": "WARN — submit allowed, approvers see a banner",
-    "policyBlock": "BLOCK — over-budget submissions refused",
+        "overBudgetPolicy": "Over-budget policy",
+        "policyWarn": "WARN — submit allowed, approvers see a banner",
+        "policyBlock": "BLOCK — over-budget submissions refused",
         "code": "Code",
         "nameEn": "Name (EN)",
         "nameVn": "Name (VN)",
@@ -291,7 +292,14 @@
     "stockHint": "In stock: {qty}",
     "signatureBlock": "Electronic signatures",
     "createPo": "Create PO from this PR",
-    "createRfq": "Create RFQ"
+    "createRfq": "Create RFQ",
+    "thItem": "Item / description",
+    "thUom": "UoM",
+    "freeText": "— Free text —",
+    "freeTextPlaceholder": "Describe the item / service",
+    "removeLine": "Remove line",
+    "estimatedTotal": "Estimated total",
+    "addLine": "Add line"
   },
   "approvals": {
     "title": "Waiting for me",
@@ -590,7 +598,7 @@
     "empty": "No data for this period.",
     "rowCount": "{count} row(s)",
     "names": {
-    "exception-register": "Exception Register",
+      "exception-register": "Exception Register",
       "spend-by-vendor": "Spend by Vendor",
       "spend-by-category": "Spend by Category",
       "spend-by-department": "Spend by Department",
@@ -607,7 +615,7 @@
       "inventory-value": "Inventory Value"
     },
     "descs": {
-    "exception-register": "Every override — single-source, tolerance, bank changes — for the quarterly compliance report.",
+      "exception-register": "Every override — single-source, tolerance, bank changes — for the quarterly compliance report.",
       "spend-by-vendor": "Invoiced spend per vendor for the fiscal year.",
       "spend-by-category": "Invoiced spend per item category.",
       "spend-by-department": "Invoiced spend per requesting department.",
@@ -624,10 +632,10 @@
       "inventory-value": "On-hand stock valued at moving-average cost."
     },
     "cols": {
-    "exceptionType": "Exception",
-    "entity": "Entity",
-    "justification": "Justification",
-    "approvedBy": "Approved by",
+      "exceptionType": "Exception",
+      "entity": "Entity",
+      "justification": "Justification",
+      "approvedBy": "Approved by",
       "vendor": "Vendor",
       "invoices": "Invoices",
       "amount": "Amount (₫)",
@@ -892,6 +900,20 @@
     "noBatches": "No batches yet.",
     "rows": "rows"
   },
+  "esign": {
+    "title": "Electronic signature",
+    "meaning": "Meaning",
+    "reason": "Reason",
+    "reasonOptional": "Reason (optional)",
+    "password": "Confirm your password",
+    "note": "Re-authenticating applies your legally-binding electronic signature (21 CFR Part 11).",
+    "cancel": "Cancel",
+    "submit": "Sign & continue",
+    "close": "Close",
+    "errPassword": "Enter your password to sign.",
+    "errReason": "A reason is required.",
+    "errFailed": "Signing failed."
+  },
   "grn": {
     "lot": "Lot",
     "expiry": "Expiry",
@@ -1045,5 +1067,27 @@
     "tabApprovals": "Approvals & signatures",
     "approvalsPending": "Submit to start the approval flow.",
     "attachments": "Attachments / receipts"
+  },
+  "list": {
+    "new": "New",
+    "search": "Search",
+    "exportExcel": "Export to Excel",
+    "noRecords": "No records.",
+    "countOf": "{shown} of {total}"
+  },
+  "attach": {
+    "none": "No attachments.",
+    "add": "Add attachment",
+    "uploadFailed": "Upload failed.",
+    "removeFailed": "Could not remove."
+  },
+  "excelImport": {
+    "template": "Download template",
+    "failedTitle": "Import failed",
+    "failed": "Import failed.",
+    "completeTitle": "Import complete",
+    "created": "Created",
+    "updated": "Updated",
+    "skipped": "Skipped"
   }
 }

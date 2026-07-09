@@ -12,6 +12,7 @@ const IN_TYPES = new Set(["GRN_IN", "TRANSFER_IN", "ADJUST_IN", "RETURN_IN"]);
 export default async function TracePage({ params }: { params: { lotId: string } }) {
   await requireUser();
   const t = await getTranslations("trace");
+  const ti = await getTranslations("inventory.type");
 
   const lot = await db.lot.findUnique({
     where: { id: params.lotId },
@@ -113,7 +114,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
                 return (
                   <li key={m.id} className="rounded-lg border border-grey/15 px-3 py-2 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${IN_TYPES.has(m.type) ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"}`}>{m.type}</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${IN_TYPES.has(m.type) ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"}`}>{ti(m.type)}</span>
                       <span className="font-mono text-xs font-bold text-navy">{m.movementNumber}</span>
                       <span className="tabular-nums">{Number(decToString(m.qty, 4)).toLocaleString("en-US")} {lot.item.uom.code}</span>
                       <span className="text-xs text-grey">{m.warehouse.code} · {formatVnDateTime(m.postedAt)} · {m.createdBy.name}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2, Save, Send } from "lucide-react";
@@ -38,6 +39,7 @@ export function PrForm({
   existing?: ExistingPr;
 }) {
   const t = useTranslations("pr");
+  const fmtErr = useActionError();
   const tc = useTranslations("common");
   const router = useRouter();
 
@@ -84,7 +86,7 @@ export function PrForm({
       router.push(`/requisitions/${id}`);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save the requisition.");
+      setError(fmtErr(e));
       setBusy(null);
     }
   }

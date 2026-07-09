@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { createSteps, applyDecision, type Decision } from "@/lib/workflow/engine";
+import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { payReqCreateSchema, type PayReqCreatePayload } from "@/lib/schemas/payreq";
 import type { SignatureMeaning } from "@prisma/client";
@@ -172,6 +172,9 @@ export async function verifyPaymentRequest(params: { id: string; password: strin
   if (!preq) throw new Error("Payment request not found.");
   if (preq.status !== "SUBMITTED") throw new Error("Only a submitted payment request can be verified.");
   if (preq.verifiedById) throw new Error("Already verified.");
+  if (preq.requesterId === user.id) {
+    throw new Error("Segregation of duties: you cannot verify your own payment request (§15).");
+  }
 
   let sig;
   try {
@@ -209,7 +212,11 @@ export async function decidePaymentRequest(params: { id: string; decision: Decis
 
   const meaning: SignatureMeaning =
     params.decision === "APPROVED" ? "APPROVED" : params.decision === "REJECTED" ? "REJECTED" : "REVIEWED";
-  let sig;
+    // §15/§19: authorization BEFORE the signature — an unauthorized caller must be refused
+  // before any signature row is written (no orphan signatures).
+  await assertCurrentApprover("PAYMENT_REQUEST", preq.id, user.id);
+
+let sig;
   try {
     sig = await signRecord({
       userId: user.id,

@@ -39,7 +39,8 @@
     "notes": "Ghi chú",
     "attachments": "Tệp đính kèm",
     "audit": "Nhật ký",
-    "approvals": "Phê duyệt & Chữ ký"
+    "approvals": "Phê duyệt & Chữ ký",
+    "actionFailed": "Thao tác thất bại. Vui lòng thử lại."
   },
   "auth": {
     "signIn": "Đăng nhập",
@@ -90,8 +91,8 @@
   },
   "dashboard": {
     "notifications": "Thông báo chưa đọc",
-    "spendMtd": "Chi tiêu tháng này",
-    "spendYtd": "Chi tiêu năm nay",
+    "spendMtd": "Chi tiêu tháng",
+    "spendYtd": "Chi tiêu năm",
     "cycleTime": "Chu kỳ PR → PO",
     "days": "ngày",
     "savings": "Tiết kiệm so với báo giá cao nhất",
@@ -110,8 +111,6 @@
     "myRequisitions": "Yêu cầu của tôi",
     "pendingApprovals": "Chờ phê duyệt",
     "openPos": "Đơn hàng đang mở",
-    "spendMtd": "Chi tiêu tháng",
-    "spendYtd": "Chi tiêu năm",
     "recentActivity": "Hoạt động gần đây",
     "nothingYet": "Chưa có dữ liệu."
   },
@@ -156,7 +155,9 @@
     "PARTIALLY_REJECTED": "Từ chối một phần",
     "UNMATCHED": "Chưa đối chiếu",
     "MISMATCH": "Lệch",
-    "UNPAID": "Chưa trả"
+    "UNPAID": "Chưa trả",
+    "EXPIRED": "Hết hạn",
+    "TERMINATED": "Đã chấm dứt"
   },
   "admin": {
     "users": {
@@ -177,9 +178,9 @@
     },
     "md": {
       "fields": {
-    "overBudgetPolicy": "Chính sách vượt ngân sách",
-    "policyWarn": "CẢNH BÁO — vẫn gửi được, người duyệt thấy cảnh báo",
-    "policyBlock": "CHẶN — từ chối gửi phiếu vượt ngân sách",
+        "overBudgetPolicy": "Chính sách vượt ngân sách",
+        "policyWarn": "CẢNH BÁO — vẫn gửi được, người duyệt thấy cảnh báo",
+        "policyBlock": "CHẶN — từ chối gửi phiếu vượt ngân sách",
         "code": "Mã",
         "nameEn": "Tên (EN)",
         "nameVn": "Tên (VN)",
@@ -291,7 +292,14 @@
     "stockHint": "Tồn kho: {qty}",
     "signatureBlock": "Chữ ký điện tử",
     "createPo": "Tạo PO từ PR này",
-    "createRfq": "Tạo RFQ"
+    "createRfq": "Tạo RFQ",
+    "thItem": "Vật tư / mô tả",
+    "thUom": "ĐVT",
+    "freeText": "— Nhập tự do —",
+    "freeTextPlaceholder": "Mô tả vật tư / dịch vụ",
+    "removeLine": "Xóa dòng",
+    "estimatedTotal": "Tổng ước tính",
+    "addLine": "Thêm dòng"
   },
   "approvals": {
     "title": "Chờ tôi duyệt",
@@ -590,7 +598,7 @@
     "empty": "Không có dữ liệu trong kỳ.",
     "rowCount": "{count} dòng",
     "names": {
-    "exception-register": "Sổ ngoại lệ",
+      "exception-register": "Sổ ngoại lệ",
       "spend-by-vendor": "Chi tiêu theo NCC",
       "spend-by-category": "Chi tiêu theo nhóm hàng",
       "spend-by-department": "Chi tiêu theo phòng ban",
@@ -607,7 +615,7 @@
       "inventory-value": "Giá trị tồn kho"
     },
     "descs": {
-    "exception-register": "Mọi ngoại lệ — chào giá đơn nguồn, vượt dung sai, đổi tài khoản — cho báo cáo tuân thủ quý.",
+      "exception-register": "Mọi ngoại lệ — chào giá đơn nguồn, vượt dung sai, đổi tài khoản — cho báo cáo tuân thủ quý.",
       "spend-by-vendor": "Chi tiêu theo hóa đơn của từng NCC trong năm.",
       "spend-by-category": "Chi tiêu theo nhóm vật tư.",
       "spend-by-department": "Chi tiêu theo phòng ban yêu cầu.",
@@ -624,10 +632,10 @@
       "inventory-value": "Tồn kho theo giá bình quân."
     },
     "cols": {
-    "exceptionType": "Ngoại lệ",
-    "entity": "Đối tượng",
-    "justification": "Lý do",
-    "approvedBy": "Người duyệt",
+      "exceptionType": "Ngoại lệ",
+      "entity": "Đối tượng",
+      "justification": "Lý do",
+      "approvedBy": "Người duyệt",
       "vendor": "NCC",
       "invoices": "Hóa đơn",
       "amount": "Giá trị (₫)",
@@ -892,6 +900,20 @@
     "noBatches": "Chưa có lô nào.",
     "rows": "dòng"
   },
+  "esign": {
+    "title": "Chữ ký điện tử",
+    "meaning": "Ý nghĩa chữ ký",
+    "reason": "Lý do",
+    "reasonOptional": "Lý do (không bắt buộc)",
+    "password": "Xác nhận mật khẩu của bạn",
+    "note": "Xác thực lại sẽ áp dụng chữ ký điện tử có giá trị pháp lý của bạn (21 CFR Part 11).",
+    "cancel": "Hủy",
+    "submit": "Ký & tiếp tục",
+    "close": "Đóng",
+    "errPassword": "Nhập mật khẩu để ký.",
+    "errReason": "Cần nhập lý do.",
+    "errFailed": "Ký không thành công."
+  },
   "grn": {
     "lot": "Lô",
     "expiry": "Hạn dùng",
@@ -1045,5 +1067,27 @@
     "tabApprovals": "Phê duyệt & chữ ký",
     "approvalsPending": "Trình để bắt đầu luồng phê duyệt.",
     "attachments": "Chứng từ đính kèm"
+  },
+  "list": {
+    "new": "Tạo mới",
+    "search": "Tìm kiếm",
+    "exportExcel": "Xuất Excel",
+    "noRecords": "Không có dữ liệu.",
+    "countOf": "{shown} / {total}"
+  },
+  "attach": {
+    "none": "Chưa có tệp đính kèm.",
+    "add": "Thêm tệp đính kèm",
+    "uploadFailed": "Tải lên thất bại.",
+    "removeFailed": "Không thể xóa."
+  },
+  "excelImport": {
+    "template": "Tải mẫu nhập",
+    "failedTitle": "Nhập thất bại",
+    "failed": "Nhập thất bại.",
+    "completeTitle": "Nhập hoàn tất",
+    "created": "Đã tạo",
+    "updated": "Đã cập nhật",
+    "skipped": "Bỏ qua"
   }
 }

@@ -7,10 +7,11 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { createSteps, applyDecision, type Decision } from "@/lib/workflow/engine";
+import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { postMovement, StockError } from "@/lib/stock/post-movement";
 import { checkReorderAfterOut } from "@/lib/stock/reorder";
+import { assertWarehouseKeeper } from "@/lib/stock/keeper";
 import { giCreateSchema, giExecuteSchema, type GiCreatePayload, type GiExecutePayload } from "@/lib/schemas/gi";
 import type { SignatureMeaning } from "@prisma/client";
 
@@ -90,7 +91,11 @@ export async function decideGoodsIssue(params: { id: string; decision: Decision;
 
   const meaning: SignatureMeaning =
     params.decision === "APPROVED" ? "APPROVED" : params.decision === "REJECTED" ? "REJECTED" : "REVIEWED";
-  let sig;
+    // §15/§19: authorization BEFORE the signature — an unauthorized caller must be refused
+  // before any signature row is written (no orphan signatures).
+  await assertCurrentApprover("GOODS_ISSUE", gi.id, user.id);
+
+let sig;
   try {
     sig = await signRecord({
       userId: user.id,
@@ -144,9 +149,13 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
   });
   if (!gi) throw new Error("Goods issue not found.");
   if (gi.status !== "APPROVED") throw new Error("Only an approved goods issue can be executed.");
+  await assertWarehouseKeeper(user, gi.warehouseId);
   const lineById = new Map(gi.lines.map((l) => [l.id, l]));
   const issuing = values.lines.filter((l) => Number(l.qtyIssued) > 0);
   if (!issuing.length) throw new Error("Issue at least one unit.");
+  if (new Set(issuing.map((l) => l.lineId)).size !== issuing.length) {
+    throw new Error("Duplicate line in the payload.");
+  }
   for (const l of issuing) {
     const gl = lineById.get(l.lineId);
     if (!gl) throw new Error("Line does not belong to this goods issue.");
@@ -234,7 +243,11 @@ export async function executeGoodsIssue(params: { payload: GiExecutePayload; pas
         const single = fefoPlan.get(l.lineId)!.length === 1 ? fefoPlan.get(l.lineId)![0].lotId : null;
         await tx.goodsIssueLine.update({ where: { id: l.lineId }, data: { qtyIssued: new D(l.qtyIssued), lotId: single } });
       }
-      await tx.goodsIssue.update({ where: { id: gi.id }, data: { status: "ISSUED", issuedById: user.id, issuedAt: new Date() } });
+      const flipped = await tx.goodsIssue.updateMany({
+        where: { id: gi.id, status: "APPROVED" },
+        data: { status: "ISSUED", issuedById: user.id, issuedAt: new Date() },
+      });
+      if (flipped.count === 0) throw staleError();   // concurrent execution — roll the movements back
     });
   } catch (e) {
     if (e instanceof StockError) throw new Error(e.message);

@@ -11,6 +11,7 @@ import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { postMovement, StockError } from "@/lib/stock/post-movement";
 import { checkReorderAfterOut } from "@/lib/stock/reorder";
 import { transferCreateSchema, type TransferCreatePayload } from "@/lib/schemas/transfer";
+import { assertWarehouseKeeper } from "@/lib/stock/keeper";
 
 const D = Prisma.Decimal;
 
@@ -41,18 +42,50 @@ export async function createTransfer(input: TransferCreatePayload) {
 /** Dispatch: ISSUED signature; every line posts TRANSFER_OUT at the source's avg cost. */
 export async function dispatchTransfer(params: { id: string; password: string }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
-  const trf = await db.stockTransfer.findUnique({ where: { id: params.id }, include: { lines: true } });
+  const trf = await db.stockTransfer.findUnique({
+    where: { id: params.id },
+    include: { lines: { include: { item: { select: { isLotTracked: true } } } } },
+  });
   if (!trf) throw new Error("Transfer not found.");
   if (trf.status !== "DRAFT") throw new Error("Only a draft transfer can be dispatched.");
+  await assertWarehouseKeeper(user, trf.fromWarehouseId);
 
-  // pre-check stock before signing (no orphan signatures); in-tx guard stays authoritative
+  // Pre-check stock BEFORE signing (no orphan signatures); the in-tx FOR-UPDATE guard stays
+  // authoritative. §21: lot-tracked items dispatch FEFO across their lots (earliest expiry
+  // first, expired lots excluded) — the balances of lot-tracked stock live on lot rows, so a
+  // no-lot OUT would find nothing to move.
+  const today = new Date(new Date().toDateString());
   const balances = await db.stockBalance.findMany({
-    where: { warehouseId: trf.fromWarehouseId, itemId: { in: trf.lines.map((l) => l.itemId) } },
+    where: { warehouseId: trf.fromWarehouseId, itemId: { in: trf.lines.map((l) => l.itemId) }, qtyOnHand: { gt: 0 } },
+    include: { lot: { select: { id: true, expiryDate: true } } },
   });
-  const onHand = new Map(balances.map((b) => [b.itemId, b.qtyOnHand]));
+  const plan = new Map<string, { lotId: string | null; qty: Prisma.Decimal }[]>();
   for (const l of trf.lines) {
-    if (new D(l.qty).greaterThan(new D(onHand.get(l.itemId) ?? 0))) {
-      throw new Error(`Insufficient stock at source: ${new D(onHand.get(l.itemId) ?? 0).toString()} on hand, ${new D(l.qty).toString()} to transfer.`);
+    let need = new D(l.qty);
+    if (l.item.isLotTracked) {
+      const lots = balances
+        .filter((b) => b.itemId === l.itemId && b.lotId && !(b.lot?.expiryDate && b.lot.expiryDate < today))
+        .sort((x, y) => (x.lot?.expiryDate?.getTime() ?? Infinity) - (y.lot?.expiryDate?.getTime() ?? Infinity));
+      const parts: { lotId: string | null; qty: Prisma.Decimal }[] = [];
+      for (const b of lots) {
+        if (need.lessThanOrEqualTo(0)) break;
+        const take = D.min(need, new D(b.qtyOnHand));
+        parts.push({ lotId: b.lotId, qty: take });
+        need = need.minus(take);
+      }
+      if (need.greaterThan(0)) {
+        const avail = lots.reduce((s2, b) => s2.plus(b.qtyOnHand), new D(0));
+        throw new Error(`Insufficient non-expired lot stock at source: ${avail.toString()} available, ${new D(l.qty).toString()} to transfer.`);
+      }
+      plan.set(l.id, parts);
+    } else {
+      const onHand = balances
+        .filter((b) => b.itemId === l.itemId && !b.lotId)
+        .reduce((s2, b) => s2.plus(b.qtyOnHand), new D(0));
+      if (need.greaterThan(onHand)) {
+        throw new Error(`Insufficient stock at source: ${onHand.toString()} on hand, ${need.toString()} to transfer.`);
+      }
+      plan.set(l.id, [{ lotId: null, qty: need }]);
     }
   }
 
@@ -74,19 +107,22 @@ export async function dispatchTransfer(params: { id: string; password: string })
   try {
     await db.$transaction(async (tx) => {
       for (const l of trf.lines) {
-        await postMovement(
-          {
-            type: "TRANSFER_OUT",
-            warehouseId: trf.fromWarehouseId,
-            itemId: l.itemId,
-            qty: l.qty,
-            refEntityType: "StockTransfer",
-            refEntityId: trf.id,
-            note: trf.transferNumber,
-            createdById: user.id,
-          },
-          tx,
-        );
+        for (const part of plan.get(l.id)!) {
+          await postMovement(
+            {
+              type: "TRANSFER_OUT",
+              warehouseId: trf.fromWarehouseId,
+              itemId: l.itemId,
+              lotId: part.lotId,
+              qty: part.qty,
+              refEntityType: "StockTransfer",
+              refEntityId: trf.id,
+              note: trf.transferNumber,
+              createdById: user.id,
+            },
+            tx,
+          );
+        }
       }
       const ok = await tx.stockTransfer.updateMany({ where: { id: trf.id, status: "DRAFT" }, data: { status: "IN_TRANSIT" } });
       if (!ok.count) throw staleError();
@@ -110,12 +146,16 @@ export async function receiveTransfer(params: { id: string; password: string }) 
   const trf = await db.stockTransfer.findUnique({ where: { id: params.id }, include: { lines: true } });
   if (!trf) throw new Error("Transfer not found.");
   if (trf.status !== "IN_TRANSIT") throw new Error("Only an in-transit transfer can be received.");
+  await assertWarehouseKeeper(user, trf.toWarehouseId);
 
+  // Mirror the dispatch EXACTLY: one TRANSFER_IN per TRANSFER_OUT movement, same lot and same
+  // unit cost — lot identity and valuation survive the move (an item appearing on two lines or
+  // two lots must not collapse onto one cost).
   const outs = await db.stockMovement.findMany({
     where: { refEntityType: "StockTransfer", refEntityId: trf.id, type: "TRANSFER_OUT" },
-    select: { itemId: true, unitCostVnd: true },
+    select: { itemId: true, lotId: true, qty: true, unitCostVnd: true },
   });
-  const costByItem = new Map(outs.map((m) => [m.itemId, m.unitCostVnd]));
+  if (!outs.length) throw new Error("No dispatch movements found for this transfer.");
 
   let sig;
   try {
@@ -134,14 +174,15 @@ export async function receiveTransfer(params: { id: string; password: string }) 
 
   try {
     await db.$transaction(async (tx) => {
-      for (const l of trf.lines) {
+      for (const m of outs) {
         await postMovement(
           {
             type: "TRANSFER_IN",
             warehouseId: trf.toWarehouseId,
-            itemId: l.itemId,
-            qty: l.qty,
-            unitCostVnd: costByItem.get(l.itemId) ?? 0,
+            itemId: m.itemId,
+            lotId: m.lotId,
+            qty: m.qty,
+            unitCostVnd: m.unitCostVnd,
             refEntityType: "StockTransfer",
             refEntityId: trf.id,
             note: trf.transferNumber,

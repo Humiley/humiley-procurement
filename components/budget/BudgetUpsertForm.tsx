@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { upsertBudget } from "@/app/(portal)/budgets/actions";
@@ -10,6 +11,7 @@ export type BudgetOpt = { id: string; label: string };
 /** §9 ADMIN: set (or create) the amount of a costCenter × category × FY budget row. */
 export function BudgetUpsertForm({ costCenters, categories, fiscalYear }: { costCenters: BudgetOpt[]; categories: BudgetOpt[]; fiscalYear: number }) {
   const t = useTranslations("budgets");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [costCenterId, setCostCenterId] = useState(costCenters[0]?.id || "");
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
@@ -27,7 +29,7 @@ export function BudgetUpsertForm({ costCenters, categories, fiscalYear }: { cost
       setAmount("");
       router.refresh();
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : "Save failed." });
+      setMsg({ ok: false, text: fmtErr(e) });
     } finally {
       setBusy(false);
     }

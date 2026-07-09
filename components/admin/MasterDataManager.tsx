@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Pencil, X, Loader2 } from "lucide-react";
@@ -208,6 +209,7 @@ function FormModal({
   const t = useTranslations("common");
   const router = useRouter();
   const isEdit = !!row;
+  const fmtErr = useActionError();
   const [values, setValues] = useState<FormValues>(() => initialValues(fields, row));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -225,7 +227,7 @@ function FormModal({
       router.refresh();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Paperclip, Download, Trash2, Upload, Loader2 } from "lucide-react";
 import { deleteAttachment } from "@/app/(portal)/attachments.actions";
@@ -25,6 +26,7 @@ export function PrAttachments({
   entityType?: string;
   refreshPath?: string;
 }) {
+  const t = useTranslations("attach");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -41,10 +43,10 @@ export function PrAttachments({
       fd.append("entityType", entityType);
       fd.append("entityId", entityId);
       const res = await fetch("/api/v1/attachments", { method: "POST", body: fd });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Upload failed.");
+      if (!res.ok) throw new Error((await res.json()).error ?? t("uploadFailed"));
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
+      setError(err instanceof Error ? err.message : t("uploadFailed"));
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -57,7 +59,7 @@ export function PrAttachments({
       await deleteAttachment(id, refreshPath ?? `/requisitions/${entityId}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not remove.");
+      setError(err instanceof Error ? err.message : t("removeFailed"));
     } finally {
       setBusy(false);
     }
@@ -67,7 +69,7 @@ export function PrAttachments({
     <div className="space-y-3">
       {attachments.length === 0 ? (
         <p className="flex items-center gap-2 text-sm text-grey">
-          <Paperclip className="h-4 w-4" /> No attachments.
+          <Paperclip className="h-4 w-4" /> {t("none")}
         </p>
       ) : (
         <ul className="divide-y divide-black/5 rounded-card border border-black/5">
@@ -102,7 +104,7 @@ export function PrAttachments({
         <div>
           <button className="btn-outline" onClick={() => inputRef.current?.click()} disabled={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Add attachment
+            {t("add")}
           </button>
           <input ref={inputRef} type="file" className="hidden" onChange={onFile} />
         </div>

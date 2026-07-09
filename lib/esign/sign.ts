@@ -128,44 +128,52 @@ export async function signRecord(params: {
 
   const recordSnapshotHash = sha256Hex(canonicalJson(params.record));
 
-  // Tamper-evident chain: link to the hash of the entity's latest signature.
-  const prev = await db.electronicSignature.findFirst({
-    where: { entityType: params.entityType, entityId: params.entityId },
-    orderBy: { signedAt: "desc" },
-  });
-  const prevSignatureHash = prev
-    ? signatureHash({
-        userId: prev.userId,
-        entityType: prev.entityType,
-        entityId: prev.entityId,
-        meaning: prev.meaning,
-        signedAt: prev.signedAt,
-        fullNamePrinted: prev.fullNamePrinted,
-        recordSnapshotHash: prev.recordSnapshotHash,
-        prevSignatureHash: prev.prevSignatureHash,
-      })
-    : null;
+  // Read-prev + insert must be serialized per entity, or two concurrent signatures both link
+  // to the same prev and FORK the chain (verifyChain would then flag an honest race as
+  // tampering). A pg advisory transaction lock on (entityType, entityId) makes the chain append
+  // strictly sequential without blocking signatures on other entities.
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${params.entityType + ":" + params.entityId}))`;
 
-  // signedAt is written explicitly so the stored row hashes identically at verify time.
-  // selfHash makes every row independently verifiable — without it, tampering the LAST
-  // link of a chain (nothing references its hash yet) would be undetectable.
-  const signedAt = new Date();
-  const row: SigRow = {
-    userId: user.id,
-    entityType: params.entityType,
-    entityId: params.entityId,
-    meaning: params.meaning,
-    signedAt,
-    fullNamePrinted: user.name,
-    recordSnapshotHash,
-    prevSignatureHash,
-  };
-  return db.electronicSignature.create({
-    data: {
-      ...row,
-      reason: params.reason || null,
-      selfHash: signatureHash(row),
-    },
+    // Tamper-evident chain: link to the hash of the entity's latest signature.
+    const prev = await tx.electronicSignature.findFirst({
+      where: { entityType: params.entityType, entityId: params.entityId },
+      orderBy: { signedAt: "desc" },
+    });
+    const prevSignatureHash = prev
+      ? signatureHash({
+          userId: prev.userId,
+          entityType: prev.entityType,
+          entityId: prev.entityId,
+          meaning: prev.meaning,
+          signedAt: prev.signedAt,
+          fullNamePrinted: prev.fullNamePrinted,
+          recordSnapshotHash: prev.recordSnapshotHash,
+          prevSignatureHash: prev.prevSignatureHash,
+        })
+      : null;
+
+    // signedAt is written explicitly so the stored row hashes identically at verify time.
+    // selfHash makes every row independently verifiable — without it, tampering the LAST
+    // link of a chain (nothing references its hash yet) would be undetectable.
+    const signedAt = new Date();
+    const row: SigRow = {
+      userId: user.id,
+      entityType: params.entityType,
+      entityId: params.entityId,
+      meaning: params.meaning,
+      signedAt,
+      fullNamePrinted: user.name,
+      recordSnapshotHash,
+      prevSignatureHash,
+    };
+    return tx.electronicSignature.create({
+      data: {
+        ...row,
+        reason: params.reason || null,
+        selfHash: signatureHash(row),
+      },
+    });
   });
 }
 

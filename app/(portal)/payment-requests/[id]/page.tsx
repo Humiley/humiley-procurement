@@ -81,11 +81,11 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
         <Field label={t("bank")} value={`${q.payeeBankName || "—"} · ${q.payeeBankAccount || "—"}`} />
         <Field label={t("method")} value={q.paymentMethod === "CASH" ? t("cash") : t("bankTransfer")} />
         <Field label={t("dueDate")} value={q.dueDate ? formatVnDate(q.dueDate) : "—"} />
-        {q.advance ? <Field label={t("settleAdvance")} value={`${q.advance.paymentRequestNumber} · ${decToString(q.advance.amount, 0)} ₫`} /> : null}
+        {q.advance ? <Field label={t("settleAdvance")} value={`${q.advance.paymentRequestNumber} · ${Number(decToString(q.advance.amount, 0)).toLocaleString("en-US")} ₫`} /> : null}
         {q.paidDate ? <Field label={t("paidOn")} value={`${formatVnDate(q.paidDate)} · ${q.paymentRef || ""}`} /> : null}
         <div className="col-span-2 sm:col-span-2">
           <dt className="text-xs uppercase tracking-wide text-grey">{t("amount")}</dt>
-          <dd className="mt-0.5 text-lg font-bold text-navy">{decToString(q.amount, 0)} ₫</dd>
+          <dd className="mt-0.5 text-lg font-bold text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</dd>
         </div>
         <div className="col-span-2 sm:col-span-4">
           <dt className="text-xs uppercase tracking-wide text-grey">{t("reason")}</dt>
@@ -123,7 +123,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
                   )}
                   {l.invoice ? <span className="ml-2 rounded bg-grey/10 px-1.5 py-0.5 text-[10px] font-bold text-grey">{l.invoice.paymentStatus}</span> : null}
                 </td>
-                <td className="px-3 py-2.5 text-right font-medium">{decToString(l.amount, 0)} ₫</td>
+                <td className="px-3 py-2.5 text-right font-medium">{Number(decToString(l.amount, 0)).toLocaleString("en-US")} ₫</td>
               </tr>
             ))}
           </tbody>

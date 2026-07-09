@@ -1121,3 +1121,55 @@ auth (Auth.js Credentials + bcrypt) → RBAC (`lib/rbac.ts`) → core lib (`mone
 
 ### ⚠️ Known limitations / TODOs
 - Phase 1 not yet complete (auth/shell/seed/components pending) — see nextAction. This report will be finalized to the §23 format at the `phase-1` commit.
+
+---
+
+# QA/QC Deep Pass — 2026-07-09 (post-Phase-17 adversarial review)
+
+A 63-agent adversarial review (6 finder dimensions × verify panels) over the finished build
+produced **53 confirmed findings** (9 high / 31 medium / 13 low; 4 refuted). All were fixed in
+this pass unless listed as accepted backlog in `VALIDATION.md §8`. Highlights:
+
+**Correctness / concurrency (high):**
+- Over-receipt across multiple GRNs — acceptance now bumps `PoLine.receivedQty` with a guarded
+  `updateMany` (`receivedQty ≤ qty − qtyAccepted`) inside the movement transaction; hard block.
+- Unguarded status flips (acceptGrn, executeGoodsIssue, dispatch/receive transfer, postCount)
+  — all now optimistic-guarded `updateMany({ id, status: expected })` + stale error.
+- Signature-chain fork under concurrency — `signRecord` serializes per entity via
+  `pg_advisory_xact_lock(hashtext(type:id))`.
+- Authorization order in all five decide actions — `assertCurrentApprover` runs **before**
+  signing, so no orphan signatures and no signing by a non-current approver.
+- Budget ledger read-modify-write races — single-statement atomic
+  `UPDATE … SET col = GREATEST(0, col + δ)`.
+- FX: GRN stock cost, budget commit/spend/release, PO submit banding, and release amounts all
+  convert via the document's captured `fxRate` (budgets are VND).
+- Transfers of lot-tracked items — FEFO plan at dispatch (expired lots excluded), one
+  TRANSFER_IN mirrored per TRANSFER_OUT movement at receive.
+- Stock count posting — adjustment = countedQty − *current* balance (physical truth), not the
+  stale creation-time variance.
+- Keeper scoping (§10b) — `assertWarehouseKeeper` on GRN create/accept, issues, transfers
+  (both directions), counts.
+- Payment-request self-verification blocked (SoD); vendor bank reject reverts to the earliest
+  pre-change snapshot; delegation to the document requester blocked; attachment
+  download/delete behind a shared `canAccessAttachment` policy.
+
+**Dates / TZ:** all display dates via `ymdVn`/`ymdHmVn` (Asia/Ho_Chi_Minh), fiscal year via
+`fiscalYearOf` from the *document* date; KPI FY ranges use +07:00 offsets; on-time delivery is
+day-granular in VN time. `toISOString().slice()` is banned for display.
+
+**KPI correctness:** spend everywhere = invoice `subtotal` (ex-VAT) so donuts, trends and
+totals agree; savings unchanged.
+
+**UI/i18n sweep:** SignatureDialog, PrLinesEditor, PrAttachments, ExcelImportButton,
+MatrixManager (enum labels via `approvals.type.*`/`roles.*`), DocListPage chrome, movement
+types in Scan/Trace/Transfer views; grouped VND money on PO/invoice/payment-request pages;
+`status.EXPIRED`/`TERMINATED` keys; ~35 hardcoded catch fallbacks now go through
+`useActionError()`; GRN-accept + shipment-docs tables scroll horizontally on mobile.
+EN/VI parity 963/963 keys.
+
+**Seed/e2e:** seed year is dynamic (`new Date().getFullYear()`); e2e specs use `SEED_YEAR`.
+
+**Portal side (timekeeping repo, same pass):** integration URLs (procurement/SharePoint/Teams)
+now admin-only server-side with unchanged-value tolerance; launcher normalizes scheme-less
+URLs and refuses non-http(s); login handoff tolerates repeated `?email=` params; permission
+grid shows locked checkboxes on admin rows; SW cache → v8.

@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { vendorSchema } from "@/lib/schemas/masterdata";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { createSteps, applyDecision, type Decision } from "@/lib/workflow/engine";
+import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import type { SignatureMeaning } from "@prisma/client";
 
@@ -136,10 +136,22 @@ export async function confirmVendorBank(params: { vendorId: string; approve: boo
   if (params.approve) {
     await db.vendor.update({ where: { id: vendor.id }, data: { bankChangeFreeze: false } });
   } else {
-    // revert to the values recorded by the change audit
-    const changeLog = await db.auditLog.findFirst({
-      where: { entityType: "Vendor", entityId: vendor.id, action: "VENDOR_BANK_CHANGE" },
+    // Revert to the last CONFIRMED state: the beforeJson of the EARLIEST change since the
+    // last confirmation (two stacked unconfirmed changes must not revert to the first
+    // unconfirmed values).
+    const lastConfirm = await db.auditLog.findFirst({
+      where: { entityType: "Vendor", entityId: vendor.id, action: { in: ["VENDOR_BANK_CONFIRM", "VENDOR_BANK_REJECT"] } },
       orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    const changeLog = await db.auditLog.findFirst({
+      where: {
+        entityType: "Vendor",
+        entityId: vendor.id,
+        action: "VENDOR_BANK_CHANGE",
+        ...(lastConfirm ? { createdAt: { gt: lastConfirm.createdAt } } : {}),
+      },
+      orderBy: { createdAt: "asc" },
     });
     const beforeJson = (changeLog?.beforeJson ?? {}) as { bankName?: string | null; bankAccount?: string | null };
     await db.vendor.update({
@@ -192,6 +204,11 @@ export async function decideVendor(params: { vendorId: string; decision: Decisio
 
   const meaning: SignatureMeaning =
     params.decision === "APPROVED" ? "APPROVED" : params.decision === "REJECTED" ? "REJECTED" : "REVIEWED";
+
+  // §15/§19: authorization BEFORE the signature — an unauthorized caller must be refused
+  // before any signature row is written (no orphan signatures).
+  await assertCurrentApprover("VENDOR", v.id, user.id);
+
   let sig;
   try {
     sig = await signRecord({
@@ -208,6 +225,15 @@ export async function decideVendor(params: { vendorId: string; decision: Decisio
     throw e;
   }
 
+  // Vendor has no requester column — the outcome notification goes to whoever SUBMITTED it
+  // for approval (from the audit trail), not back to the deciding director.
+  const submitLog = await db.auditLog.findFirst({
+    where: { entityType: "Vendor", entityId: v.id, action: "VENDOR_SUBMIT" },
+    orderBy: { createdAt: "desc" },
+    select: { userId: true },
+  });
+  const submitterId = submitLog?.userId ?? user.id;
+
   const result = await applyDecision({
     entityType: "VENDOR",
     entityId: v.id,
@@ -217,7 +243,7 @@ export async function decideVendor(params: { vendorId: string; decision: Decisio
     snapshotHash: sig.recordSnapshotHash,
     link: "/vendors",
     refLabel: `${v.code} · ${v.nameEn}`,
-    requesterId: user.id,
+    requesterId: submitterId,
   });
 
   if (result.outcome === "approved") {

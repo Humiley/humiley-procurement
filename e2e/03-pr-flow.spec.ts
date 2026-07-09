@@ -6,7 +6,7 @@ test("PR: create → submit → signed manager approval", async ({ page }) => {
   await page.goto("/requisitions/new");
 
   // cost center defaults to the requester's department (single option)
-  await page.locator('input[type="date"]').first().fill("2026-08-01");
+  await page.locator('input[type="date"]').first().fill(new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10));
   await page.locator("textarea").first().fill("E2E — office consumables");
   // line: pick the first catalog item (auto-fills UoM), small qty×price → L1 band only
   await page.locator("tbody select").first().selectOption({ index: 1 });

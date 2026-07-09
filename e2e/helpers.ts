@@ -1,6 +1,8 @@
 import { Page, expect } from "@playwright/test";
 
 export const PASSWORD = "Humiley@2026";
+// prisma/seed.ts stamps document numbers with the current year — specs must follow it
+export const SEED_YEAR = new Date().getFullYear();
 
 export async function login(page: Page, email: string) {
   await page.goto("/login");

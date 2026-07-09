@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { FileCheck2, FilePlus2 } from "lucide-react";
@@ -13,6 +14,7 @@ export type CooOpt = { id: string; label: string };
 /** §20 import-document checklist — generate, mark received, VERIFIED via §19 signature. */
 export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: string; docs: ShipDocRow[]; cooForms: CooOpt[]; canAct: boolean }) {
   const t = useTranslations("shipdocs");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [cooId, setCooId] = useState(cooForms[0]?.id || "");
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,7 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
       await fn();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }
@@ -60,7 +62,8 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
     <div className="rounded-xl border border-grey/20 bg-white p-4">
       <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("title")}</h3>
       {error ? <p className="mb-2 rounded bg-danger/10 px-2 py-1 text-xs text-danger">{error}</p> : null}
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
             <th className="py-2">{t("doc")}</th>
@@ -112,6 +115,7 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
           ))}
         </tbody>
       </table>
+      </div>
 
       <SignatureDialog
         open={verifyId !== null}

@@ -178,7 +178,7 @@ export async function verifyInvoice(params: { invoiceId: string; password: strin
     for (const l of inv.lines) {
       await tx.poLine.update({
         where: { id: l.poLineId },
-        data: { invoicedQty: new D(l.poLine.invoicedQty).plus(l.qty) },
+        data: { invoicedQty: { increment: new D(l.qty) } },
       });
     }
     await tx.invoice.update({ where: { id: inv.id }, data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" } });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Upload, FileDown, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
@@ -24,6 +25,8 @@ export function ExcelImportButton({
   label: string;
   templateHeaders: string[];
 }) {
+  const t = useTranslations("excelImport");
+  const tc = useTranslations("common");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -51,11 +54,11 @@ export function ExcelImportButton({
       fd.append("file", file);
       const res = await fetch(`/api/admin/import?kind=${kind}`, { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Import failed.");
+      if (!res.ok) throw new Error(json.error ?? t("failed"));
       setResult(json as ImportResult);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed.");
+      setError(err instanceof Error ? err.message : t("failed"));
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -65,7 +68,7 @@ export function ExcelImportButton({
   return (
     <>
       <div className="flex items-center gap-1">
-        <button className="btn-outline" onClick={downloadTemplate} type="button" title="Download template">
+        <button className="btn-outline" onClick={downloadTemplate} type="button" title={t("template")} aria-label={t("template")}>
           <FileDown className="h-4 w-4" />
         </button>
         <button
@@ -93,7 +96,7 @@ export function ExcelImportButton({
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
                 <div>
-                  <p className="font-semibold text-danger">Import failed</p>
+                  <p className="font-semibold text-danger">{t("failedTitle")}</p>
                   <p className="mt-1 text-sm text-body">{error}</p>
                 </div>
               </div>
@@ -101,20 +104,20 @@ export function ExcelImportButton({
               <div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald" />
-                  <p className="font-semibold text-navy">Import complete</p>
+                  <p className="font-semibold text-navy">{t("completeTitle")}</p>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-md bg-panel p-2">
                     <p className="text-lg font-bold text-emerald">{result.created}</p>
-                    <p className="text-xs text-grey">Created</p>
+                    <p className="text-xs text-grey">{t("created")}</p>
                   </div>
                   <div className="rounded-md bg-panel p-2">
                     <p className="text-lg font-bold text-navy">{result.updated}</p>
-                    <p className="text-xs text-grey">Updated</p>
+                    <p className="text-xs text-grey">{t("updated")}</p>
                   </div>
                   <div className="rounded-md bg-panel p-2">
                     <p className="text-lg font-bold text-warning">{result.skipped}</p>
-                    <p className="text-xs text-grey">Skipped</p>
+                    <p className="text-xs text-grey">{t("skipped")}</p>
                   </div>
                 </div>
                 {result.errors.length > 0 && (
@@ -134,7 +137,7 @@ export function ExcelImportButton({
                   setError(null);
                 }}
               >
-                Close
+                {tc("close")}
               </button>
             </div>
           </div>

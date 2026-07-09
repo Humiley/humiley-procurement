@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Truck, PackageCheck, X } from "lucide-react";
@@ -10,6 +11,7 @@ import { dispatchTransfer, receiveTransfer, cancelTransfer } from "@/app/(portal
 /** Dispatch (ISSUED sig) → in transit → receive (RECEIVED sig); drafts can be cancelled. */
 export function TransferDetailActions({ id, status, canAct }: { id: string; status: string; canAct: boolean }) {
   const t = useTranslations("trf");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [mode, setMode] = useState<"dispatch" | "receive" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function TransferDetailActions({ id, status, canAct }: { id: string; stat
       await cancelTransfer(id);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Cancel failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useTranslations } from "next-intl";
 import { ShieldCheck, ShieldX, Loader2 } from "lucide-react";
 import { verifyAllChains, type IntegrityResult } from "@/app/(portal)/admin/governance.actions";
@@ -8,6 +9,7 @@ import { verifyAllChains, type IntegrityResult } from "@/app/(portal)/admin/gove
 /** §19 tamper-evidence: re-compute every signature chain on demand. */
 export function IntegrityPanel() {
   const t = useTranslations("integrity");
+  const fmtErr = useActionError();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<IntegrityResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +20,7 @@ export function IntegrityPanel() {
     try {
       setResult(await verifyAllChains());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Verification failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

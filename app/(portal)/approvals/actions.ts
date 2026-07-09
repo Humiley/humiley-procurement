@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { applyDecision, type Decision } from "@/lib/workflow/engine";
+import { applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import type { SignatureMeaning } from "@prisma/client";
 
@@ -41,7 +41,11 @@ export async function decidePr(params: {
     lines: pr.lines.map((l) => ({ item: l.itemId ?? l.freeTextDescription, qty: l.qty, price: l.estUnitPriceVnd })),
   };
 
-  let sig;
+    // §15/§19: authorization BEFORE the signature — an unauthorized caller must be refused
+  // before any signature row is written (no orphan signatures).
+  await assertCurrentApprover("PR", pr.id, user.id);
+
+let sig;
   try {
     sig = await signRecord({
       userId: user.id,

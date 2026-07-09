@@ -14,6 +14,7 @@ import { scanLookup, type ScanResult } from "@/app/(portal)/scan/actions";
  */
 export function ScanHub() {
   const t = useTranslations("scan");
+  const ti = useTranslations("inventory.type");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -156,7 +157,7 @@ export function ScanHub() {
             <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-grey">{t("recentMovements")}</h3>
             <ul className="space-y-1 font-mono text-xs">
               {result.movements.map((m) => (
-                <li key={m.number}>{m.number} · {m.type} · {Number(m.qty).toLocaleString("en-US")} · {m.when} · {m.ref}</li>
+                <li key={m.number}>{m.number} · {ti(m.type)} · {Number(m.qty).toLocaleString("en-US")} · {m.when} · {m.ref}</li>
               ))}
             </ul>
           </div>

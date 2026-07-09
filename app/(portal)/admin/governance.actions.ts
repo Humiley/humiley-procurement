@@ -65,7 +65,24 @@ export async function reassignStep(params: { stepId: string; newApproverId: stri
   if (!target || !target.isActive) throw new Error("Target approver not found or inactive.");
   if (target.id === step.approverId) throw new Error("The step is already assigned to that user.");
 
-  await db.approvalStep.update({ where: { id: step.id }, data: { approverId: target.id } });
+  // §15 hard rule survives delegation: never hand a step to the document's own requester.
+  const requesterByType: Record<string, () => Promise<string | null>> = {
+    PR: async () => (await db.purchaseRequisition.findUnique({ where: { id: step.entityId }, select: { requesterId: true } }))?.requesterId ?? null,
+    PO: async () => (await db.purchaseOrder.findUnique({ where: { id: step.entityId }, select: { createdById: true } }))?.createdById ?? null,
+    PAYMENT_REQUEST: async () => (await db.paymentRequest.findUnique({ where: { id: step.entityId }, select: { requesterId: true } }))?.requesterId ?? null,
+    GOODS_ISSUE: async () => (await db.goodsIssue.findUnique({ where: { id: step.entityId }, select: { requesterId: true } }))?.requesterId ?? null,
+  };
+  const requesterId = await (requesterByType[step.entityType]?.() ?? Promise.resolve(null));
+  if (requesterId && requesterId === target.id) {
+    throw new Error("Segregation of duties: a step cannot be delegated to the document's requester (§15).");
+  }
+
+  // delegation provenance stays on the step itself (visible in every approval timeline)
+  const provenance = `Delegated from ${step.approver.name} by ${admin.name}`;
+  await db.approvalStep.update({
+    where: { id: step.id },
+    data: { approverId: target.id, comment: step.comment ? `${step.comment} · ${provenance}` : provenance },
+  });
   await audit({
     userId: admin.id,
     action: "STEP_REASSIGN",

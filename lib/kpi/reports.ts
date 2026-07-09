@@ -1,6 +1,7 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { ymdVn } from "@/lib/dates";
 
 const D = Prisma.Decimal;
 const DAY = 24 * 3600 * 1000;
@@ -16,7 +17,8 @@ export type ReportDef = { fn: (fy: number) => Promise<ReportTable> };
 
 const money = (v: unknown) => Number(new D((v as never) ?? 0).toFixed(0)).toLocaleString("en-US");
 const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : "—");
-const fyRange = (fy: number) => ({ gte: new Date(`${fy}-01-01T00:00:00`), lt: new Date(`${fy + 1}-01-01T00:00:00`) });
+// FY boundaries are VIETNAM calendar boundaries regardless of the server's TZ
+const fyRange = (fy: number) => ({ gte: new Date(`${fy}-01-01T00:00:00+07:00`), lt: new Date(`${fy + 1}-01-01T00:00:00+07:00`) });
 
 async function spendByVendor(fy: number): Promise<ReportTable> {
   const invoices = await db.invoice.findMany({ where: { invoiceDate: fyRange(fy) }, include: { vendor: { select: { code: true, nameEn: true } } } });
@@ -24,7 +26,7 @@ async function spendByVendor(fy: number): Promise<ReportTable> {
   for (const i of invoices) {
     const k = `${i.vendor.code} · ${i.vendor.nameEn}`;
     const e = agg.get(k) ?? { count: 0, total: new D(0) };
-    agg.set(k, { count: e.count + 1, total: e.total.plus(i.total) });
+    agg.set(k, { count: e.count + 1, total: e.total.plus(i.subtotal) });   // ex-VAT — input VAT is deductible
   }
   return {
     columns: ["vendor", "invoices", "amount"],
@@ -53,7 +55,7 @@ async function spendByDepartment(fy: number): Promise<ReportTable> {
   const agg = new Map<string, Prisma.Decimal>();
   for (const i of invoices) {
     const k = i.po.pr ? `${i.po.pr.department.code} · ${i.po.pr.department.nameEn}` : "—";
-    agg.set(k, (agg.get(k) ?? new D(0)).plus(i.total));
+    agg.set(k, (agg.get(k) ?? new D(0)).plus(i.subtotal));
   }
   return { columns: ["department", "amount"], rows: Array.from(agg.entries()).sort((a, b) => Number(b[1]) - Number(a[1])).map(([k, v]) => [k, money(v)]) };
 }
@@ -66,7 +68,7 @@ async function spendByProject(fy: number): Promise<ReportTable> {
   const agg = new Map<string, Prisma.Decimal>();
   for (const i of invoices) {
     const k = i.po.pr?.projectCode || "—";
-    agg.set(k, (agg.get(k) ?? new D(0)).plus(i.total));
+    agg.set(k, (agg.get(k) ?? new D(0)).plus(i.subtotal));
   }
   return { columns: ["project", "amount"], rows: Array.from(agg.entries()).sort((a, b) => Number(b[1]) - Number(a[1])).map(([k, v]) => [k, money(v)]) };
 }
@@ -79,7 +81,7 @@ async function prRegister(fy: number): Promise<ReportTable> {
   });
   return {
     columns: ["number", "date", "requester", "department", "costCenter", "purpose", "amount", "status"],
-    rows: prs.map((p) => [p.prNumber, p.createdAt.toISOString().slice(0, 10), p.requester.name, p.department.code, p.costCenter.code, p.purpose, money(p.totalEstimatedVnd), p.status]),
+    rows: prs.map((p) => [p.prNumber, ymdVn(p.createdAt), p.requester.name, p.department.code, p.costCenter.code, p.purpose, money(p.totalEstimatedVnd), p.status]),
   };
 }
 
@@ -91,7 +93,7 @@ async function poRegister(fy: number): Promise<ReportTable> {
   });
   return {
     columns: ["number", "date", "vendor", "sourcePr", "amount", "status"],
-    rows: pos.map((p) => [p.poNumber, p.createdAt.toISOString().slice(0, 10), `${p.vendor.code} · ${p.vendor.nameEn}`, p.pr?.prNumber ?? "—", money(p.total), p.status]),
+    rows: pos.map((p) => [p.poNumber, ymdVn(p.createdAt), `${p.vendor.code} · ${p.vendor.nameEn}`, p.pr?.prNumber ?? "—", money(p.total), p.status]),
   };
 }
 
@@ -105,7 +107,7 @@ async function grnRegister(fy: number): Promise<ReportTable> {
     columns: ["number", "date", "po", "warehouse", "receivedBy", "accepted", "rejected", "status"],
     rows: grns.map((g) => [
       g.grnNumber,
-      g.receivedDate.toISOString().slice(0, 10),
+      ymdVn(g.receivedDate),
       g.po.poNumber,
       g.warehouse.code,
       g.receivedBy.name,
@@ -128,7 +130,7 @@ async function invoiceAging(): Promise<ReportTable> {
     columns: ["number", "vendor", "dueDate", "amount", "daysOverdue", "bucket"],
     rows: invoices.map((i) => {
       const overdue = Math.max(0, Math.floor((now - i.dueDate.getTime()) / DAY));
-      return [i.invoiceNumber, i.vendor.code, i.dueDate.toISOString().slice(0, 10), money(i.total), overdue, bucket(overdue)];
+      return [i.invoiceNumber, i.vendor.code, ymdVn(i.dueDate), money(i.total), overdue, bucket(overdue)];
     }),
   };
 }
@@ -145,7 +147,7 @@ async function vendorPerformance(fy: number): Promise<ReportTable> {
     rows: vendors.map((v) => {
       const grns = v.purchaseOrders.flatMap((p) => p.goodsReceipts.map((g) => ({ ...g, expected: p.expectedDate })));
       const timed = grns.filter((g) => g.expected);
-      const onTime = timed.filter((g) => g.receivedDate <= g.expected!).length;
+      const onTime = timed.filter((g) => ymdVn(g.receivedDate) <= ymdVn(g.expected!)).length;   // same VN day counts as on time
       const acc = grns.flatMap((g) => g.lines).reduce((s, l) => s + Number(l.qtyAccepted), 0);
       const rej = grns.flatMap((g) => g.lines).reduce((s, l) => s + Number(l.qtyRejected), 0);
       return [`${v.code} · ${v.nameEn}`, v.purchaseOrders.length, grns.length, pct(onTime, timed.length), pct(rej, acc + rej)];
@@ -199,7 +201,7 @@ async function paymentAging(): Promise<ReportTable> {
       r.paymentRequestNumber,
       r.payeeName,
       r.requester.name,
-      r.dueDate ? r.dueDate.toISOString().slice(0, 10) : "—",
+      r.dueDate ? ymdVn(r.dueDate) : "—",
       money(r.amount),
       r.dueDate ? Math.floor((r.dueDate.getTime() - now) / DAY) : "—",
     ]),
@@ -221,7 +223,7 @@ async function outstandingAdvances(): Promise<ReportTable> {
         a.paymentRequestNumber,
         a.requester.name,
         money(a.amount),
-        a.paidDate ? a.paidDate.toISOString().slice(0, 10) : "—",
+        a.paidDate ? ymdVn(a.paidDate) : "—",
         a.paidDate ? Math.floor((now - a.paidDate.getTime()) / DAY) : "—",
       ]),
   };
@@ -258,7 +260,7 @@ async function exceptionRegister(fy: number): Promise<ReportTable> {
   return {
     columns: ["date", "exceptionType", "entity", "justification", "approvedBy"],
     rows: rows.map((e) => [
-      e.createdAt.toISOString().slice(0, 10),
+      ymdVn(e.createdAt),
       e.type,
       `${e.entityType} · ${e.entityId.slice(-8)}`,
       e.justification,

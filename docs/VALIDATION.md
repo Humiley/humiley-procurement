@@ -73,3 +73,9 @@ Every claim below is E2E-evidenced in `docs/PHASE-REPORTS.md` (phase noted per c
 - E-invoice XML parse (schema holds `xmlPath`) — deferred to the integration phase.
 - Column-level encryption for staff bank data (PDPD) — deployment/ops concern; portal stores
   vendor banking only, personal payroll data lives in the HR portal.
+- **Server-thrown error messages are EN-only.** Server actions throw human-readable English
+  strings; the client shows them verbatim (with a localized generic fallback via
+  `lib/use-action-error.ts` when the thrown value is not an `Error`). A full error catalog
+  (error codes + `messages/*` lookups) is backlog — logged in the 2026-07 QA pass.
+- CSV export from `DocListPage` exports the *filtered client-side page state* (by design —
+  what you see is what you export); the admin Export Center is the authoritative extract.

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Download, ArrowUpDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 export type ListColumn<T> = {
@@ -32,16 +33,16 @@ export function DocListPage<T extends Record<string, unknown>>({
   title,
   subtitle,
   newHref,
-  newLabel = "New",
+  newLabel,
   columns,
   rows,
   rowKey,
   rowHref,
   tabs,
-  searchPlaceholder = "Search",
-  exportLabel = "Export to Excel",
+  searchPlaceholder,
+  exportLabel,
   exportFileName,
-  emptyLabel = "No records.",
+  emptyLabel,
   toolbar,
 }: {
   title: string;
@@ -59,6 +60,7 @@ export function DocListPage<T extends Record<string, unknown>>({
   emptyLabel?: string;
   toolbar?: React.ReactNode;
 }) {
+  const tl = useTranslations("list");
   const [q, setQ] = useState("");
   const [tab, setTab] = useState(tabs?.[0]?.key ?? "__all");
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
@@ -126,11 +128,11 @@ export function DocListPage<T extends Record<string, unknown>>({
         </div>
         <div className="flex items-center gap-2">
           <button className="btn-outline" onClick={exportCsv}>
-            <Download className="h-4 w-4" /> {exportLabel}
+            <Download className="h-4 w-4" /> {exportLabel ?? tl("exportExcel")}
           </button>
           {newHref && (
             <Link href={newHref} className="btn-primary">
-              <Plus className="h-4 w-4" /> {newLabel}
+              <Plus className="h-4 w-4" /> {newLabel ?? tl("new")}
             </Link>
           )}
         </div>
@@ -164,7 +166,7 @@ export function DocListPage<T extends Record<string, unknown>>({
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-grey" />
               <input
                 className="field w-56 pl-8"
-                placeholder={searchPlaceholder}
+                placeholder={searchPlaceholder ?? tl("search")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -200,7 +202,7 @@ export function DocListPage<T extends Record<string, unknown>>({
               {filtered.length === 0 ? (
                 <tr>
                   <td className="td text-center text-grey" colSpan={columns.length}>
-                    {emptyLabel}
+                    {emptyLabel ?? tl("noRecords")}
                   </td>
                 </tr>
               ) : (
@@ -246,7 +248,7 @@ export function DocListPage<T extends Record<string, unknown>>({
         </div>
 
         <div className="border-t border-black/5 px-3 py-2 text-xs text-grey">
-          {filtered.length} of {rows.length}
+          {tl("countOf", { shown: filtered.length, total: rows.length })}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, Undo2, XCircle, Pencil, Loader2 } from "lucide-react";
@@ -18,6 +19,7 @@ export function PrDetailActions({
   canRecall: boolean;
 }) {
   const t = useTranslations("pr");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function PrDetailActions({
       await fn();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(null);
     }

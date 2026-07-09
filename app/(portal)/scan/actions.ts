@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
+import { ymdVn, ymdHmVn } from "@/lib/dates";
 import { resolveScan } from "@/lib/barcode";
 
 export type ScanResult =
@@ -50,7 +51,7 @@ export async function scanLookup(raw: string): Promise<ScanResult> {
       lotId: lot.id,
       label: lot.lotNumber,
       item: hit.item,
-      expiryDate: lot.expiryDate ? lot.expiryDate.toISOString().slice(0, 10) : null,
+      expiryDate: lot.expiryDate ? ymdVn(lot.expiryDate) : null,
       grn: lot.grn?.grnNumber ?? null,
       po: lot.grn?.po.poNumber ?? null,
       vendor: lot.vendor ? `${lot.vendor.code} · ${lot.vendor.nameEn}` : null,
@@ -61,7 +62,7 @@ export async function scanLookup(raw: string): Promise<ScanResult> {
         number: m.movementNumber,
         type: m.type,
         qty: decToString(m.qty, 4) ?? "0",
-        when: m.postedAt.toISOString().slice(0, 16).replace("T", " "),
+        when: ymdHmVn(m.postedAt),
         ref: m.note ?? "—",
       })),
     };
@@ -92,7 +93,7 @@ export async function scanLookup(raw: string): Promise<ScanResult> {
         .map((b) => ({
           lotId: b.lot!.id,
           lotNumber: b.lot!.lotNumber,
-          expiryDate: b.lot!.expiryDate ? b.lot!.expiryDate.toISOString().slice(0, 10) : null,
+          expiryDate: b.lot!.expiryDate ? ymdVn(b.lot!.expiryDate) : null,
           onHand: decToString(b.qtyOnHand, 4) ?? "0",
         })),
     };

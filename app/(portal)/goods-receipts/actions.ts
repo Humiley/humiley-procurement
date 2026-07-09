@@ -11,6 +11,7 @@ import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { grnCreateSchema, grnAcceptSchema, type GrnCreatePayload, type GrnAcceptPayload } from "@/lib/schemas/grn";
 import { postMovement } from "@/lib/stock/post-movement";
 import { nextLotNumber, ensureItemBarcode, createLotBarcode } from "@/lib/barcode";
+import { assertWarehouseKeeper } from "@/lib/stock/keeper";
 
 const D = Prisma.Decimal;
 
@@ -76,6 +77,7 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
     include: { lines: { include: { poLine: { include: { item: { select: { id: true, code: true, isLotTracked: true } } } } } }, po: { include: { lines: true } } },
   });
   if (!grn) throw new Error("GRN not found.");
+  await assertWarehouseKeeper(user, grn.warehouseId);
   if (grn.status !== "QC_PENDING") throw new Error("Only a QC-pending GRN can be accepted.");
 
   const lineById = new Map(grn.lines.map((l) => [l.id, l]));
@@ -169,7 +171,11 @@ export async function acceptGrn(params: { payload: GrnAcceptPayload; password: s
         }
       }
     }
-    await tx.goodsReceipt.update({ where: { id: grn.id }, data: { status: newStatus } });
+    const flipped = await tx.goodsReceipt.updateMany({
+      where: { id: grn.id, status: "QC_PENDING" },
+      data: { status: newStatus },
+    });
+    if (flipped.count === 0) throw staleError();   // concurrent acceptance — roll everything back
   });
 
   // PO status from cumulative receipts (rejected quantities keep the line open — §9)

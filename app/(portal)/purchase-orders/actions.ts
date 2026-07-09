@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { createSteps, applyDecision, type Decision } from "@/lib/workflow/engine";
+import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { sendMailRaw } from "@/lib/notify";
 import { poCreateSchema, type PoFormPayload } from "@/lib/schemas/po";
@@ -32,9 +32,20 @@ export async function createPo(input: PoFormPayload) {
 
   let pr = null;
   if (values.prId) {
-    pr = await db.purchaseRequisition.findUnique({ where: { id: values.prId } });
+    pr = await db.purchaseRequisition.findUnique({ where: { id: values.prId }, include: { lines: { select: { id: true } } } });
     if (!pr) throw new Error("Source requisition not found.");
     if (pr.status !== "APPROVED") throw new Error("Only an APPROVED requisition can be converted to a PO.");
+    // every referenced prLineId must belong to THIS requisition
+    const prLineIds = new Set(pr.lines.map((l) => l.id));
+    for (const l of values.lines) {
+      if (l.prLineId && !prLineIds.has(l.prLineId)) throw new Error("A line references a different requisition.");
+    }
+    // Consume the PR FIRST (guarded) — two concurrent conversions must not both create POs.
+    if (!(await transition(db.purchaseRequisition, pr.id, "APPROVED", "CONVERTED"))) {
+      throw new Error("This requisition was just converted by someone else.");
+    }
+  } else {
+    for (const l of values.lines) if (l.prLineId) throw new Error("A line references a requisition but none was given.");
   }
 
   const { subtotal, vatAmount, total } = computeTotals(values.lines, values.vatPct);
@@ -90,8 +101,7 @@ export async function createPo(input: PoFormPayload) {
     return created;
   });
 
-  // Converting an approved PR consumes it (§5 lifecycle).
-  if (pr) await transition(db.purchaseRequisition, pr.id, "APPROVED", "CONVERTED");
+  // (the PR was consumed — guarded — before the PO was created)
 
   await audit({
     userId: user.id,
@@ -121,7 +131,7 @@ export async function submitPo(id: string) {
     await createSteps({
       entityType: "PO",
       entityId: id,
-      amountVnd: Number(po.total),
+      amountVnd: Number(po.total) * Number(po.fxRate),   // §6 bands are VND — convert foreign-currency totals
       departmentId: po.pr?.departmentId || user.departmentId || "",
       requesterId: po.createdById || user.id,
       link: `/purchase-orders/${id}`,
@@ -158,7 +168,11 @@ export async function decidePo(params: { poId: string; decision: Decision; passw
     lines: po.lines.map((l) => ({ d: l.description, q: l.qty, p: l.unitPrice })),
   };
 
-  let sig;
+    // §15/§19: authorization BEFORE the signature — an unauthorized caller must be refused
+  // before any signature row is written (no orphan signatures).
+  await assertCurrentApprover("PO", po.id, user.id);
+
+let sig;
   try {
     sig = await signRecord({
       userId: user.id,

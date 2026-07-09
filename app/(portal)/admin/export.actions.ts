@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { decToString } from "@/lib/money";
+import { ymdVn, ymdHmVn } from "@/lib/dates";
 
 /**
  * §17 accounting export — MATCHED invoices / PAID payment requests as CSV batches for
@@ -30,13 +31,17 @@ export async function exportAccountingBatch(kind: "INVOICES" | "PAYMENT_REQUESTS
     const batch = await db.$transaction(async (tx) => {
       const batchNumber = await nextDocNumber("EXP", tx, { prefix: "EXP" });
       const b = await tx.exportBatch.create({ data: { batchNumber, kind, rowCount: rows.length, createdById: user.id } });
-      await tx.invoice.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { exportBatchId: b.id } });
+      const stamped = await tx.invoice.updateMany({
+        where: { id: { in: rows.map((r) => r.id) }, exportBatchId: null },
+        data: { exportBatchId: b.id },
+      });
+      if (stamped.count !== rows.length) throw new Error("Some rows were just exported by another batch — reload and retry.");
       return b;
     });
     const csv = toCsv(
       ["batch", "invoice_no", "vendor_invoice_no", "invoice_date", "due_date", "vendor_code", "vendor_name", "vendor_tax_code", "po_no", "subtotal_vnd", "vat_vnd", "total_vnd", "payment_status"],
       rows.map((i) => [
-        batch.batchNumber, i.invoiceNumber, i.vendorInvoiceNo, i.invoiceDate.toISOString().slice(0, 10), i.dueDate.toISOString().slice(0, 10),
+        batch.batchNumber, i.invoiceNumber, i.vendorInvoiceNo, ymdVn(i.invoiceDate), ymdVn(i.dueDate),
         i.vendor.code, i.vendor.nameEn, i.vendor.taxCode ?? "", i.po.poNumber,
         decToString(i.subtotal, 2) ?? "0", decToString(i.vatAmount, 2) ?? "0", decToString(i.total, 2) ?? "0", i.paymentStatus,
       ]),
@@ -54,13 +59,17 @@ export async function exportAccountingBatch(kind: "INVOICES" | "PAYMENT_REQUESTS
   const batch = await db.$transaction(async (tx) => {
     const batchNumber = await nextDocNumber("EXP", tx, { prefix: "EXP" });
     const b = await tx.exportBatch.create({ data: { batchNumber, kind, rowCount: rows.length, createdById: user.id } });
-    await tx.paymentRequest.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { exportBatchId: b.id } });
+    const stamped = await tx.paymentRequest.updateMany({
+      where: { id: { in: rows.map((r) => r.id) }, exportBatchId: null },
+      data: { exportBatchId: b.id },
+    });
+    if (stamped.count !== rows.length) throw new Error("Some rows were just exported by another batch — reload and retry.");
     return b;
   });
   const csv = toCsv(
     ["batch", "payment_no", "type", "paid_date", "payment_ref", "payee", "vendor_code", "cost_center", "requester", "amount_vnd"],
     rows.map((r) => [
-      batch.batchNumber, r.paymentRequestNumber, r.type, r.paidDate ? r.paidDate.toISOString().slice(0, 10) : "", r.paymentRef ?? "",
+      batch.batchNumber, r.paymentRequestNumber, r.type, r.paidDate ? ymdVn(r.paidDate) : "", r.paymentRef ?? "",
       r.payeeName, r.vendor?.code ?? "", r.costCenter.code, r.requester.name, decToString(r.amount, 2) ?? "0",
     ]),
   );
@@ -78,6 +87,6 @@ export async function pendingExportCounts() {
   return {
     invoices,
     payments,
-    batches: batches.map((b) => ({ batchNumber: b.batchNumber, kind: b.kind, rowCount: b.rowCount, by: b.createdBy.name, at: b.createdAt.toISOString().slice(0, 16).replace("T", " ") })),
+    batches: batches.map((b) => ({ batchNumber: b.batchNumber, kind: b.kind, rowCount: b.rowCount, by: b.createdBy.name, at: ymdHmVn(b.createdAt) })),
   };
 }

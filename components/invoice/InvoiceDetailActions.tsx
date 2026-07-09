@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
@@ -21,6 +22,7 @@ export function InvoiceDetailActions({
   paymentStatus: string;
 }) {
   const t = useTranslations("invoice");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [dialog, setDialog] = useState<null | "verify" | "paid" | "partial">(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function InvoiceDetailActions({
       start(() => router.refresh());
     } catch (e) {
       setDialog(null);
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     }
   }
 

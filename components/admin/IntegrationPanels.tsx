@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { KeyRound, Plus, Power, Webhook, Trash2, Radio } from "lucide-react";
@@ -14,6 +15,7 @@ const EVENTS = ["po.approved", "invoice.matched", "payment.paid", "stock.belowMi
 /** §17 integration console — API keys (token shown once) + outbound webhooks with test ping. */
 export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: WebhookRow[] }) {
   const t = useTranslations("integration");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [keyName, setKeyName] = useState("");
   const [minted, setMinted] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
       await fn();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

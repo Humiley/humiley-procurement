@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
@@ -13,6 +14,7 @@ type PriceRow = { itemId: string; priceVnd: string };
 /** §9 framework agreement form — vendor, validity, value, optional contracted price list. */
 export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: CtrOpt[] }) {
   const t = useTranslations("contracts");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [vendorId, setVendorId] = useState(vendors[0]?.id || "");
   const [title, setTitle] = useState("");
@@ -39,7 +41,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
       });
       router.push(`/contracts/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the contract.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Download, FileSpreadsheet } from "lucide-react";
@@ -11,6 +12,7 @@ export type ExportBatchRow = { batchNumber: string; kind: string; rowCount: numb
 /** §17 accounting export — batch CSV download; exported rows are stamped and never re-export. */
 export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCount: number; paymentCount: number; batches: ExportBatchRow[] }) {
   const t = useTranslations("acctExport");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
       setMsg(t("done", { batch: res.batchNumber, rows: res.rowCount }));
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Export failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }

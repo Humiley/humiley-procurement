@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, Trophy } from "lucide-react";
@@ -42,6 +43,7 @@ export function RfqDetail({
   canManage: boolean;
 }) {
   const t = useTranslations("rfq");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function RfqDetail({
       await fn();
       start(() => router.refresh());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(null);
     }
@@ -87,7 +89,7 @@ export function RfqDetail({
       const res = await awardQuote({ rfqId, quoteId: v.quote!.id, justification: just || undefined });
       router.push(`/purchase-orders/${res.poId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Award failed.");
+      setError(fmtErr(e));
       setBusy(null);
     }
   }

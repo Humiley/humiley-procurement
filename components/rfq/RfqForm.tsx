@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createRfq } from "@/app/(portal)/rfqs/actions";
@@ -21,6 +22,7 @@ export function RfqForm({
   initialLines: RfqFormLine[];
 }) {
   const t = useTranslations("rfq");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [title, setTitle] = useState(fromPr ? `Sourcing for ${fromPr.label}` : "");
   const [dueDate, setDueDate] = useState("");
@@ -56,7 +58,7 @@ export function RfqForm({
       });
       router.push(`/rfqs/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the RFQ.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

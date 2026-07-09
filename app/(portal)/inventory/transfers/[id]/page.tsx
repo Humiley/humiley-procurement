@@ -11,6 +11,7 @@ import { TransferDetailActions } from "@/components/inv/TransferDetailActions";
 export default async function TransferDetailPage({ params }: { params: { id: string } }) {
   const user = await requireUser();
   const t = await getTranslations("trf");
+  const ti = await getTranslations("inventory.type");
   const st = await getTranslations("status");
 
   const trf = await db.stockTransfer.findUnique({
@@ -75,7 +76,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
           <ul className="space-y-1.5 text-xs">
             {movements.map((m) => (
               <li key={m.id} className="font-mono">
-                {m.movementNumber} · {m.type} · {Number(decToString(m.qty, 4)).toLocaleString("en-US")} @ {Number(decToString(m.unitCostVnd, 2)).toLocaleString("en-US")} ₫
+                {m.movementNumber} · {ti(m.type)} · {Number(decToString(m.qty, 4)).toLocaleString("en-US")} @ {Number(decToString(m.unitCostVnd, 2)).toLocaleString("en-US")} ₫
               </li>
             ))}
           </ul>

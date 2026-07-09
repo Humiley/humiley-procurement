@@ -4,13 +4,15 @@ import { auth } from "@/lib/auth";
 import { Logo } from "@/components/shared/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export default async function LoginPage({ searchParams }: { searchParams: { email?: string } }) {
+export default async function LoginPage({ searchParams }: { searchParams: { email?: string | string[] } }) {
   const session = await auth();
   if (session?.user) redirect("/dashboard");
   const t = await getTranslations("auth");
   // Humiley Portal handoff: the sidebar launcher appends ?email=<signed-in user> so the
   // procurement login opens with the account prefilled (see docs/PORTAL-INTEGRATION.md).
-  const prefillEmail = (searchParams.email ?? "").trim().slice(0, 120);
+  // A repeated ?email= param arrives as an array — take the first value, never crash.
+  const rawEmail = Array.isArray(searchParams.email) ? searchParams.email[0] : searchParams.email;
+  const prefillEmail = (rawEmail ?? "").trim().slice(0, 120);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-panel p-4">

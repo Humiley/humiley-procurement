@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2, UserCog } from "lucide-react";
@@ -16,6 +17,9 @@ const ENTITY_TYPES = ["PR", "PO", "VENDOR", "PAYMENT_REQUEST", "GOODS_ISSUE"];
 /** §6 DoA matrix CRUD + §15 delegation of pending steps — ADMIN only. */
 export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pending: PendingStepRow[]; users: UserOpt[] }) {
   const t = useTranslations("matrix");
+  const fmtErr = useActionError();
+  const ta = useTranslations("approvals.type");
+  const tr = useTranslations("roles");
   const router = useRouter();
   const [entityType, setEntityType] = useState("PR");
   const [minA, setMinA] = useState("0");
@@ -33,7 +37,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
       await fn();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }
@@ -50,7 +54,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-grey">{t("addTitle")}</h3>
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-sm"><span className="mb-1 block text-xs font-semibold text-grey">{t("entityType")}</span>
-            <select className={field} value={entityType} onChange={(e) => setEntityType(e.target.value)}>{ENTITY_TYPES.map((x) => <option key={x}>{x}</option>)}</select>
+            <select className={field} value={entityType} onChange={(e) => setEntityType(e.target.value)}>{ENTITY_TYPES.map((x) => <option key={x} value={x}>{ta(x)}</option>)}</select>
           </label>
           <label className="text-sm"><span className="mb-1 block text-xs font-semibold text-grey">{t("min")}</span>
             <input className={`${field} w-36 text-right`} value={minA} onChange={(e) => setMinA(e.target.value)} />
@@ -62,7 +66,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
             <input className={`${field} w-16 text-right`} value={level} onChange={(e) => setLevel(e.target.value)} />
           </label>
           <label className="text-sm"><span className="mb-1 block text-xs font-semibold text-grey">{t("role")}</span>
-            <select className={field} value={role} onChange={(e) => setRole(e.target.value)}>{ROLES.map((x) => <option key={x}>{x}</option>)}</select>
+            <select className={field} value={role} onChange={(e) => setRole(e.target.value)}>{ROLES.map((x) => <option key={x} value={x}>{tr(x)}</option>)}</select>
           </label>
           <button type="button" disabled={busy} onClick={() => run(() => addMatrixRow({ entityType: entityType as never, minAmountVnd: minA.replace(/\D/g, "") || "0", maxAmountVnd: maxA.replace(/\D/g, "") || null, level, approverRole: role as never }))} className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
             <Plus className="h-4 w-4" /> {t("add")}
@@ -72,7 +76,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
 
       {grouped.map((g) => (
         <div key={g.et} className="rounded-xl border border-grey/20 bg-white p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{g.et}</h3>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{ta(g.et)}</h3>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
@@ -84,7 +88,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
                 <tr key={r.id} className="border-t border-grey/10">
                   <td className="py-1.5 tabular-nums">{Number(r.min).toLocaleString("en-US")} – {r.max ? Number(r.max).toLocaleString("en-US") : "∞"} ₫</td>
                   <td className="py-1.5">L{r.level}</td>
-                  <td className="py-1.5">{r.approverRole ?? "—"}</td>
+                  <td className="py-1.5">{r.approverRole ? tr(r.approverRole) : "—"}</td>
                   <td className="py-1.5 text-right">
                     <button type="button" disabled={busy} onClick={() => run(() => deleteMatrixRow(r.id))} className="text-grey hover:text-danger" aria-label={t("delete")}>
                       <Trash2 className="h-4 w-4" />
@@ -107,7 +111,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
           <ul className="space-y-2">
             {pending.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{s.entityType}</span>
+                <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{ta(s.entityType)}</span>
                 <span className="font-mono text-xs font-bold">{s.refLabel}</span>
                 <span className="text-xs text-grey">L{s.level} · {s.approver}</span>
                 <span className="flex-1" />

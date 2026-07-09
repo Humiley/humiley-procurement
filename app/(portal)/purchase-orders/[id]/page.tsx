@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString, formatQty } from "@/lib/money";
-import { formatVnDate, formatVnDateTime } from "@/lib/dates";
+import { formatVnDate, formatVnDateTime, ymdVn } from "@/lib/dates";
 import { DocDetailLayout } from "@/components/shared/DocDetailLayout";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { VndDisplay } from "@/components/shared/VndDisplay";
@@ -56,9 +56,7 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
     type: d.type,
     status: d.status,
     docNumber: d.docNumber,
-    issueDate: d.issueDate
-      ? `${d.issueDate.getFullYear()}-${String(d.issueDate.getMonth() + 1).padStart(2, "0")}-${String(d.issueDate.getDate()).padStart(2, "0")}`
-      : null,
+    issueDate: d.issueDate ? ymdVn(d.issueDate) : null,
     formCode: d.cooFormType?.code ?? null,
   }));
   const cooOpts: CooOpt[] = cooForms.map((c) => ({ id: c.id, label: `${c.code.replace("_", " ")} — ${c.agreementName}` }));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createInvoice } from "@/app/(portal)/invoices/actions";
@@ -19,9 +20,10 @@ export function InvoiceForm({
   lines: InvPoLine[];
 }) {
   const t = useTranslations("invoice");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [vendorInvoiceNo, setVendorInvoiceNo] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().slice(0, 10));
+  const [invoiceDate, setInvoiceDate] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
   const [rows, setRows] = useState<Record<string, { qty: string; price: string }>>(
     Object.fromEntries(lines.map((l) => [l.poLineId, { qty: l.toInvoice, price: l.poPrice }])),
   );
@@ -40,7 +42,7 @@ export function InvoiceForm({
       });
       router.push(`/invoices/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the invoice.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

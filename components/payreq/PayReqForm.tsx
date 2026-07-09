@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPaymentRequest } from "@/app/(portal)/payment-requests/actions";
@@ -26,6 +27,7 @@ export function PayReqForm({
   myPaidAdvances: PayReqOpt[];
 }) {
   const t = useTranslations("payreq");
+  const fmtErr = useActionError();
   const router = useRouter();
   const types = PAYREQ_TYPES.filter((x) => x !== "VENDOR_PAYMENT" || canVendorPayment);
   const [type, setType] = useState<string>(types[0]);
@@ -69,7 +71,7 @@ export function PayReqForm({
       });
       router.push(`/payment-requests/${res.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create the payment request.");
+      setError(fmtErr(e));
       setBusy(false);
     }
   }

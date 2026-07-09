@@ -40,7 +40,7 @@ export default async function PaymentRequestsPage() {
                 <Link href={`/payment-requests/${q.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{q.paymentRequestNumber}</Link>
                 <span className="min-w-0 flex-1 truncate">{q.payeeName}</span>
                 <span className="text-xs text-grey">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</span>
-                <b className="text-navy">{decToString(q.amount, 0)} ₫</b>
+                <b className="text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</b>
               </li>
             ))}
           </ul>
@@ -73,7 +73,7 @@ export default async function PaymentRequestsPage() {
                   <td className="max-w-[200px] truncate px-3 py-2.5">{q.payeeName}{q.vendor ? <span className="text-xs text-grey"> · {q.vendor.code}</span> : null}</td>
                   <td className="px-3 py-2.5">{q.requester.name}</td>
                   <td className="px-3 py-2.5">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</td>
-                  <td className="px-3 py-2.5 text-right font-semibold text-navy">{decToString(q.amount, 0)} ₫</td>
+                  <td className="px-3 py-2.5 text-right font-semibold text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</td>
                   <td className="px-3 py-2.5"><StatusBadge status={q.status} label={st.has(q.status) ? st(q.status) : q.status} /></td>
                 </tr>
               ))}

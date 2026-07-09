@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Play, Ban } from "lucide-react";
@@ -9,6 +10,7 @@ import { activateContract, terminateContract } from "@/app/(portal)/contracts/ac
 /** DRAFT → activate; ACTIVE → terminate. */
 export function ContractDetailActions({ id, status }: { id: string; status: string }) {
   const t = useTranslations("contracts");
+  const fmtErr = useActionError();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function ContractDetailActions({ id, status }: { id: string; status: stri
       await fn(id);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed.");
+      setError(fmtErr(e));
     } finally {
       setBusy(false);
     }
