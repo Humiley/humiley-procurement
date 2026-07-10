@@ -1,0 +1,8 @@
+# Public HTTPS edge for a STANDALONE procurement host (compose `--profile edge`).
+# Caddy auto-obtains + renews a Let's Encrypt cert and reverse-proxies to the app container.
+# The domain comes from .env (PROCUREMENT_DOMAIN). NOTE: if procurement shares the portal's VPS,
+# do NOT run this — add a block to the PORTAL's Caddyfile instead (see DEPLOY.md, option B).
+{$PROCUREMENT_DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy app:3000
+}

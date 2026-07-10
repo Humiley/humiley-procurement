@@ -35,6 +35,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
+# Uploaded documents (invoices/bills) land under STORAGE_DIR=/app/storage — a compose volume
+# mounts here so they survive redeploys. Created owned by nextjs so a fresh named volume
+# inherits writable ownership (uid 1001).
+RUN mkdir -p /app/storage && chown -R nextjs:nodejs /app/storage
+ENV STORAGE_DIR=/app/storage
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0

@@ -1,0 +1,116 @@
+# Humiley Procurement — production stack (Next.js standalone + PostgreSQL 16).
+# Procurement is an APP OF THE PORTAL: a portal user opens it with no second login via the
+# signed SSO handoff, so PORTAL_SSO_SECRET here MUST equal the portal's TK_SSO_SECRET.
+#
+# Quick start on the server (see DEPLOY.md for the full runbook):
+#   cp .env.production.example .env   # then edit it
+#   ./deploy.sh --bootstrap           # first time (migrate + seed admin), or ./deploy.sh to update
+#
+# SAFE BY DEFAULT: `docker compose up -d` starts ONLY app + db (no ports 80/443), so it can run on
+# the SAME VPS as the live portal without clashing with the portal's Caddy. Publish it publicly by
+# EITHER (a) `--profile edge` for a standalone host (bundled Caddy owns 80/443), OR (b) adding a
+# reverse-proxy block to the portal's Caddy — both documented in DEPLOY.md.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: humiley_proc_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-procurement}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=${POSTGRES_DB:-humiley_procurement}
+    volumes:
+      - proc_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-procurement} -d $${POSTGRES_DB:-humiley_procurement}"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+    expose:
+      - "5432"
+
+  app:
+    build: .
+    container_name: humiley_proc_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-procurement}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-humiley_procurement}?schema=public
+      # Auth.js v5 — generated once into .env by deploy.sh; behind a proxy so trust the host.
+      - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET (openssl rand -hex 32)}
+      - AUTH_TRUST_HOST=true
+      # No-second-login SSO — MUST equal the portal's TK_SSO_SECRET.
+      - PORTAL_SSO_SECRET=${PORTAL_SSO_SECRET:?must equal the portal TK_SSO_SECRET}
+      - APP_URL=${APP_URL:-https://procurement.humiley.com}
+      - DEFAULT_VAT_PCT=${DEFAULT_VAT_PCT:-10}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-procurement@humiley.com}
+    volumes:
+      - proc_storage:/app/storage   # uploaded invoices/bills persist across redeploys
+    expose:
+      - "3000"
+    ports:
+      # localhost-only by default so the portal's Caddy (or an SSH tunnel) can reach it without
+      # exposing the app directly. Set PROCUREMENT_BIND=0.0.0.0 only if nothing fronts it.
+      - "${PROCUREMENT_BIND:-127.0.0.1}:${PROCUREMENT_PORT:-3000}:3000"
+
+  # ── One-time / update setup: run migrations. Uses the `builder` stage (it has the prisma CLI +
+  #    tsx, which the slim runtime image omits). `docker compose --profile setup run --rm migrate`.
+  migrate:
+    build:
+      context: .
+      target: builder
+    profiles: ["setup"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-procurement}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-humiley_procurement}?schema=public
+    command: sh -c "npx prisma migrate deploy"
+
+  # First-run only: seed the §6 approval matrix + one ADMIN (random one-time password, printed
+  # once). Idempotent — skips the admin if the email already exists.
+  bootstrap:
+    build:
+      context: .
+      target: builder
+    profiles: ["setup"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-procurement}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-humiley_procurement}?schema=public
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
+      - BOOTSTRAP_ADMIN_NAME=${BOOTSTRAP_ADMIN_NAME:-System Administrator}
+    command: sh -c "npm run bootstrap"
+
+  # ── Public edge for a STANDALONE host (own VPS). Do NOT enable on a box already running the
+  #    portal's Caddy — 80/443 would clash. Opt in with `--profile edge`.
+  caddy:
+    image: caddy:2
+    container_name: humiley_proc_caddy
+    profiles: ["edge"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - PROCUREMENT_DOMAIN=${PROCUREMENT_DOMAIN:-procurement.humiley.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - proc_caddy_data:/data
+      - proc_caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  proc_db:
+  proc_storage:
+  proc_caddy_data:
+  proc_caddy_config:
