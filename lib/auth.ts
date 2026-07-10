@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { db } from "@/lib/db";
+import { verifyPortalToken } from "@/lib/portal-sso";
 
 const MAX_FAILED = 5;
 const LOCK_MINUTES = 15;
@@ -10,6 +11,49 @@ const LOCK_MINUTES = 15;
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
+    // Portal single-sign-on: a user already authenticated in the Humiley Portal (Microsoft 365)
+    // is signed in with NO password — procurement is a portal app, like HR/CRM. The portal mints
+    // a signed one-time token (see lib/portal-sso.ts); we verify it and map to the procurement User.
+    Credentials({
+      id: "portal-sso",
+      name: "Humiley Portal",
+      credentials: { token: { label: "Portal token", type: "text" } },
+      async authorize(creds) {
+        const identity = verifyPortalToken(String(creds?.token ?? ""));
+        if (!identity) return null;
+        let user = await db.user.findUnique({ where: { email: identity.email } });
+        // JIT provisioning: the token is portal-signed and only minted for users the admin has
+        // GRANTED Procurement (portal appsAllowed), so a first-time arrival is auto-created as a
+        // REQUESTER — "assign in the portal and they're in", like HR/CRM. The admin elevates the
+        // role (purchaser/director/…) in Admin → Users when someone needs more than raising PRs.
+        // A random password is set only so §19 e-sign re-auth has a credential; SSO login never
+        // needs it (mustChangePw stays false — no change-password wall on a portal user).
+        if (!user) {
+          user = await db.user.create({
+            data: {
+              email: identity.email,
+              name: identity.name,
+              passwordHash: await bcrypt.hash(crypto.randomUUID() + crypto.randomUUID(), 10),
+              roles: ["REQUESTER"],
+              isActive: true,
+              mustChangePw: false,
+            },
+          });
+        }
+        if (!user.isActive) return null; // an admin can revoke access by deactivating the user
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          roles: user.roles,
+          departmentId: user.departmentId,
+          isChief: user.isChief,
+          locale: user.locale,
+          // SSO users arrived via M365 — don't force a procurement password change on them.
+          mustChangePw: false,
+        };
+      },
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },

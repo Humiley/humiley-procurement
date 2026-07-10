@@ -4,23 +4,33 @@ The procurement portal is an **app of the Humiley Portal** (portal.humiley.com),
 CRM — not a standalone product. This document is the exact integration plan: SSO, launcher, user
 mapping, and deployment. It fulfils the standing constraint recorded in PHASE-REPORTS.md.
 
-## 1. Deployment shape
+## 1. Deployment shape — an app of the portal, no separate domain needed
 
-- Deploy this Next.js app on the same VPS as the portal (Docker), reachable at
-  **procurement.humiley.com** (recommended — cookies and MSAL redirect URIs stay clean) behind the
-  existing Caddy. Caddy block:
+Procurement is just another app of the portal (like HR and CRM): you deploy it once on the SAME VPS
+and **assign it per user** — you do NOT need a separate public domain or a second login.
 
-  ```
-  procurement.humiley.com {
-      reverse_proxy procurement:3000
-  }
-  ```
-
-- `docker-compose` service `procurement` (Next standalone build) + the existing Postgres 16 with a
-  dedicated `humiley_procurement` database. `.env`: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL=https://procurement.humiley.com`,
+- Add a `procurement` service (Next standalone build — Dockerfile shipped) + the existing Postgres 16
+  with a dedicated `humiley_procurement` database to the portal's `docker-compose`. Reach it behind
+  the existing Caddy — either a subdomain (`procurement.humiley.com`) OR a path on the portal host;
+  pick whatever is easiest, the SSO handoff works the same. `.env`: `DATABASE_URL`, `AUTH_SECRET`,
+  `AUTH_TRUST_HOST=true`, and — critically — **`PORTAL_SSO_SECRET` set to the SAME value as the
+  portal's `TK_SSO_SECRET`** (this is what makes the no-second-login handoff work).
   SMTP_* (optional), and the Entra variables below.
 
-## 2. Single sign-on with Microsoft 365 (Entra ID)
+## 2. Single sign-on — ✅ SHIPPED (no second login)
+
+A portal user who clicks **Procurement** is signed in with NO password prompt, exactly like opening
+HR or CRM. How it works:
+- The portal's backend mints a short-lived HMAC-signed token (`GET /api/procurement/sso`, gated so
+  only users who have Procurement granted can obtain one) using the shared `TK_SSO_SECRET`.
+- The launcher opens `<procurementUrl>/sso?t=<token>`; procurement's `/sso` route verifies the token
+  against `PORTAL_SSO_SECRET` (same value), maps the email to its `User` row, and opens a session —
+  no login screen. A tampered/expired token, or a user with no procurement account, falls back to
+  the normal login page. **Both secrets MUST match**, or the handoff falls back to the login screen.
+- The password login page still exists for direct/admin access and is used for the §19 e-signature
+  re-authentication (a deliberate Part 11 re-auth on each signature).
+
+### 2b. (Optional, future) Direct Microsoft 365 (Entra ID) provider
 
 The portal signs users in with M365; procurement must accept the same identity so a portal user
 lands here already authenticated. Auth.js v5 makes this a **provider addition, not a rebuild**:
@@ -61,7 +71,8 @@ The Humiley Portal now carries Procurement as a first-class app (implemented in 
 
 - **Sidebar section "Procurement"** with a "Procurement Portal · Cổng Mua hàng" entry
   (external-link arrow, shopping-cart icon) — opens this app in a new tab at
-  `<procurementUrl>/login?email=<signed-in user>`; the login screen prefills that email
+  `<procurementUrl>/sso?t=<signed token>` for a seamless no-password sign-in (falls back to
+  `/login?email=<user>` if `TK_SSO_SECRET`/`PORTAL_SSO_SECRET` are not configured)
   (see §2.3 — the address is the join key). Already-authenticated users are bounced straight
   to their procurement dashboard.
 - **Opt-in access** exactly like HR/Finance: `procurement` is an appsAllowed opt-in app —

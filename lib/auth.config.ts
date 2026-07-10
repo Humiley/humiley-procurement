@@ -16,6 +16,7 @@ export const authConfig = {
       const { pathname } = request.nextUrl;
       const isPublic =
         pathname === "/login" ||
+        pathname === "/sso" || // portal SSO landing creates the session
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/_next") ||
         pathname === "/favicon.ico";
