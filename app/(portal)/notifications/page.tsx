@@ -30,7 +30,7 @@ export default async function NotificationsPage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (
         <ul className="space-y-2">
           {items.map((n) => {
@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
             const body = locale === "vi" ? n.bodyVn : n.bodyEn;
             return (
               <li key={n.id}>
-                <div className={`flex items-start gap-3 rounded-xl border p-3 ${n.isRead ? "border-grey/15 bg-white" : "border-navy/30 bg-navy/5"}`}>
+                <div className={`flex items-start gap-3 rounded-xl border p-3 ${n.isRead ? "border-line bg-white" : "border-navy/30 bg-navy/5"}`}>
                   {/* opening a notification marks it read via /notifications/go/[id] */}
                   <Link href={`/notifications/go/${n.id}`} className="min-w-0 flex-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/50">
                     <p className={`text-sm ${n.isRead ? "font-medium text-ink" : "font-bold text-navy"}`}>{title}</p>

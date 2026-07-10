@@ -47,21 +47,20 @@ export function InvoiceDetailActions({
     }
   }
 
-  const btn = "rounded-lg px-3 py-1.5 text-sm font-semibold";
   return (
     <div className="flex flex-wrap items-center gap-2">
       {error ? <span className="text-xs text-danger">{error}</span> : null}
       {!verified ? (
-        <button className={`${btn} bg-navy text-white hover:opacity-90`} onClick={() => { setError(null); setDialog("verify"); }}>
+        <button className={"btn-primary"} onClick={() => { setError(null); setDialog("verify"); }}>
           {matched ? t("verify") : t("verifyOverride")}
         </button>
       ) : null}
       {verified && paymentStatus !== "PAID" ? (
         <>
-          <button className={`${btn} bg-emerald text-white hover:opacity-90`} onClick={() => { setError(null); setDialog("paid"); }}>
+          <button className={"btn-emerald"} onClick={() => { setError(null); setDialog("paid"); }}>
             {t("markPaid")}
           </button>
-          <button className={`${btn} border border-emerald/40 text-emerald hover:bg-emerald/5`} onClick={() => { setError(null); setDialog("partial"); }}>
+          <button className={"btn-outline !border-emerald !text-emerald hover:!bg-emerald/5"} onClick={() => { setError(null); setDialog("partial"); }}>
             {t("markPartial")}
           </button>
         </>

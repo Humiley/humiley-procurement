@@ -46,7 +46,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
         <h1 className="font-mono text-lg font-bold text-navy">{grn.grnNumber}</h1>
         <StatusBadge status={grn.status} label={st.has(grn.status) ? st(grn.status) : grn.status} />
         {hasLots ? (
-          <a href={`/inventory/labels?grn=${grn.id}`} className="rounded-lg border border-navy/30 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5">
+          <a href={`/inventory/labels?grn=${grn.id}`} className="btn-outline">
             {t("printLabels")}
           </a>
         ) : null}
@@ -56,10 +56,10 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("received")}</th>
               <th className="px-3 py-2.5 text-right">{t("accepted")}</th>
@@ -70,7 +70,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
           </thead>
           <tbody>
             {grn.lines.map((l) => (
-              <tr key={l.id} className="border-b border-grey/10 last:border-0">
+              <tr key={l.id} className="border-b border-line last:border-0">
                 <td className="px-3 py-2.5">{l.poLine.description}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums">{formatQty(l.qtyReceived)}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums text-emerald">{formatQty(l.qtyAccepted)}</td>
@@ -92,7 +92,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
-              <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+              <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">
                 <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
                 <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                 <span className="text-grey">{formatVnDateTime(s.signedAt)}</span>

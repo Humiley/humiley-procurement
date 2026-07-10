@@ -41,7 +41,7 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
   }
 
   return (
-    <div className="mb-4 rounded-xl border border-grey/20 bg-white p-4">
+    <div className="mb-4 card p-4">
       <div className="mb-2 flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 text-navy" />
         <h2 className="text-sm font-bold text-navy">{t("title")}</h2>
@@ -49,13 +49,13 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
       {error ? <p className="mb-2 rounded bg-danger/10 px-2 py-1 text-xs text-danger">{error}</p> : null}
       <ul className="space-y-1.5">
         {actionable.map((v) => (
-          <li key={v.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-grey/10 px-3 py-1.5 text-sm">
+          <li key={v.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm">
             <span className="font-mono text-xs font-bold text-navy">{v.code}</span>
             <span className="min-w-0 flex-1 truncate">{v.nameEn}</span>
             <span className="rounded bg-grey/10 px-1.5 py-0.5 text-[10px] font-bold text-grey">{v.status}</span>
             {v.status === "DRAFT" ? (
               <button
-                className="rounded-lg bg-navy px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                className="btn-primary btn-sm"
                 disabled={busy === v.id}
                 onClick={() => run(v.id, () => submitVendorForApproval(v.id))}
               >

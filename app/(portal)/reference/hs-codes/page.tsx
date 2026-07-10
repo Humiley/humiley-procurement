@@ -19,10 +19,10 @@ export default async function HsCodesPage() {
         <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
         <p className="mt-0.5 text-sm text-grey">{t("subtitle")}</p>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[820px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("colCode")}</th>
               <th className="px-3 py-2.5">{t("colDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("colMfn")}</th>
@@ -35,7 +35,7 @@ export default async function HsCodesPage() {
             {codes.map((h) => {
               const best = h.duties.slice().sort((a, b) => Number(a.preferentialDutyPct) - Number(b.preferentialDutyPct))[0];
               return (
-                <tr key={h.id} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr key={h.id} className="border-b border-line last:border-0 hover:bg-grey/5">
                   <td className="px-3 py-2.5 font-mono text-sm font-bold text-navy">
                     <Link href={`/reference/hs-codes/${h.id}`} className="hover:underline">{h.code}</Link>
                   </td>

@@ -41,7 +41,7 @@ export function TransferDetailActions({ id, status, canAct }: { id: string; stat
     <div className="flex flex-wrap items-center gap-3">
       {status === "DRAFT" ? (
         <>
-          <button type="button" onClick={() => setMode("dispatch")} className="flex items-center gap-1.5 rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+          <button type="button" onClick={() => setMode("dispatch")} className="btn-primary">
             <Truck className="h-4 w-4" /> {t("dispatch")}
           </button>
           <button type="button" disabled={busy} onClick={cancel} className="btn-outline flex items-center gap-1.5">
@@ -49,7 +49,7 @@ export function TransferDetailActions({ id, status, canAct }: { id: string; stat
           </button>
         </>
       ) : (
-        <button type="button" onClick={() => setMode("receive")} className="flex items-center gap-1.5 rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+        <button type="button" onClick={() => setMode("receive")} className="btn-emerald">
           <PackageCheck className="h-4 w-4" /> {t("receive")}
         </button>
       )}

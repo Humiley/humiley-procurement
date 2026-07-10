@@ -34,7 +34,7 @@ export default async function BudgetsPage() {
         />
       ) : null}
       {budgets.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (
         <div className="space-y-2">
           {budgets.map((b) => {
@@ -43,7 +43,7 @@ export default async function BudgetsPage() {
             const over = spent + committed > total;
             const pct = (v: number) => (total > 0 ? Math.min(100, (v / total) * 100) : 0);
             return (
-              <div key={b.id} className="rounded-xl border border-grey/20 bg-white p-4">
+              <div key={b.id} className="card p-4">
                 <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-2">
                   <Link href={`/budgets/${b.id}`} className="text-sm font-semibold text-navy hover:underline">
                     {b.costCenter.code} · {b.costCenter.nameEn}

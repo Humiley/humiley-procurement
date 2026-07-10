@@ -56,17 +56,17 @@ export default async function BudgetDetailPage({ params }: { params: { id: strin
           [t("committed"), committed, "text-warning"],
           [t("remaining"), remaining, remaining < 0 ? "text-danger" : "text-emerald"],
         ].map(([label, v, cls]) => (
-          <div key={label as string} className="rounded-xl border border-grey/20 bg-white p-4">
+          <div key={label as string} className="card p-4">
             <dt className="text-xs uppercase tracking-wide text-grey">{label as string}</dt>
             <dd className={`mt-0.5 text-lg font-bold tabular-nums ${cls as string}`}>{(v as number).toLocaleString("en-US")} ₫</dd>
           </div>
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("colPr")}</th>
               <th className="px-3 py-2.5">{t("colItem")}</th>
               <th className="px-3 py-2.5">{t("colRequester")}</th>
@@ -80,7 +80,7 @@ export default async function BudgetDetailPage({ params }: { params: { id: strin
               <tr><td colSpan={6} className="px-3 py-6 text-center text-grey">{t("noLines")}</td></tr>
             ) : (
               lines.map((l) => (
-                <tr key={l.id} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr key={l.id} className="border-b border-line last:border-0 hover:bg-grey/5">
                   <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
                     <Link href={`/requisitions/${l.pr.id}`} className="hover:underline">{l.pr.prNumber}</Link>
                   </td>

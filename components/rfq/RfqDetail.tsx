@@ -138,17 +138,17 @@ export function RfqDetail({
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
       {/* vendors + lifecycle */}
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-bold text-navy">{t("vendorsPanel")}</h2>
           <div className="flex gap-2">
             {canManage && status === "DRAFT" ? (
-              <button className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50" disabled={!!busy} onClick={onSend}>
+              <button className="btn-primary" disabled={!!busy} onClick={onSend}>
                 <Send className="h-3.5 w-3.5" /> {busy === "send" ? "…" : t("send")}
               </button>
             ) : null}
             {canManage && ["DRAFT", "SENT"].includes(status) ? (
-              <button className="rounded-lg border border-grey/30 px-3 py-1.5 text-sm font-semibold text-grey hover:bg-grey/10" disabled={!!busy} onClick={() => { if (!window.confirm(tc("confirmIrreversible"))) return; run("close", () => closeRfq(rfqId)); }}>
+              <button className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-grey hover:bg-grey/10" disabled={!!busy} onClick={() => { if (!window.confirm(tc("confirmIrreversible"))) return; run("close", () => closeRfq(rfqId)); }}>
                 {t("close")}
               </button>
             ) : null}
@@ -156,7 +156,7 @@ export function RfqDetail({
         </div>
         <ul className="space-y-1.5">
           {vendors.map((v) => (
-            <li key={v.vendorId} className="flex flex-wrap items-center gap-2 rounded-lg border border-grey/10 px-3 py-1.5 text-sm">
+            <li key={v.vendorId} className="flex flex-wrap items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm">
               <span className="font-mono text-xs font-bold text-navy">{v.code}</span>
               <span className="min-w-0 flex-1 truncate">{v.nameEn}</span>
               {v.sentAt ? <span className="text-[11px] text-grey">{t("sentAt", { d: v.sentAt })}</span> : <span className="text-[11px] text-grey">{t("notSent")}</span>}
@@ -187,7 +187,7 @@ export function RfqDetail({
           <table className="w-full text-sm">
             <tbody>
               {lines.map((l) => (
-                <tr key={l.id} className="border-b border-grey/10 last:border-0">
+                <tr key={l.id} className="border-b border-line last:border-0">
                   <td className="py-1 pr-2 text-xs text-grey">#{l.no}</td>
                   <td className="max-w-[280px] truncate py-1 pr-2">{l.description}</td>
                   <td className="py-1 pr-2 text-right text-xs text-grey">{l.qty} {l.uom}</td>
@@ -199,18 +199,18 @@ export function RfqDetail({
             </tbody>
           </table>
           <div className="mt-2 flex justify-end gap-2">
-            <button className="rounded-lg border border-grey/30 px-3 py-1.5 text-sm text-grey" onClick={() => setEntryFor(null)}>{t("cancel")}</button>
-            <button className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50" disabled={busy === "entry"} onClick={saveEntry}>{busy === "entry" ? "…" : t("saveQuote")}</button>
+            <button className="rounded-lg border border-line px-3 py-1.5 text-sm text-grey" onClick={() => setEntryFor(null)}>{t("cancel")}</button>
+            <button className="btn-primary" disabled={busy === "entry"} onClick={saveEntry}>{busy === "entry" ? "…" : t("saveQuote")}</button>
           </div>
         </div>
       ) : null}
 
       {/* comparison matrix */}
       {quoted.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+        <div className="overflow-x-auto card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2.5">{t("compareLine")}</th>
                 {quoted.map((v) => (
                   <th key={v.vendorId} className="px-3 py-2.5 text-right">{v.code}</th>
@@ -219,7 +219,7 @@ export function RfqDetail({
             </thead>
             <tbody>
               {lines.map((l) => (
-                <tr key={l.id} className="border-b border-grey/10">
+                <tr key={l.id} className="border-b border-line">
                   <td className="max-w-[280px] truncate px-3 py-2" title={l.description}>#{l.no} {l.description} <span className="text-xs text-grey">× {l.qty}</span></td>
                   {quoted.map((v) => {
                     const p = Number(v.quote!.priceByLine[l.id] ?? NaN);
@@ -232,7 +232,7 @@ export function RfqDetail({
                   })}
                 </tr>
               ))}
-              <tr className="border-b border-grey/10 bg-panel font-bold">
+              <tr className="border-b border-line bg-panel font-bold">
                 <td className="px-3 py-2">{t("compareTotal")}</td>
                 {quoted.map((v) => {
                   const tot = Number(v.quote!.totalVnd);
@@ -240,11 +240,11 @@ export function RfqDetail({
                   return <td key={v.vendorId} className={`px-3 py-2 text-right tabular-nums ${isLow ? "bg-emerald/15 text-emerald" : "text-navy"}`}>{fmt(tot)} ₫</td>;
                 })}
               </tr>
-              <tr className="border-b border-grey/10">
+              <tr className="border-b border-line">
                 <td className="px-3 py-2 text-xs text-grey">{t("compareLead")}</td>
                 {quoted.map((v) => <td key={v.vendorId} className="px-3 py-2 text-right text-xs">{v.quote!.leadTimeDays != null ? `${v.quote!.leadTimeDays}d` : "—"}</td>)}
               </tr>
-              <tr className="border-b border-grey/10">
+              <tr className="border-b border-line">
                 <td className="px-3 py-2 text-xs text-grey">{t("compareTerms")}</td>
                 {quoted.map((v) => <td key={v.vendorId} className="max-w-[140px] truncate px-3 py-2 text-right text-xs" title={v.quote!.paymentTerms ?? ""}>{v.quote!.paymentTerms || "—"}</td>)}
               </tr>
@@ -254,7 +254,7 @@ export function RfqDetail({
                   {quoted.map((v) => (
                     <td key={v.vendorId} className="px-3 py-2.5 text-right">
                       <button
-                        className="inline-flex items-center gap-1 rounded-lg bg-emerald px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                        className="btn-emerald btn-sm"
                         disabled={!!busy}
                         onClick={() => onAward(v)}
                       >
@@ -268,7 +268,7 @@ export function RfqDetail({
           </table>
         </div>
       ) : (
-        <p className="rounded-xl border border-grey/20 bg-white p-4 text-sm text-grey">{t("noQuotesYet")}</p>
+        <p className="card p-4 text-sm text-grey">{t("noQuotesYet")}</p>
       )}
       <TextPromptDialog
         open={!!justFor}

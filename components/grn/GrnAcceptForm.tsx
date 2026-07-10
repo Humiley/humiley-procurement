@@ -77,7 +77,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
         </thead>
         <tbody>
           {lines.map((l) => (
-            <tr key={l.grnLineId} className="border-t border-grey/10">
+            <tr key={l.grnLineId} className="border-t border-line">
               <td className="max-w-[240px] truncate py-1.5 pr-2">{l.description}</td>
               <td className="py-1.5 pr-2 text-right tabular-nums">{l.received}</td>
               <td className="py-1 pr-2"><input className={`${field} text-right`} value={qc[l.grnLineId].a} onChange={(e) => setQc({ ...qc, [l.grnLineId]: { ...qc[l.grnLineId], a: e.target.value } })} /></td>
@@ -91,7 +91,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
       </table>
       </div>
       <div className="mt-3 flex justify-end">
-        <button type="button" className="rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90" onClick={() => { const v = validateQc(); setError(v); if (!v) setSignOpen(true); }}>
+        <button type="button" className="btn-emerald" onClick={() => { const v = validateQc(); setError(v); if (!v) setSignOpen(true); }}>
           {t("acceptSign")}
         </button>
       </div>

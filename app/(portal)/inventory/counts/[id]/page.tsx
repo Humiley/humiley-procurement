@@ -54,11 +54,11 @@ export default async function CountDetailPage({ params }: { params: { id: string
       />
 
       {signatures.length > 0 ? (
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatures")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
-              <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+              <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">
                 <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
                 <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                 <span className="text-grey">{formatVnDateTime(s.signedAt)}</span>

@@ -38,11 +38,11 @@ export function ContractDetailActions({ id, status }: { id: string; status: stri
   return (
     <div className="flex items-center gap-3">
       {status === "DRAFT" ? (
-        <button type="button" disabled={busy} onClick={() => run(activateContract)} className="flex items-center gap-1.5 rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={() => run(activateContract)} className="btn-emerald">
           <Play className="h-4 w-4" /> {t("activate")}
         </button>
       ) : (
-        <button type="button" disabled={busy} onClick={() => run(terminateContract, true)} className="flex items-center gap-1.5 rounded-lg border border-danger/40 px-4 py-2 text-sm font-semibold text-danger hover:bg-danger/5 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={() => run(terminateContract, true)} className="btn-danger">
           <Ban className="h-4 w-4" /> {t("terminate")}
         </button>
       )}

@@ -174,7 +174,7 @@ export function DocListPage<T extends Record<string, unknown>>({
       </div>
 
       <div className="card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-3">
           {tabs && tabs.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {tabs.map((t) => (
@@ -302,7 +302,7 @@ export function DocListPage<T extends Record<string, unknown>>({
           </table>
         </div>
 
-        <div className="border-t border-black/5 px-3 py-2 text-xs text-grey">
+        <div className="border-t border-line px-3 py-2 text-xs text-grey">
           {tl("countOf", { shown: filtered.length, total: rows.length })}
         </div>
       </div>

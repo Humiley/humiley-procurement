@@ -54,7 +54,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
         <span className="text-sm text-body">{item.code} · {item.nameEn}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-xl border border-grey/20 bg-white p-4 text-sm sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3 card p-4 text-sm sm:grid-cols-4">
         <div>
           <dt className="text-xs uppercase tracking-wide text-grey">{t("colOnHand")}</dt>
           <dd className="mt-0.5 text-lg font-bold text-navy">
@@ -80,12 +80,12 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
       </div>
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("noMovements")}</p>
+        <p className="card p-6 text-sm text-grey">{t("noMovements")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+        <div className="overflow-x-auto card">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2.5">{t("colMovement")}</th>
                 <th className="px-3 py-2.5">{t("colDate")}</th>
                 <th className="px-3 py-2.5">{t("colType")}</th>
@@ -99,7 +99,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-grey/10 last:border-0">
+                <tr key={r.id} className="border-b border-line last:border-0">
                   <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">{r.number}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">{r.when}</td>
                   <td className="px-3 py-2.5">

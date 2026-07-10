@@ -10,7 +10,7 @@ export default function PortalError({ error, reset }: { error: Error & { digest?
         {error.message || "Unexpected error."}
         {error.digest ? <span className="block font-mono text-xs">ref {error.digest}</span> : null}
       </p>
-      <button type="button" onClick={reset} className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+      <button type="button" onClick={reset} className="btn-primary">
         Try again · Thử lại
       </button>
     </div>

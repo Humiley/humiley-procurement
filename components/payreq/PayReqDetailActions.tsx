@@ -60,30 +60,29 @@ export function PayReqDetailActions({
     start(() => router.refresh());
   }
 
-  const btn = "rounded-lg px-3 py-1.5 text-sm font-semibold disabled:opacity-50";
   return (
     <div className="flex flex-wrap items-center gap-2">
       {error ? <span className="text-xs text-danger">{error}</span> : null}
-      <a href={`/api/payment-request/${id}/pdf`} target="_blank" rel="noopener" className={`${btn} border border-navy/30 text-navy hover:bg-navy/5`}>
+      <a href={`/api/payment-request/${id}/pdf`} target="_blank" rel="noopener" className={"btn-outline"}>
         {t("pdf")}
       </a>
       {isRequester && status === "DRAFT" ? (
-        <button className={`${btn} bg-navy text-white hover:opacity-90`} disabled={!!busy} onClick={() => run("submit", () => submitPaymentRequest(id))}>
+        <button className={"btn-primary"} disabled={!!busy} onClick={() => run("submit", () => submitPaymentRequest(id))}>
           {busy === "submit" ? "…" : t("submit")}
         </button>
       ) : null}
       {isAccountant && status === "SUBMITTED" && !verified ? (
-        <button className={`${btn} bg-navy text-white hover:opacity-90`} onClick={() => { setError(null); setDialog("verify"); }}>
+        <button className={"btn-primary"} onClick={() => { setError(null); setDialog("verify"); }}>
           {t("verify")}
         </button>
       ) : null}
       {isAccountant && status === "APPROVED" ? (
-        <button className={`${btn} bg-emerald text-white hover:opacity-90`} onClick={() => { setError(null); setDialog("paid"); }}>
+        <button className={"btn-emerald"} onClick={() => { setError(null); setDialog("paid"); }}>
           {t("markPaid")}
         </button>
       ) : null}
       {(isRequester || isAccountant) && ["DRAFT", "SUBMITTED"].includes(status) ? (
-        <button className={`${btn} border border-danger/30 text-danger hover:bg-danger/5`} disabled={!!busy} onClick={() => run("cancel", () => cancelPaymentRequest(id), true)}>
+        <button className={"btn-danger"} disabled={!!busy} onClick={() => run("cancel", () => cancelPaymentRequest(id), true)}>
           {busy === "cancel" ? "…" : t("cancel")}
         </button>
       ) : null}

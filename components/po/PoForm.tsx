@@ -125,7 +125,7 @@ export function PoForm({
       ) : null}
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("vendor")} *</span>
           <select className={field} value={vendorId} required onChange={(e) => setVendorId(e.target.value)}>
@@ -182,10 +182,10 @@ export function PoForm({
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2">{t("lineDesc")}</th>
               <th className="w-32 px-3 py-2">{t("uom")}</th>
               <th className="w-28 px-3 py-2 text-right">{t("qty")}</th>
@@ -196,7 +196,7 @@ export function PoForm({
           </thead>
           <tbody>
             {lines.map((l, i) => (
-              <tr key={i} className="border-b border-grey/10 last:border-0">
+              <tr key={i} className="border-b border-line last:border-0">
                 <td className="px-2 py-1.5">
                   <input className={field} value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} />
                 </td>
@@ -226,10 +226,10 @@ export function PoForm({
             ))}
           </tbody>
         </table>
-        <div className="flex items-center justify-between border-t border-grey/15 px-3 py-2">
+        <div className="flex items-center justify-between border-t border-line px-3 py-2">
           <button
             type="button"
-            className="rounded-lg border border-grey/30 px-3 py-1 text-xs font-semibold text-grey hover:bg-grey/10"
+            className="rounded-lg border border-line px-3 py-1 text-xs font-semibold text-grey hover:bg-grey/10"
             onClick={() => setLines((ls) => [...ls, { description: "", uomId: uoms[0]?.id || "", qty: "1", unitPrice: "0" }])}
           >
             {t("addLine")}
@@ -247,7 +247,7 @@ export function PoForm({
           type="button"
           disabled={busy}
           onClick={submit}
-          className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className="btn-primary"
         >
           {busy ? "…" : t("create")}
         </button>

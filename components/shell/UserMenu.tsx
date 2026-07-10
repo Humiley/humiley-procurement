@@ -80,9 +80,9 @@ export function UserMenu({
         <div
           ref={menuRef}
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-56 rounded-card border border-black/5 bg-white p-1 shadow-card"
+          className="absolute right-0 z-50 mt-2 w-56 rounded-card border border-line bg-white p-1 shadow-card"
         >
-          <div className="border-b border-black/5 px-3 py-2">
+          <div className="border-b border-line px-3 py-2">
             <p className="text-sm font-medium text-body">{name}</p>
             <p className="truncate text-xs text-grey">{email}</p>
           </div>

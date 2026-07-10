@@ -16,10 +16,10 @@ export default async function IncotermsPage() {
         <p className="mt-0.5 text-sm text-grey">{t("subtitle")}</p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[860px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("term")}</th>
               <th className="px-3 py-2.5">{t("mode")}</th>
               <th className="px-3 py-2.5">{t("exportClearance")}</th>
@@ -31,7 +31,7 @@ export default async function IncotermsPage() {
           </thead>
           <tbody>
             {INCOTERMS_BOOK.map((i) => (
-              <tr key={i.code} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+              <tr key={i.code} className="border-b border-line last:border-0 hover:bg-grey/5">
                 <td className="px-3 py-2.5">
                   <span className="font-mono text-sm font-bold text-navy">{i.code}</span>
                   <span className="ml-2">{i.nameEn}</span>
@@ -49,7 +49,7 @@ export default async function IncotermsPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {INCOTERMS_BOOK.map((i) => (
-          <div key={i.code} id={i.code} className="rounded-xl border border-grey/20 bg-white p-4">
+          <div key={i.code} id={i.code} className="card p-4">
             <h3 className="text-sm font-bold text-navy">
               <span className="font-mono">{i.code}</span> — {i.nameEn} <span className="font-normal italic text-grey">/ {i.nameVn}</span>
             </h3>

@@ -45,7 +45,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
     <div className="space-y-4">
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-grey">
           <KeyRound className="h-4 w-4" /> {t("keysTitle")}
         </h3>
@@ -62,7 +62,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                 setKeyName("");
               })
             }
-            className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="btn-primary"
           >
             <Plus className="h-4 w-4" /> {t("mint")}
           </button>
@@ -86,7 +86,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                 <span className="text-xs text-grey">{k.lastUsedAt ? t("lastUsed", { when: k.lastUsedAt }) : t("neverUsed")}</span>
                 <span className="flex-1" />
                 {k.isActive ? (
-                  <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deactivateApiKey(k.id)); }} className="flex items-center gap-1 rounded-lg border border-danger/40 px-2.5 py-1 text-xs font-semibold text-danger hover:bg-danger/5">
+                  <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deactivateApiKey(k.id)); }} className="btn-danger btn-sm">
                     <Power className="h-3.5 w-3.5" /> {t("deactivate")}
                   </button>
                 ) : null}
@@ -99,7 +99,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
         </p>
       </div>
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-grey">
           <Webhook className="h-4 w-4" /> {t("hooksTitle")}
         </h3>
@@ -128,7 +128,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
             type="button"
             disabled={busy || !url}
             onClick={() => run(() => createWebhook({ url, events: events as never, secret: secret || null }))}
-            className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="btn-primary"
           >
             <Plus className="h-4 w-4" /> {t("addHook")}
           </button>
@@ -155,7 +155,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                       setTestResult(t("pinged", { url: h.url }));
                     })
                   }
-                  className="flex items-center gap-1 rounded-lg border border-navy/30 px-2.5 py-1 text-xs font-semibold text-navy hover:bg-navy/5"
+                  className="btn-outline btn-sm"
                 >
                   <Radio className="h-3.5 w-3.5" /> {t("test")}
                 </button>

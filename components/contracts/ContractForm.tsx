@@ -57,7 +57,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("vendor")} *</span>
           <select className={field} value={vendorId} onChange={(e) => setVendorId(e.target.value)}>
@@ -88,7 +88,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
         </label>
       </div>
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("priceList")}</h3>
         <p className="mb-3 text-xs text-grey">{t("priceListHint")}</p>
         {prices.map((p, i) => (
@@ -111,7 +111,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
       </div>
 
       <div className="flex justify-end">
-        <button type="button" disabled={busy} onClick={submit} className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={submit} className="btn-primary">
           {busy ? "…" : t("create")}
         </button>
       </div>

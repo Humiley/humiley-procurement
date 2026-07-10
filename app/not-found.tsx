@@ -10,7 +10,7 @@ export default function NotFound() {
         The page you are looking for does not exist or was moved.
         <span className="block italic">Trang bạn tìm không tồn tại hoặc đã được di chuyển.</span>
       </p>
-      <Link href="/dashboard" className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+      <Link href="/dashboard" className="btn-primary">
         Dashboard
       </Link>
     </div>

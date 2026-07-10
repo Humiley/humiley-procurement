@@ -71,7 +71,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-grey">{t("backward")}</h3>
           <ol className="relative space-y-0 border-l-2 border-emerald/40 pl-4">
             {backward.map((step, i) => (
@@ -86,7 +86,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
               </li>
             ))}
           </ol>
-          <div className="mt-4 border-t border-grey/15 pt-3">
+          <div className="mt-4 border-t border-line pt-3">
             <h4 className="mb-1 text-[10px] font-bold uppercase tracking-wide text-grey">{t("currentStock")}</h4>
             {lot.stockBalances.filter((b) => Number(b.qtyOnHand) !== 0).length === 0 ? (
               <p className="text-sm text-grey">{t("fullyConsumed")}</p>
@@ -103,7 +103,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
           </div>
         </div>
 
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-grey">{t("forward")}</h3>
           {lot.movements.length === 0 ? (
             <p className="text-sm text-grey">{t("noMovements")}</p>
@@ -112,7 +112,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
               {lot.movements.map((m) => {
                 const gi = m.refEntityType === "GoodsIssue" ? issueById.get(m.refEntityId ?? "") : null;
                 return (
-                  <li key={m.id} className="rounded-lg border border-grey/15 px-3 py-2 text-sm">
+                  <li key={m.id} className="rounded-lg border border-line px-3 py-2 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${IN_TYPES.has(m.type) ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"}`}>{ti(m.type)}</span>
                       <span className="font-mono text-xs font-bold text-navy">{m.movementNumber}</span>

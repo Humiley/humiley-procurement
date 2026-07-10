@@ -50,7 +50,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
           { kind: "INVOICES" as const, count: invoiceCount, title: t("invoicesTitle"), desc: t("invoicesDesc") },
           { kind: "PAYMENT_REQUESTS" as const, count: paymentCount, title: t("paymentsTitle"), desc: t("paymentsDesc") },
         ].map((c) => (
-          <div key={c.kind} className="rounded-xl border border-grey/20 bg-white p-4">
+          <div key={c.kind} className="card p-4">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-navy"><FileSpreadsheet className="h-4 w-4" /> {c.title}</h3>
             <p className="mt-1 text-xs text-grey">{c.desc}</p>
             <p className="mt-2 text-2xl font-bold tabular-nums text-navy">{c.count}</p>
@@ -58,7 +58,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
               type="button"
               disabled={busy || c.count === 0}
               onClick={() => runExport(c.kind)}
-              className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="btn-emerald mt-3"
             >
               <Download className="h-4 w-4" /> {t("exportCsv")}
             </button>
@@ -66,7 +66,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
         ))}
       </div>
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("history")}</h3>
         {batches.length === 0 ? (
           <p className="text-sm text-grey">{t("noBatches")}</p>

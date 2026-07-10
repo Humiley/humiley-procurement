@@ -47,7 +47,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
         </span>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-grey/20 bg-white px-4 py-3">
+      <div className="flex items-center justify-between card px-4 py-3">
         <span className="text-sm text-grey">
           {t("subtotal")}: <b className="text-body">{decToString(inv.subtotal, 0)}</b> · VAT: <b className="text-body">{decToString(inv.vatAmount, 0)}</b>
         </span>
@@ -65,10 +65,10 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       ) : null}
 
       {/* §9 3-way match table */}
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[760px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("poPrice")}</th>
               <th className="px-3 py-2.5 text-right">{t("invPrice")}</th>
@@ -80,7 +80,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           </thead>
           <tbody>
             {match.lines.map((l) => (
-              <tr key={l.poLineId} className="border-b border-grey/10 last:border-0">
+              <tr key={l.poLineId} className="border-b border-line last:border-0">
                 <td className="max-w-[240px] truncate px-3 py-2.5" title={l.description}>{l.description}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums">{Number(l.poPrice).toLocaleString("en-US")}</td>
                 <td className={`px-3 py-2.5 text-right tabular-nums ${l.priceOk ? "" : "font-bold text-danger"}`}>{Number(l.invPrice).toLocaleString("en-US")}</td>
@@ -103,7 +103,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
-              <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+              <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">
                 <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
                 <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                 <span className="text-grey">{formatVnDateTime(s.signedAt)}</span>

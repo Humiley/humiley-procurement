@@ -77,7 +77,7 @@ export function PrAttachments({
           <Paperclip className="h-4 w-4" /> {t("none")}
         </p>
       ) : (
-        <ul className="divide-y divide-black/5 rounded-card border border-black/5">
+        <ul className="divide-y divide-line rounded-card border border-line">
           {attachments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span className="flex min-w-0 items-center gap-2">

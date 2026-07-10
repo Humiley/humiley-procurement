@@ -28,7 +28,7 @@ export function MarkReadButton({ id, label }: { id: string; label: string }) {
             }
           })
         }
-        className="rounded border border-grey/30 px-2 py-0.5 text-[11px] text-grey transition hover:bg-grey/10 disabled:opacity-50"
+        className="rounded border border-line px-2 py-0.5 text-[11px] text-grey transition hover:bg-grey/10 disabled:opacity-50"
       >
         {pending ? <Loader2 className="inline h-3 w-3 animate-spin" /> : label}
       </button>
@@ -58,7 +58,7 @@ export function MarkAllButton({ label }: { label: string }) {
             }
           })
         }
-        className="rounded-lg border border-grey/30 px-3 py-1 text-xs font-semibold text-grey transition hover:bg-grey/10 disabled:opacity-50"
+        className="rounded-lg border border-line px-3 py-1 text-xs font-semibold text-grey transition hover:bg-grey/10 disabled:opacity-50"
       >
         {pending ? <Loader2 className="inline h-3.5 w-3.5 animate-spin" /> : label}
       </button>

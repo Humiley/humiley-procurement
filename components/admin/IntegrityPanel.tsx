@@ -28,10 +28,10 @@ export function IntegrityPanel() {
   }
 
   return (
-    <div className="rounded-xl border border-grey/20 bg-white p-4">
+    <div className="card p-4">
       <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("title")}</h3>
       <p className="mb-3 text-sm text-grey">{t("hint")}</p>
-      <button type="button" disabled={busy} onClick={run} className="flex items-center gap-1.5 rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+      <button type="button" disabled={busy} onClick={run} className="btn-primary">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} {t("run")}
       </button>
       {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}

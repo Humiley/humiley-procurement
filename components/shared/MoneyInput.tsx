@@ -43,7 +43,7 @@ export function MoneyInput({
   const auto = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const digits = (value ?? "").replace(/\D/g, "");
-  const display = digits ? Number(digits).toLocaleString("vi-VN") : "";
+  const display = digits ? Number(digits).toLocaleString("en-US") : "";
   return (
     <div className={cn("relative", className)}>
       <input

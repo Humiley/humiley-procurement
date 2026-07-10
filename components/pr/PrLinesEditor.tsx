@@ -24,7 +24,7 @@ export type CatalogItem = {
 };
 export type UomOpt = { id: string; label: string };
 
-const vnd = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
+const vnd = { format: (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n) + "\u00A0₫" };
 
 export function newPrLine(): PrEditorLine {
   return {
@@ -76,7 +76,7 @@ export function PrLinesEditor({
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto rounded-card border border-black/5">
+      <div className="overflow-x-auto rounded-card border border-line">
         <table className="w-full min-w-[720px] border-collapse">
           <thead>
             <tr>

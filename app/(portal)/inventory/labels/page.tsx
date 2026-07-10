@@ -41,13 +41,13 @@ export default async function LabelsPage({ searchParams }: { searchParams: { grn
       </div>
 
       {labels.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey print:hidden">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey print:hidden">{t("empty")}</p>
       ) : (
         <div className="flex flex-wrap gap-3">
           {labels.map(({ lot, qr }) => (
             <div
               key={lot.id}
-              className="label-50x30 flex w-[50mm] items-center gap-2 rounded border border-grey/30 bg-white p-2"
+              className="label-50x30 flex w-[50mm] items-center gap-2 rounded border border-line bg-white p-2"
               style={{ height: "30mm", breakInside: "avoid" }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

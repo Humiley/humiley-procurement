@@ -26,7 +26,7 @@ export default async function PaymentRequestsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-navy">{t("listTitle")}</h1>
-        <Link href="/payment-requests/new" className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90">
+        <Link href="/payment-requests/new" className="btn-primary">
           {t("newButton")}
         </Link>
       </div>
@@ -48,12 +48,12 @@ export default async function PaymentRequestsPage() {
       ) : null}
 
       {preqs.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+        <div className="overflow-x-auto card">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2.5">{t("colNo")}</th>
                 <th className="px-3 py-2.5">{t("colType")}</th>
                 <th className="px-3 py-2.5">{t("colPayee")}</th>
@@ -65,7 +65,7 @@ export default async function PaymentRequestsPage() {
             </thead>
             <tbody>
               {preqs.map((q) => (
-                <tr key={q.id} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr key={q.id} className="border-b border-line last:border-0 hover:bg-grey/5">
                   <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
                     <Link href={`/payment-requests/${q.id}`} className="hover:underline">{q.paymentRequestNumber}</Link>
                   </td>

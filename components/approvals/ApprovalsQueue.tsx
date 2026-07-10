@@ -76,12 +76,12 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
       {notice ? <p className="rounded-lg bg-emerald/10 px-3 py-2 text-sm text-emerald">{notice}</p> : null}
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+        <div className="overflow-x-auto card">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2.5">{t("colType")}</th>
                 <th className="px-3 py-2.5">{t("colRef")}</th>
                 <th className="px-3 py-2.5">{t("colPurpose")}</th>
@@ -97,7 +97,7 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
                 <tr
                   key={r.stepId}
                   ref={r.stepId === highlightStepId ? highlightRef : undefined}
-                  className={`border-b border-grey/10 last:border-0 ${
+                  className={`border-b border-line last:border-0 ${
                     r.stepId === highlightStepId ? "bg-warning/10" : "hover:bg-grey/5"
                   }`}
                 >

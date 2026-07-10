@@ -43,6 +43,14 @@ body {
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] px-3 py-[7px] text-[13px] font-semibold text-grey transition hover:bg-panel hover:text-body;
   }
+  /* compact modifier (portal .btn-sm) — declare-after so it overrides the base padding */
+  .btn-sm {
+    @apply px-2.5 py-1 text-xs;
+  }
+  /* portal .btn-danger */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[7px] bg-[#FEE2E2] px-3.5 py-[7px] text-[13px] font-semibold text-[#991B1B] transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+  }
   .card {
     @apply rounded-card border border-line bg-white shadow-card;
   }

@@ -25,7 +25,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
         <h1 className="font-mono text-lg font-bold text-navy">HS {h.code}</h1>
       </div>
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4 text-sm">
+      <div className="card p-4 text-sm">
         <p className="font-semibold">{h.descriptionEn}</p>
         <p className="text-xs italic text-grey">{h.descriptionVn}</p>
         <div className="mt-2 flex flex-wrap gap-4 text-xs">
@@ -39,24 +39,24 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("dutyMatrix")}</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="py-2">{t("route")}</th>
                 <th className="py-2">{t("countries")}</th>
                 <th className="py-2 text-right">{t("duty")}</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-grey/10">
+              <tr className="border-b border-line">
                 <td className="py-2 font-semibold">MFN</td>
                 <td className="py-2 text-xs text-grey">{t("mfnAny")}</td>
                 <td className="py-2 text-right font-semibold tabular-nums">{Number(h.mfnDutyPct)}%</td>
               </tr>
               {h.duties.map((d) => (
-                <tr key={d.id} className="border-b border-grey/10 last:border-0">
+                <tr key={d.id} className="border-b border-line last:border-0">
                   <td className="py-2">
                     <span className="font-semibold">{d.cooFormType.code.replace("_", " ")}</span>
                     <span className="block text-xs text-grey">{d.cooFormType.agreementName}</span>
@@ -68,7 +68,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
             </tbody>
           </table>
         </div>
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("linkedItems")}</h3>
           {h.itemTrades.length === 0 ? (
             <p className="text-sm text-grey">{t("noItems")}</p>

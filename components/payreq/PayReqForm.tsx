@@ -96,13 +96,13 @@ export function PayReqForm({
       <div className="flex flex-wrap gap-2">
         {types.map((x) => (
           <button key={x} type="button" onClick={() => setType(x)}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${type === x ? "border-navy bg-navy/10 font-semibold text-navy" : "border-grey/30 text-grey hover:bg-grey/5"}`}>
+            className={`rounded-lg border px-3 py-1.5 text-sm ${type === x ? "border-navy bg-navy/10 font-semibold text-navy" : "border-line text-grey hover:bg-grey/5"}`}>
             {t(`type.${x}`)}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("costCenter")} *</span>
           <select className={field} value={costCenterId} onChange={(e) => setCostCenterId(e.target.value)}>
@@ -127,7 +127,7 @@ export function PayReqForm({
       </div>
 
       {type === "VENDOR_PAYMENT" ? (
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <label className="text-sm">
             <span className="mb-1 block text-xs font-semibold text-grey">{t("vendor")} *</span>
             <select className={field} value={vendorId} onChange={(e) => { setVendorId(e.target.value); setInvoiceIds(new Set()); }}>
@@ -140,7 +140,7 @@ export function PayReqForm({
               <ul className="mt-3 space-y-1.5">
                 {vendorInvoices.map((i) => (
                   <li key={i.id}>
-                    <label className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${invoiceIds.has(i.id) ? "border-navy bg-navy/5" : "border-grey/20"}`}>
+                    <label className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${invoiceIds.has(i.id) ? "border-navy bg-navy/5" : "border-line"}`}>
                       <input type="checkbox" checked={invoiceIds.has(i.id)} onChange={() => setInvoiceIds((s) => { const n = new Set(s); if (n.has(i.id)) n.delete(i.id); else n.add(i.id); return n; })} />
                       <span className="min-w-0 flex-1 truncate">{i.label}</span>
                       <b className="text-navy">{fmt(i.amount)} ₫</b>
@@ -156,7 +156,7 @@ export function PayReqForm({
       ) : null}
 
       {type === "ADVANCE" ? (
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-2">
           <label className="text-sm">
             <span className="mb-1 block text-xs font-semibold text-grey">{t("amount")} *</span>
             <input className={`${field} text-right`} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
@@ -172,7 +172,7 @@ export function PayReqForm({
       ) : null}
 
       {type === "ADVANCE_SETTLEMENT" ? (
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <label className="text-sm">
             <span className="mb-1 block text-xs font-semibold text-grey">{t("settleAdvance")} *</span>
             <select className={field} value={advanceRequestId} onChange={(e) => setAdvanceRequestId(e.target.value)}>
@@ -184,7 +184,7 @@ export function PayReqForm({
       ) : null}
 
       {type === "REIMBURSEMENT" || type === "ADVANCE_SETTLEMENT" ? (
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <span className="mb-2 block text-xs font-semibold text-grey">{t("expenseLines")} *</span>
           {lines.map((l, i) => (
             <div key={i} className="mb-1.5 flex gap-2">
@@ -193,7 +193,7 @@ export function PayReqForm({
               <button type="button" className="text-danger" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}>✕</button>
             </div>
           ))}
-          <button type="button" className="rounded-lg border border-grey/30 px-3 py-1 text-xs font-semibold text-grey hover:bg-grey/10" onClick={() => setLines((ls) => [...ls, { description: "", amount: "" }])}>
+          <button type="button" className="rounded-lg border border-line px-3 py-1 text-xs font-semibold text-grey hover:bg-grey/10" onClick={() => setLines((ls) => [...ls, { description: "", amount: "" }])}>
             {t("addLine")}
           </button>
           {type === "REIMBURSEMENT" ? <p className="mt-2 text-xs text-warning">{t("receiptsNote")}</p> : null}
@@ -202,7 +202,7 @@ export function PayReqForm({
 
       <div className="flex items-center justify-end gap-4">
         <span className="text-sm text-grey">{t("total")}: <b className="text-base text-navy">{fmt(total)} ₫</b></span>
-        <button type="button" disabled={busy} onClick={submit} className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={submit} className="btn-primary">
           {busy ? "…" : t("create")}
         </button>
       </div>

@@ -36,7 +36,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
         <StatusBadge status={c.status} label={st.has(c.status) ? st(c.status) : c.status} />
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-xl border border-grey/20 bg-white p-4 text-sm sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3 card p-4 text-sm sm:grid-cols-4">
         <Field label={t("vendor")} value={`${c.vendor.code} · ${c.vendor.nameEn}`} />
         <Field label={t("validity")} value={`${formatVnDate(c.startDate)} → ${formatVnDate(c.endDate)}`} />
         <Field label={t("value")} value={`${Number(decToString(c.valueVnd, 0)).toLocaleString("en-US")} ₫`} />
@@ -50,7 +50,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
       {canAct ? <ContractDetailActions id={c.id} status={c.status} /> : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("priceList")}</h3>
           {items.length === 0 ? (
             <p className="text-sm text-grey">{t("noPrices")}</p>
@@ -58,7 +58,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
             <table className="w-full text-sm">
               <tbody>
                 {items.map((i) => (
-                  <tr key={i.id} className="border-b border-grey/10 last:border-0">
+                  <tr key={i.id} className="border-b border-line last:border-0">
                     <td className="py-2">{i.code} · {i.nameEn}</td>
                     <td className="py-2 text-right font-semibold tabular-nums">
                       {Number(priceList[i.id]).toLocaleString("en-US")} ₫ <span className="text-xs font-normal text-grey">/ {i.uom.code}</span>
@@ -69,7 +69,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
             </table>
           )}
         </div>
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("linkedPos")}</h3>
           {c.purchaseOrders.length === 0 ? (
             <p className="text-sm text-grey">{t("noPos")}</p>

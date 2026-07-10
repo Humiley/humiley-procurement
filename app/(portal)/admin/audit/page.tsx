@@ -26,7 +26,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
         <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
       </div>
 
-      <form className="flex flex-wrap items-end gap-2 rounded-xl border border-grey/20 bg-white p-3">
+      <form className="flex flex-wrap items-end gap-2 card p-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("entityType")}</span>
           <select name="entityType" defaultValue={searchParams.entityType ?? ""} className="field">
@@ -47,10 +47,10 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
         <button type="submit" className="btn-outline">{t("apply")}</button>
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[820px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("when")}</th>
               <th className="px-3 py-2.5">{t("user")}</th>
               <th className="px-3 py-2.5">{t("action")}</th>
@@ -63,7 +63,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
               <tr><td colSpan={5} className="px-3 py-6 text-center text-grey">{t("empty")}</td></tr>
             ) : (
               rows.map((r) => (
-                <tr key={r.id} className="border-b border-grey/10 last:border-0">
+                <tr key={r.id} className="border-b border-line last:border-0">
                   <td className="px-3 py-2 whitespace-nowrap text-xs">{formatVnDateTime(r.createdAt)}</td>
                   <td className="px-3 py-2">{r.user?.name ?? "—"}</td>
                   <td className="px-3 py-2 font-mono text-xs font-bold text-navy">{r.action}</td>

@@ -57,7 +57,7 @@ export default async function InventoryPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
-        <Link href="/inventory/issues/new" className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90">
+        <Link href="/inventory/issues/new" className="btn-primary">
           {t("requestIssue")}
         </Link>
       </div>
@@ -77,7 +77,7 @@ export default async function InventoryPage() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("valueByWarehouse")}</h3>
           {valueByWh.length === 0 ? (
             <p className="text-sm text-grey">{t("empty")}</p>
@@ -92,7 +92,7 @@ export default async function InventoryPage() {
             </ul>
           )}
         </div>
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("slowMovers")}</h3>
           {slowMovers.length === 0 ? (
             <p className="text-sm text-grey">{t("noSlowMovers")}</p>
@@ -110,12 +110,12 @@ export default async function InventoryPage() {
       </div>
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-6 text-sm text-grey">{t("empty")}</p>
+        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+        <div className="overflow-x-auto card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2.5">{t("colWarehouse")}</th>
                 <th className="px-3 py-2.5">{t("colItem")}</th>
                 <th className="px-3 py-2.5 text-right">{t("colOnHand")}</th>
@@ -126,7 +126,7 @@ export default async function InventoryPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr key={r.id} className="border-b border-line last:border-0 hover:bg-grey/5">
                   <td className="px-3 py-2.5 font-semibold">{r.wh}</td>
                   <td className="px-3 py-2.5">{r.item}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{r.qty.toLocaleString("en-US")} {r.uom}</td>

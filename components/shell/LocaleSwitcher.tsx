@@ -26,7 +26,7 @@ export function LocaleSwitcher() {
     <div
       role="group"
       aria-label={t("label")}
-      className="flex items-center rounded-md border border-grey/25 text-xs"
+      className="flex items-center rounded-md border border-line text-xs"
     >
       <Globe className="ml-2 h-3.5 w-3.5 shrink-0 text-grey" />
       {(["en", "vi"] as const).map((l) => {

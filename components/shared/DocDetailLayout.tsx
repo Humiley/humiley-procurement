@@ -56,11 +56,11 @@ export function DocDetailLayout({
           </div>
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
-        {metaSlot && <div className="mt-4 border-t border-black/5 pt-4">{metaSlot}</div>}
+        {metaSlot && <div className="mt-4 border-t border-line pt-4">{metaSlot}</div>}
       </div>
 
       <div className="card">
-        <div className="flex flex-wrap gap-1 border-b border-black/5 px-2">
+        <div className="flex flex-wrap gap-1 border-b border-line px-2">
           {tabs.map((t) => (
             <button
               key={t.key}

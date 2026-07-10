@@ -68,7 +68,7 @@ export function GiForm({
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("warehouse")} *</span>
           <select className={field} value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
@@ -95,10 +95,10 @@ export function GiForm({
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2">{t("item")}</th>
               <th className="w-28 px-3 py-2 text-right">{t("onHand")}</th>
               <th className="w-36 px-3 py-2 text-right">{t("qty")}</th>
@@ -109,7 +109,7 @@ export function GiForm({
             {lines.map((l, i) => {
               const it = items.find((x) => x.id === l.itemId);
               return (
-                <tr key={i} className="border-b border-grey/10 last:border-0">
+                <tr key={i} className="border-b border-line last:border-0">
                   <td className="px-2 py-1.5">
                     <select
                       className={field}
@@ -158,7 +158,7 @@ export function GiForm({
         >
           <Plus className="h-4 w-4" /> {t("addLine")}
         </button>
-        <button type="button" disabled={busy} onClick={submit} className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={submit} className="btn-primary">
           {busy ? "…" : t("create")}
         </button>
       </div>

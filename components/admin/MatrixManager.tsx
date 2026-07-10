@@ -52,7 +52,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
     <div className="space-y-4">
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-grey">{t("addTitle")}</h3>
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-sm"><span className="mb-1 block text-xs font-semibold text-grey">{t("entityType")}</span>
@@ -70,24 +70,24 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
           <label className="text-sm"><span className="mb-1 block text-xs font-semibold text-grey">{t("role")}</span>
             <select className={field} value={role} onChange={(e) => setRole(e.target.value)}>{ROLES.map((x) => <option key={x} value={x}>{tr(x)}</option>)}</select>
           </label>
-          <button type="button" disabled={busy} onClick={() => run(() => addMatrixRow({ entityType: entityType as never, minAmountVnd: minA.replace(/\D/g, "") || "0", maxAmountVnd: maxA.replace(/\D/g, "") || null, level, approverRole: role as never }))} className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => run(() => addMatrixRow({ entityType: entityType as never, minAmountVnd: minA.replace(/\D/g, "") || "0", maxAmountVnd: maxA.replace(/\D/g, "") || null, level, approverRole: role as never }))} className="btn-primary">
             <Plus className="h-4 w-4" /> {t("add")}
           </button>
         </div>
       </div>
 
       {grouped.map((g) => (
-        <div key={g.et} className="rounded-xl border border-grey/20 bg-white p-4">
+        <div key={g.et} className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{ta(g.et)}</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="py-1.5">{t("band")}</th><th className="py-1.5">{t("level")}</th><th className="py-1.5">{t("role")}</th><th className="w-10 py-1.5" />
               </tr>
             </thead>
             <tbody>
               {g.list.map((r) => (
-                <tr key={r.id} className="border-t border-grey/10">
+                <tr key={r.id} className="border-t border-line">
                   <td className="py-1.5 tabular-nums">{Number(r.min).toLocaleString("en-US")} – {r.max ? Number(r.max).toLocaleString("en-US") : "∞"} ₫</td>
                   <td className="py-1.5">L{r.level}</td>
                   <td className="py-1.5">{r.approverRole ? tr(r.approverRole) : "—"}</td>
@@ -103,7 +103,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
         </div>
       ))}
 
-      <div className="rounded-xl border border-grey/20 bg-white p-4">
+      <div className="card p-4">
         <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-grey">
           <UserCog className="h-4 w-4" /> {t("delegationTitle")}
         </h3>
@@ -123,7 +123,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
                     <option key={u.id} value={u.id}>{u.label}</option>
                   ))}
                 </select>
-                <button type="button" disabled={busy || !reassign[s.id]} onClick={() => run(() => reassignStep({ stepId: s.id, newApproverId: reassign[s.id] }))} className="rounded-lg border border-navy/30 px-2.5 py-1 text-xs font-semibold text-navy hover:bg-navy/5 disabled:opacity-50">
+                <button type="button" disabled={busy || !reassign[s.id]} onClick={() => run(() => reassignStep({ stepId: s.id, newApproverId: reassign[s.id] }))} className="btn-outline btn-sm">
                   {t("reassign")}
                 </button>
               </li>

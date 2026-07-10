@@ -34,16 +34,16 @@ export default async function ReportPage({ params, searchParams }: { params: { k
         </form>
         <a
           href={`/api/reports/${params.key}?fy=${fy}`}
-          className="flex items-center gap-1.5 rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+          className="btn-emerald"
         >
           <Download className="h-4 w-4" /> {t("exportXlsx")}
         </a>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               {table.columns.map((c) => (
                 <th key={c} className="px-3 py-2.5">{t(`cols.${c}`)}</th>
               ))}
@@ -54,7 +54,7 @@ export default async function ReportPage({ params, searchParams }: { params: { k
               <tr><td colSpan={table.columns.length} className="px-3 py-6 text-center text-grey">{t("empty")}</td></tr>
             ) : (
               table.rows.map((row, i) => (
-                <tr key={i} className="border-b border-grey/10 last:border-0 hover:bg-grey/5">
+                <tr key={i} className="border-b border-line last:border-0 hover:bg-grey/5">
                   {row.map((cell, j) => (
                     <td key={j} className={`px-3 py-2 ${j > 0 && numeric(cell) ? "text-right tabular-nums" : ""}`}>{cell}</td>
                   ))}

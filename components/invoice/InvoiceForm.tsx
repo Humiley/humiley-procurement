@@ -72,7 +72,7 @@ export function InvoiceForm({
       <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-grey/20 bg-white p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("po")} *</span>
           <select className={field} value={selectedPoId || ""} onChange={(e) => router.push(`/invoices/new?po=${e.target.value}`)}>
@@ -94,10 +94,10 @@ export function InvoiceForm({
 
       {selectedPoId && lines.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+          <div className="overflow-x-auto card">
             <table className="w-full min-w-[680px] text-sm">
               <thead>
-                <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+                <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                   <th className="px-3 py-2">{t("lineDesc")}</th>
                   <th className="w-20 px-3 py-2">{t("uom")}</th>
                   <th className="w-32 px-3 py-2 text-right">{t("toInvoice")}</th>
@@ -107,7 +107,7 @@ export function InvoiceForm({
               </thead>
               <tbody>
                 {lines.map((l) => (
-                  <tr key={l.poLineId} className="border-b border-grey/10 last:border-0">
+                  <tr key={l.poLineId} className="border-b border-line last:border-0">
                     <td className="px-3 py-2">{l.description}</td>
                     <td className="px-3 py-2">{l.uom}</td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums text-navy">{l.toInvoice}</td>
@@ -119,15 +119,15 @@ export function InvoiceForm({
             </table>
           </div>
           <div className="flex justify-end">
-            <button type="button" disabled={busy} onClick={submit} className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={submit} className="btn-primary">
               {busy ? "…" : t("create")}
             </button>
           </div>
         </>
       ) : selectedPoId ? (
-        <p className="rounded-xl border border-grey/20 bg-white p-4 text-sm text-grey">{t("nothingToInvoice")}</p>
+        <p className="card p-4 text-sm text-grey">{t("nothingToInvoice")}</p>
       ) : (
-        <p className="rounded-xl border border-grey/20 bg-white p-4 text-sm text-grey">{t("pickPo")}</p>
+        <p className="card p-4 text-sm text-grey">{t("pickPo")}</p>
       )}
     </div>
   );

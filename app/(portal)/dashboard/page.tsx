@@ -137,7 +137,7 @@ export default async function DashboardPage() {
                   </span>
                 ))}
               </div>
-              <ul className="divide-y divide-black/5">
+              <ul className="divide-y divide-line">
                 {myPrs.slice(0, 6).map((p) => (
                   <li key={p.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                     <Link href={`/requisitions/${p.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{p.prNumber}</Link>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
           {recent.length === 0 ? (
             <p className="text-sm text-grey">{t("nothingYet")}</p>
           ) : (
-            <ul className="divide-y divide-black/5">
+            <ul className="divide-y divide-line">
               {recent.map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <span className="text-body">

@@ -54,7 +54,7 @@ export function GiDetailActions({
   if (status === "DRAFT" && isRequester) {
     return (
       <div className="flex items-center gap-3">
-        <button type="button" disabled={busy} onClick={submit} className="flex items-center gap-1.5 rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy} onClick={submit} className="btn-primary">
           <Send className="h-4 w-4" /> {t("submit")}
         </button>
         {error ? <p className="text-sm text-danger">{error}</p> : null}
@@ -69,7 +69,7 @@ export function GiDetailActions({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-sm">
             <thead>
-              <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
                 <th className="px-3 py-2">{t("item")}</th>
                 <th className="w-28 px-3 py-2 text-right">{t("requested")}</th>
                 <th className="w-28 px-3 py-2 text-right">{t("onHand")}</th>
@@ -78,7 +78,7 @@ export function GiDetailActions({
             </thead>
             <tbody>
               {execLines.map((l) => (
-                <tr key={l.lineId} className="border-b border-grey/10 last:border-0">
+                <tr key={l.lineId} className="border-b border-line last:border-0">
                   <td className="px-3 py-2">{l.label}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{Number(l.requested).toLocaleString("en-US")} {l.uom}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-grey">{Number(l.onHand).toLocaleString("en-US")}</td>
@@ -96,7 +96,7 @@ export function GiDetailActions({
         </div>
         {error ? <p className="text-sm text-danger">{error}</p> : null}
         <div className="flex justify-end">
-          <button type="button" onClick={() => setSignOpen(true)} className="flex items-center gap-1.5 rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+          <button type="button" onClick={() => setSignOpen(true)} className="btn-emerald">
             <PackageMinus className="h-4 w-4" /> {t("executeButton")}
           </button>
         </div>

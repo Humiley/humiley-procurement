@@ -36,7 +36,7 @@ export function NewCountButton({ warehouses }: { warehouses: { id: string; label
           <option key={w.id} value={w.id}>{w.label}</option>
         ))}
       </select>
-      <button type="button" disabled={busy} onClick={create} className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+      <button type="button" disabled={busy} onClick={create} className="btn-primary">
         {busy ? "…" : t("newButton")}
       </button>
     </div>

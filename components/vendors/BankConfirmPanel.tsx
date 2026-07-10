@@ -28,17 +28,17 @@ export function BankConfirmPanel({ rows, canConfirm }: { rows: FrozenVendorRow[]
       <p className="mb-3 text-xs text-grey">{t("hint")}</p>
       <ul className="space-y-2">
         {rows.map((v) => (
-          <li key={v.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-grey/20 bg-white px-3 py-2 text-sm">
+          <li key={v.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-white px-3 py-2 text-sm">
             <span className="font-semibold">{v.code} · {v.nameEn}</span>
             <span className="font-mono text-xs">{v.bankName ?? "—"} / {v.bankAccount ?? "—"}</span>
             {v.changedBy ? <span className="text-xs text-grey">{t("changedBy", { name: v.changedBy })}</span> : null}
             <span className="flex-1" />
             {canConfirm ? (
               <>
-                <button type="button" onClick={() => setTarget({ id: v.id, approve: true })} className="rounded-lg bg-emerald px-3 py-1 text-xs font-semibold text-white hover:opacity-90">
+                <button type="button" onClick={() => setTarget({ id: v.id, approve: true })} className="btn-emerald btn-sm">
                   {t("confirm")}
                 </button>
-                <button type="button" onClick={() => setTarget({ id: v.id, approve: false })} className="rounded-lg border border-danger/40 px-3 py-1 text-xs font-semibold text-danger hover:bg-danger/5">
+                <button type="button" onClick={() => setTarget({ id: v.id, approve: false })} className="btn-danger btn-sm">
                   {t("reject")}
                 </button>
               </>

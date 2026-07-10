@@ -74,7 +74,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
         {q.verifiedById ? <span className="rounded bg-emerald/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald">{t("verifiedBadge")}</span> : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-xl border border-grey/20 bg-white p-4 text-sm sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3 card p-4 text-sm sm:grid-cols-4">
         <Field label={t("colRequester")} value={`${q.requester.name} · ${q.department.code}`} />
         <Field label={t("costCenter")} value={`${q.costCenter.code} · ${q.costCenter.nameEn}`} />
         <Field label={t("colPayee")} value={q.payeeName + (q.vendor ? ` (${q.vendor.code})` : "")} />
@@ -102,10 +102,10 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
         verified={!!q.verifiedById}
       />
 
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="w-8 px-3 py-2.5">#</th>
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("amount")}</th>
@@ -113,7 +113,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
           </thead>
           <tbody>
             {q.lines.map((l, i) => (
-              <tr key={l.id} className="border-b border-grey/10 last:border-0">
+              <tr key={l.id} className="border-b border-line last:border-0">
                 <td className="px-3 py-2.5 text-grey">{i + 1}</td>
                 <td className="px-3 py-2.5">
                   {l.invoice ? (
@@ -131,14 +131,14 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("tabApprovals")}</h3>
           {steps.length === 0 ? <p className="text-sm text-grey">{t("approvalsPending")}</p> : <ApprovalTimeline steps={timelineSteps} />}
           {myTurn ? <DecideInline entityType="PAYMENT_REQUEST" entityId={q.id} refLabel={q.paymentRequestNumber} /> : null}
           {signatures.length > 0 ? (
             <ul className="mt-4 space-y-1.5">
               {signatures.map((s) => (
-                <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+                <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">
                   <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
                   <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                   <span className="text-grey">{formatVnDateTime(s.signedAt)}</span>
@@ -148,7 +148,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
             </ul>
           ) : null}
         </div>
-        <div className="rounded-xl border border-grey/20 bg-white p-4">
+        <div className="card p-4">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("attachments")}</h3>
           <PrAttachments
             entityId={q.id}

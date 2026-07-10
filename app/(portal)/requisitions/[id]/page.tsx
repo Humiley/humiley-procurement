@@ -93,7 +93,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
   );
 
   const detailsTab = (
-    <div className="overflow-x-auto rounded-card border border-black/5">
+    <div className="overflow-x-auto rounded-card border border-line">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
           <tr>
@@ -171,7 +171,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
             <ul className="space-y-1.5">
               {signatures.map((s) => (
-                <li key={s.id} className="rounded-lg border border-grey/15 bg-white px-3 py-2 text-xs">
+                <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">
                   <span className="font-semibold text-navy">{s.fullNamePrinted}</span>
                   <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                   <span className="text-grey" title={s.signedAt.toISOString()}>
@@ -193,7 +193,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
     audits.length === 0 ? (
       <p className="text-sm text-grey">—</p>
     ) : (
-      <ul className="divide-y divide-black/5">
+      <ul className="divide-y divide-line">
         {audits.map((a) => (
           <li key={a.id} className="flex items-center justify-between gap-3 py-2 text-sm">
             <span className="text-body">
@@ -240,13 +240,13 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
             <>
               <a
                 href={`/purchase-orders/new?fromPr=${pr.id}`}
-                className="rounded-lg bg-emerald px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+                className="btn-emerald"
               >
                 {t("createPo")}
               </a>
               <a
                 href={`/rfqs/new?fromPr=${pr.id}`}
-                className="rounded-lg border border-navy/30 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5"
+                className="btn-outline"
               >
                 {t("createRfq")}
               </a>

@@ -4,11 +4,8 @@ import { cn } from "@/lib/cn";
  * Render a VND money value (spec §22.3). Client-safe: accepts an already-serialized string
  * (from lib/money.decToString) or number — never a raw Prisma Decimal — and formats with Intl.
  */
-const fmt = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  maximumFractionDigits: 0,
-});
+// en-US grouping + trailing ₫ — the ONE money format everywhere (registers, KPIs, PDFs hint)
+const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 export function VndDisplay({
   value,
@@ -31,7 +28,7 @@ export function VndDisplay({
         className,
       )}
     >
-      {Number.isFinite(n) ? fmt.format(n) : "—"}
+      {Number.isFinite(n) ? fmt.format(n) + "\u00A0₫" : "—"}
     </span>
   );
 }

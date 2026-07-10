@@ -54,10 +54,10 @@ export function CountSheet({
   const open = status === "COUNTING";
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto rounded-xl border border-grey/20 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-grey/20 text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
               <th className="px-3 py-2.5">{t("item")}</th>
               <th className="w-28 px-3 py-2.5 text-right">{t("systemQty")}</th>
               <th className="w-36 px-3 py-2.5 text-right">{t("countedQty")}</th>
@@ -68,7 +68,7 @@ export function CountSheet({
             {lines.map((l) => {
               const v = variance(l);
               return (
-                <tr key={l.lineId} className="border-b border-grey/10 last:border-0">
+                <tr key={l.lineId} className="border-b border-line last:border-0">
                   <td className="px-3 py-2.5">{l.label}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{Number(l.systemQty).toLocaleString("en-US")} {l.uom}</td>
                   <td className="px-2 py-1.5">
@@ -97,7 +97,7 @@ export function CountSheet({
             </button>
           ) : null}
           {canPost ? (
-            <button type="button" onClick={() => setSignOpen(true)} className="flex items-center gap-1.5 rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <button type="button" onClick={() => setSignOpen(true)} className="btn-primary">
               <ClipboardCheck className="h-4 w-4" /> {t("post")}
             </button>
           ) : null}
