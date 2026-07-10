@@ -1330,3 +1330,14 @@ model Sequence {
 
   @@unique([key, year])
 }
+
+/// Consumed portal-SSO tokens — enforces SINGLE USE so a token captured from the /sso URL
+/// (browser history, Referer, server logs) cannot be replayed within its ~2-minute window.
+/// `id` is the SHA-256 of the token; a unique insert is the atomic consume. Rows are pruned
+/// opportunistically once past `expiresAt`.
+model SsoTokenUse {
+  id        String   @id
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}

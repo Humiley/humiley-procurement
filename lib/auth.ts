@@ -21,6 +21,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(creds) {
         const identity = verifyPortalToken(String(creds?.token ?? ""));
         if (!identity) return null;
+        // SINGLE USE: record the token id; a unique-insert collision means it was already
+        // consumed → reject the replay. Prune expired rows opportunistically.
+        try {
+          await db.ssoTokenUse.create({ data: { id: identity.tokenId, expiresAt: identity.expiresAt } });
+        } catch {
+          return null; // already used (P2002) — replay blocked
+        }
+        db.ssoTokenUse.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});
         let user = await db.user.findUnique({ where: { email: identity.email } });
         // JIT provisioning: the token is portal-signed and only minted for users the admin has
         // GRANTED Procurement (portal appsAllowed), so a first-time arrival is auto-created as a

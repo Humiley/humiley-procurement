@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 /**
  * Single-sign-on handoff from the Humiley Portal. Procurement is an APP OF THE PORTAL (like HR
@@ -12,7 +12,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * The HMAC covers the base64 payload STRING, so both languages sign identical bytes (no JSON
  * canonicalization needed). exp is a unix second; tokens live ~2 minutes.
  */
-export type PortalIdentity = { email: string; name: string };
+export type PortalIdentity = { email: string; name: string; tokenId: string; expiresAt: Date };
 
 const SECRET = process.env.PORTAL_SSO_SECRET || "";
 
@@ -39,5 +39,13 @@ export function verifyPortalToken(token: string): PortalIdentity | null {
   }
   if (!claims.email || !claims.exp) return null;
   if (Date.now() / 1000 > claims.exp) return null; // expired
-  return { email: String(claims.email).toLowerCase().trim(), name: String(claims.name || claims.email) };
+  // tokenId = SHA-256 of the whole token — the caller records it once (unique insert) to make
+  // the token single-use, closing the replay window.
+  const tokenId = createHash("sha256").update(token).digest("hex");
+  return {
+    email: String(claims.email).toLowerCase().trim(),
+    name: String(claims.name || claims.email),
+    tokenId,
+    expiresAt: new Date(claims.exp * 1000),
+  };
 }

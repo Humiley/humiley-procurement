@@ -32,8 +32,20 @@ export const DEFAULT_PASSWORD = "Humiley@2026";   // seed/demo ONLY — never fo
 export function generateTempPassword(): string {
   const L = "abcdefghijkmnpqrstuvwxyz", U = "ABCDEFGHJKLMNPQRSTUVWXYZ", D = "23456789", S = "!@#$%^&*";
   const all = L + U + D + S;
-  const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
-  let out = pick(L) + pick(U) + pick(D) + pick(S);
-  for (let i = 0; i < 8; i++) out += pick(all);
-  return out.split("").sort(() => Math.random() - 0.5).join("");
+  // Crypto-grade randomness — this password gates both login and the §19 e-signature re-auth,
+  // so it must not be predictable. (Web Crypto is a global in Node 18+ and the browser.)
+  const rand = (n: number) => {
+    const a = new Uint32Array(1);
+    crypto.getRandomValues(a);
+    return a[0] % n; // modulo bias is negligible for these ≤32-char alphabets
+  };
+  const pick = (set: string) => set[rand(set.length)];
+  const chars = [pick(L), pick(U), pick(D), pick(S)];
+  for (let i = 0; i < 8; i++) chars.push(all[rand(all.length)]);
+  // Fisher–Yates shuffle (the old sort(()=>random-0.5) is both biased and non-crypto).
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = rand(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
 }
