@@ -155,7 +155,7 @@ export function DocListPage<T extends Record<string, unknown>>({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-[22px]">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title">{title}</h1>

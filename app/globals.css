@@ -29,6 +29,42 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Main page scrollbar — thin + navy like the portal's #content (not the chunky default). */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(32, 80, 144, 0.18) transparent;
+}
+html::-webkit-scrollbar {
+  width: 9px;
+}
+html::-webkit-scrollbar-thumb {
+  background: rgba(32, 80, 144, 0.18);
+  border-radius: 8px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Sidebar scrollbar — thin + subtle white, like the portal's .sidebar-scroll (not the chunky
+   default browser bar). */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 3px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* Brand the native form controls (were default browser blue in the audit screenshots). */
 input[type="checkbox"],
 input[type="radio"] {
@@ -96,7 +132,7 @@ select.field {
     @apply border-b border-line bg-transparent px-3.5 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.6px] text-grey;
   }
   .td {
-    @apply border-b border-line px-3.5 py-[11px] text-[13px] text-body;
+    @apply border-b border-line px-3.5 py-[11px] align-middle text-[13px] text-body;
   }
   /* portal Crextio big, light page heading (page-header h1: 32px / weight 300) */
   .page-title {

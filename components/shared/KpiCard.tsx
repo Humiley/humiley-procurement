@@ -16,12 +16,12 @@ export function KpiCard({
   accent?: "navy" | "emerald";
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 px-6 py-[22px] transition hover:shadow-card-hover">
+    <div className="card flex items-center gap-[14px] px-6 py-[22px] transition hover:shadow-card-hover">
       {Icon && (
         <span
           className={cn(
             "flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl",
-            accent === "emerald" ? "bg-emerald/10 text-emerald" : "bg-navy/10 text-navy",
+            accent === "emerald" ? "bg-emerald/[0.12] text-emerald" : "bg-navy/[0.12] text-navy",
           )}
         >
           <Icon className="h-[22px] w-[22px]" />
@@ -31,7 +31,7 @@ export function KpiCard({
         {/* portal .kpi-value: fluid clamp + wrap so a long ₫ figure auto-scales and every digit
             stays visible instead of spilling the card (navy, weight 600, line-height 1). */}
         <p
-          className="tabular-nums text-[clamp(22px,6vw,32px)] font-semibold leading-none text-navy [overflow-wrap:anywhere]"
+          className="tabular-nums text-[clamp(24px,7vw,34px)] font-semibold leading-none text-navy [overflow-wrap:anywhere]"
           title={String(value)}
         >
           {value}

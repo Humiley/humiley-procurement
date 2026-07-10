@@ -54,9 +54,10 @@ export function Sidebar({
     }
     return -1;
   }, [current]);
-  const [openGroups, setOpenGroups] = useState<Set<number>>(new Set([1]));
+  // Default: ALL groups expanded (matches the portal); users can collapse any via its header.
+  const [openGroups, setOpenGroups] = useState<Set<number>>(() => new Set(NAV.map((_, i) => i)));
   useEffect(() => {
-    setOpenGroups((prev) => new Set(prev).add(activeGroup >= 1 ? activeGroup : 1));
+    if (activeGroup >= 0) setOpenGroups((prev) => new Set(prev).add(activeGroup));
   }, [activeGroup]);
   const toggleGroup = (gi: number) =>
     setOpenGroups((prev) => {
@@ -123,17 +124,18 @@ export function Sidebar({
         ref={asideRef}
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col bg-sidebar text-white transition-transform",
-          "lg:sticky lg:top-3.5 lg:m-3.5 lg:h-[calc(100vh-28px)] lg:w-[236px] lg:translate-x-0 lg:rounded-[26px] lg:shadow-sidebar",
+          "lg:sticky lg:top-3.5 lg:my-3.5 lg:ml-3.5 lg:h-[calc(100vh-28px)] lg:w-[228px] lg:translate-x-0 lg:rounded-[26px] lg:shadow-sidebar",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center justify-between px-5">
+        {/* Centered logo (portal .sidebar-logo align-items:center); close button floats right on mobile */}
+        <div className="relative flex h-[68px] items-center justify-center border-b border-white/10 px-4">
           <Link href="/dashboard" onClick={onClose}>
-            <Logo variant="white" />
+            <Logo variant="white" className="h-9" />
           </Link>
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
+            className="absolute right-2 flex h-10 w-10 items-center justify-center rounded-xl text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
             onClick={onClose}
             aria-label={tc("close")}
           >
@@ -141,7 +143,7 @@ export function Sidebar({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto pb-3">
+        <nav className="sidebar-nav flex-1 overflow-y-auto pb-3">
           {NAV.map((group, gi) => {
             const items = group.items.filter((it) => canSeeNav(it, roles));
             if (items.length === 0) return null;
@@ -154,7 +156,7 @@ export function Sidebar({
                     type="button"
                     onClick={() => toggleGroup(gi)}
                     aria-expanded={isOpen}
-                    className="flex w-full items-center justify-between px-5 pb-[5px] pt-3.5 text-[9px] font-medium uppercase tracking-[1.5px] text-white/40 transition hover:text-white/70"
+                    className="flex w-full items-center justify-between px-4 pb-[5px] pt-3.5 text-[9px] uppercase tracking-[1.5px] text-white/40 transition hover:text-white/70"
                   >
                     <span>{t(group.titleKey!)}</span>
                     <ChevronDown
@@ -194,14 +196,14 @@ export function Sidebar({
         </nav>
 
         {/* Footer user card — mirrors the portal's sidebar user chip + sign out. */}
-        <div className="mt-auto border-t border-white/10 p-3">
-          <div className="flex items-center gap-3 rounded-2xl px-2 py-1.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald text-[12px] font-bold text-white">
+        <div className="mt-auto border-t border-white/[0.12] p-3">
+          <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald text-[12px] font-bold text-white">
               {initials}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[12px] font-semibold text-white">{user.name}</p>
-              <p className="truncate text-[10px] text-white/50">
+              <p className="truncate text-[10px] text-white/70">
                 {roles.map((r) => troles(r)).join(", ")}
               </p>
             </div>

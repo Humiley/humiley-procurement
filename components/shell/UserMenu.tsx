@@ -64,7 +64,7 @@ export function UserMenu({
         aria-haspopup="menu"
         className="flex items-center gap-2 rounded-md px-1.5 py-1 transition hover:bg-panel"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald text-xs font-bold text-white">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald text-[11px] font-bold text-white">
           {initials || "?"}
         </span>
         <span className="hidden text-left sm:block">

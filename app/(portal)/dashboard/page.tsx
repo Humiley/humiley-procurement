@@ -33,13 +33,13 @@ export default async function DashboardPage() {
   const money = (v: number) => `${v.toLocaleString("en-US")}\u00A0₫`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-[22px]">
       <div>
         <h1 className="page-title">{t("welcome", { name: user.name })}</h1>
         <p className="mt-1 text-sm text-grey">{t("title")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label={t("myRequisitions")} value={myPrs.length} icon={FileText} href="/requisitions" />
         <KpiCard label={t("pendingApprovals")} value={pendingApprovals} icon={CheckSquare} href="/approvals" accent="emerald" />
         <KpiCard label={t("openPos")} value={openPos} icon={ShoppingCart} href="/purchase-orders" />
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
       {mgr ? (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard label={t("spendMtd")} value={money(mgr.spendMtd)} icon={Banknote} />
             <KpiCard label={t("spendYtd")} value={money(mgr.spendYtd)} icon={TrendingUp} />
             <KpiCard label={t("cycleTime")} value={`${mgr.cycleTimeDays} ${t("days")}`} icon={Timer} />
@@ -56,22 +56,22 @@ export default async function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="card p-4 lg:col-span-1">
+            <div className="card p-6 lg:col-span-1">
               <h2 className="label">{t("monthlyTrend")}</h2>
               <SpendTrendChart data={mgr.monthlyTrend} />
             </div>
-            <div className="card p-4">
+            <div className="card p-6">
               <h2 className="label">{t("byCategory")}</h2>
               <CategoryDonut data={mgr.byCategory} />
             </div>
-            <div className="card p-4">
+            <div className="card p-6">
               <h2 className="label">{t("byDepartment")}</h2>
               <DeptBarChart data={mgr.byDepartment} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="card p-4">
+            <div className="card p-6">
               <h2 className="label">{t("topVendors")}</h2>
               {mgr.topVendors.length === 0 ? (
                 <p className="text-sm text-grey">{t("nothingYet")}</p>
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
                 </ul>
               )}
             </div>
-            <div className="card p-4">
+            <div className="card p-6">
               <h2 className="label">{t("deliveriesDue")}</h2>
               {mgr.deliveriesDue.length === 0 ? (
                 <p className="text-sm text-grey">{t("noDeliveries")}</p>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
                 </ul>
               )}
             </div>
-            <div className="card p-4">
+            <div className="card p-6">
               <h2 className="label">{t("expiringContracts")}</h2>
               {mgr.expiringContracts.length === 0 ? (
                 <p className="text-sm text-grey">{t("noExpiring")}</p>
@@ -123,7 +123,7 @@ export default async function DashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="card p-5">
+        <div className="card p-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-grey">{t("myPrsByStatus")}</h2>
           {myPrs.length === 0 ? (
             <p className="text-sm text-grey">{t("nothingYet")}</p>
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
             </>
           )}
         </div>
-        <div className="card p-5">
+        <div className="card p-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-grey">{t("recentActivity")}</h2>
           {recent.length === 0 ? (
             <p className="text-sm text-grey">{t("nothingYet")}</p>

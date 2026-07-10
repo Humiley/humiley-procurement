@@ -33,7 +33,7 @@ export function SpendTrendChart({ data }: { data: { month: string; spend: number
             <stop offset="100%" stopColor={NAVY} stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E5E9F0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#dde2ee" />
         <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#5C6470" }} />
         <YAxis tickFormatter={fmt} tick={{ fontSize: 11, fill: "#5C6470" }} width={44} />
         <Tooltip formatter={(v) => fmtFull(Number(v))} />
@@ -62,7 +62,7 @@ export function DeptBarChart({ data }: { data: { name: string; value: number }[]
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E5E9F0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#dde2ee" />
         <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#5C6470" }} />
         <YAxis tickFormatter={fmt} tick={{ fontSize: 11, fill: "#5C6470" }} width={44} />
         <Tooltip formatter={(v) => fmtFull(Number(v))} />

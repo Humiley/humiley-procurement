@@ -40,12 +40,12 @@ export function DocDetailLayout({
   const current = tabs.find((t) => t.key === active) ?? tabs[0];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-[22px]">
       <Link href={backHref} className="btn-ghost -ml-3 w-fit">
         <ArrowLeft className="h-4 w-4" /> {backLabel}
       </Link>
 
-      <div className="card p-5">
+      <div className="card p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
@@ -84,7 +84,7 @@ export function DocDetailLayout({
             ))}
           </div>
         </div>
-        <div className="p-5">{current?.content}</div>
+        <div className="p-6">{current?.content}</div>
       </div>
     </div>
   );

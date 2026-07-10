@@ -60,11 +60,11 @@ export function LocaleSwitcher() {
             aria-pressed={active}
             title={t(l)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-2xl px-2.5 py-2 text-[11px] font-bold uppercase shadow-pill transition",
-              active ? "bg-navy text-white" : "bg-white text-grey hover:text-navy",
+              "inline-flex items-center gap-[5px] rounded-lg border px-[9px] py-[5px] text-[11px] font-bold uppercase transition",
+              active ? "border-navy bg-navy text-white" : "border-line bg-white text-grey hover:border-navy hover:text-navy",
             )}
           >
-            <span className="inline-flex h-[13px] w-[18px] shrink-0 overflow-hidden rounded-[2px]">
+            <span className="inline-flex h-[13px] w-[20px] shrink-0 overflow-hidden rounded-[2px]">
               {FLAGS[l]}
             </span>
             {l === "en" ? "EN" : "VI"}
