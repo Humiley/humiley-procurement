@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { withBase } from "@/lib/base-path";
 
 /**
  * Notification click-through: mark the notification read, THEN land on its document.
@@ -13,5 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (n && !n.isRead) {
     await db.notification.update({ where: { id: n.id }, data: { isRead: true } });
   }
-  return NextResponse.redirect(new URL(n?.link || "/notifications", req.url));
+  // req.url carries the basePath in its path; an absolute path in new URL() would drop it, so
+  // prefix the stored (root-relative) link with the basePath.
+  return NextResponse.redirect(new URL(withBase(n?.link || "/notifications"), req.url));
 }

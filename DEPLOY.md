@@ -1,8 +1,10 @@
 # Deploying Humiley Procurement
 
-Procurement is an **app of the Humiley Portal** — no separate login. It ships as a Next.js
-standalone image with a bundled PostgreSQL 16 and a one-command `deploy.sh`. Pick ONE hosting
-option below; both use the same stack.
+Procurement is an **app of the Humiley Portal** — no separate login and **no separate domain**. It
+is served **under the one portal domain as a path**: `https://portal.humiley.com/procurement`
+(Next.js `basePath`). It ships as a standalone image with a bundled PostgreSQL 16 and a one-command
+`deploy.sh`, and runs as its own compose stack that the portal's Caddy routes to over a shared
+Docker network.
 
 > **The one secret that must match:** `PORTAL_SSO_SECRET` (here) must equal the portal's
 > `TK_SSO_SECRET` (in `/opt/humiley-timekeeping/.env`). Otherwise the no-second-login handoff
@@ -10,62 +12,54 @@ option below; both use the same stack.
 
 ---
 
-## Option A — standalone host (recommended, simplest)
+## Deploy (same VPS as the portal — recommended)
 
-Procurement on its own VPS, or any host where ports 80/443 are free. The bundled Caddy gets the
-HTTPS cert automatically.
+Because it lives under `portal.humiley.com/procurement`, there is **no new DNS record and no new
+TLS certificate** — it rides the portal's existing domain and cert. The portal side is already
+wired: its `Caddyfile` routes `/procurement*` to this app over the shared `humiley_net` network.
+Two steps:
 
-```bash
-# on the host
-git clone https://github.com/Humiley/humiley-procurement.git /opt/humiley-procurement
-cd /opt/humiley-procurement
-cp .env.production.example .env
-nano .env            # set POSTGRES_PASSWORD, PORTAL_SSO_SECRET (== portal TK_SSO_SECRET),
-                     # BOOTSTRAP_ADMIN_EMAIL, PROCUREMENT_DOMAIN/APP_URL. Leave AUTH_SECRET blank.
-./deploy.sh --bootstrap --edge
-```
-
-DNS: point `procurement.humiley.com` (A record) at this host's IP. **Watch the DNSSEC gotcha** the
-portal hit — if Let's Encrypt can't issue, check `dig procurement.humiley.com CAA @8.8.8.8` isn't
-`SERVFAIL` (Mat Bao disabled DNSSEC for the portal for exactly this reason).
-
-Later updates: `cd /opt/humiley-procurement && ./deploy.sh` (migrations run automatically).
-
----
-
-## Option B — same VPS as the live portal (already pre-wired)
-
-The portal's Caddy already owns 80/443, so **do NOT use the bundled Caddy** (no `--edge`). The
-portal side is already wired for this: its `Caddyfile` has a `procurement.humiley.com` block that
-reverse-proxies to this app over a shared `humiley_net` Docker network, and its compose names the
-network. You just run three things, in this order:
-
-**1. DNS** — in Mat Bao, add an A record: `procurement.humiley.com` → your portal VPS IP
-(`221.132.16.110`). (DNSSEC is already off for humiley.com from the portal go-live, so the cert
-should issue cleanly.)
-
-**2. Update the portal once** — picks up the round-5 fixes AND creates `humiley_net` + activates the
-procurement route:
+**1. Update the portal once** — applies the round-5 fixes AND creates `humiley_net` + activates the
+`/procurement` route:
 ```bash
 cd /opt/humiley-timekeeping && ./update.sh
 ```
 
-**3. Deploy procurement:**
+**2. Deploy procurement:**
 ```bash
 git clone https://github.com/Humiley/humiley-procurement.git /opt/humiley-procurement
 cd /opt/humiley-procurement
 cp .env.production.example .env
 nano .env      # set POSTGRES_PASSWORD, BOOTSTRAP_ADMIN_EMAIL, and PORTAL_SSO_SECRET =
                # the portal's TK_SSO_SECRET (grep it: grep TK_SSO_SECRET /opt/humiley-timekeeping/.env)
-./deploy.sh --bootstrap        # NOTE: no --edge on the shared VPS
+./deploy.sh --bootstrap        # do NOT use --edge (the portal's Caddy fronts it)
 ```
 
-That's it — `https://procurement.humiley.com` comes up (the app prints a one-time admin password;
-copy it). Later updates are just `cd /opt/humiley-procurement && ./deploy.sh`.
+That's it — `https://portal.humiley.com/procurement` comes up (the app prints a one-time admin
+password; **copy it**). Later updates are just `cd /opt/humiley-procurement && ./deploy.sh`.
 
-> Order matters only in that the portal `./update.sh` (step 2) should run before step 3 so the
-> shared network exists — but `deploy.sh` creates `humiley_net` itself if it's missing, so it's
-> resilient either way.
+> Run the portal `./update.sh` (step 1) before step 2 so the shared network + route exist — but
+> `deploy.sh` creates `humiley_net` itself if missing, so it's resilient either way. Caddy 502s the
+> `/procurement` path until step 2 finishes; the portal itself is unaffected.
+
+---
+
+## Alternative — its own subdomain on a separate host
+
+Only if you deliberately want Procurement on a **different server** (its own `procurement.humiley.com`
+with its own cert). This uses the bundled Caddy (`--edge`) and needs a DNS A record. It also requires
+building with the subdomain routing instead of the path basePath:
+
+```bash
+# on the separate host
+git clone https://github.com/Humiley/humiley-procurement.git /opt/humiley-procurement
+cd /opt/humiley-procurement && cp .env.production.example .env
+nano .env       # set the secrets + APP_URL=https://procurement.humiley.com + PROCUREMENT_DOMAIN
+BASE_PATH= ./deploy.sh --bootstrap --edge    # BASE_PATH= (empty) serves at the root, not /procurement
+```
+Then point `procurement.humiley.com` (A record) at that host. **Mind the DNSSEC gotcha** the portal
+hit — if Let's Encrypt can't issue, check `dig procurement.humiley.com CAA @8.8.8.8` isn't `SERVFAIL`.
+The launcher works with either model (it appends `/sso` to whatever path the configured URL has).
 
 ---
 
@@ -74,16 +68,16 @@ copy it). Later updates are just `cd /opt/humiley-procurement && ./deploy.sh`.
 Backs up the Postgres DB → `git pull` → generates `AUTH_SECRET` once → builds → runs
 `prisma migrate deploy` (applies every migration, incl. `sso_token_single_use`) → on `--bootstrap`
 seeds the §6 approval matrix + one ADMIN (**random password printed once — copy it**) → starts the
-app → health-checks. Data lives in the `proc_db` and `proc_storage` volumes and survives redeploys.
-
-Migrations + bootstrap run from a one-off container built off the `builder` stage, because the slim
-runtime image intentionally omits the Prisma CLI and tsx.
+app → health-checks `/procurement/login`. Data lives in the `proc_db` and `proc_storage` volumes and
+survives redeploys. Migrations + bootstrap run from a one-off container built off the `builder`
+stage, because the slim runtime image intentionally omits the Prisma CLI and tsx.
 
 ## After go-live
 
 1. Sign in as the bootstrap admin → change the printed password immediately.
-2. In the **portal**, grant users the Procurement app (Access & Permissions) and set the
-   Procurement URL in Settings → Company Portal. They then open it from the sidebar with no login.
+2. In the **portal**, grant users the Procurement app (Access & Permissions) and set the Procurement
+   URL in Settings → Company Portal to **`https://portal.humiley.com/procurement`**. They then open
+   it from the sidebar with no login.
 3. First time a user with a **signing role** opens it, they set a signing password once (used for
    §19 e-sign re-auth); pure requesters are never prompted.
 4. Run **/admin/settings → "Verify all chains"** as the baseline signature-integrity snapshot.

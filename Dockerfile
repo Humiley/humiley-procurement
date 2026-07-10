@@ -1,6 +1,7 @@
-# Humiley Procurement — production image (Next.js standalone).
+# Humiley Procurement — production image (Next.js standalone, served under the /procurement path
+# of the portal domain — no separate domain).
 # Build:  docker build -t humiley-procurement .
-# Run:    behind Caddy, reverse-proxying procurement.humiley.com -> this:3000
+# Run:    behind the portal's Caddy, which routes portal.humiley.com/procurement* -> this:3000
 #         env: DATABASE_URL, PORTAL_SSO_SECRET (== portal TK_SSO_SECRET), AUTH_SECRET, AUTH_TRUST_HOST=true
 #
 # ONE-TIME DB SETUP (migrate + bootstrap): the standalone `runner` image below is deliberately
@@ -21,6 +22,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# basePath is baked in at build time. Default "/procurement" (served under the portal domain);
+# pass --build-arg BASE_PATH="" to build a root-served image for a standalone subdomain deploy.
+ARG BASE_PATH=/procurement
+ENV BASE_PATH=$BASE_PATH
 RUN npx prisma generate && npm run build
 
 FROM node:20-alpine AS runner

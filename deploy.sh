@@ -96,8 +96,9 @@ fi
 # 8) Health check
 say "Containers:"; docker compose ps
 PORT="$(grep -E '^PROCUREMENT_PORT=' .env | cut -d= -f2-)"; PORT="${PORT:-3000}"
-say "Checking the app on 127.0.0.1:$PORT …"; sleep 3
-CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/login" || echo 000)"
+# The app is served under the /procurement basePath — the root path 404s, so probe /procurement/login.
+say "Checking the app on 127.0.0.1:$PORT/procurement …"; sleep 3
+CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/procurement/login" || echo 000)"
 if [ "$CODE" = "200" ]; then
   printf '\033[1;32m    OK — HTTP %s. Deploy complete.\033[0m\n' "$CODE"
 else

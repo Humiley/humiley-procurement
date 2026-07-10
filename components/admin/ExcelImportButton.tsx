@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Upload, FileDown, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { withBase } from "@/lib/base-path";
 
 type ImportResult = {
   created: number;
@@ -52,7 +53,7 @@ export function ExcelImportButton({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`/api/admin/import?kind=${kind}`, { method: "POST", body: fd });
+      const res = await fetch(withBase(`/api/admin/import?kind=${kind}`), { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? t("failed"));
       setResult(json as ImportResult);

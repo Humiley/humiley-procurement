@@ -6,6 +6,7 @@ import { toast } from "@/components/shared/Toaster";
 import { useRouter } from "next/navigation";
 import { Paperclip, Download, Trash2, Upload, Loader2 } from "lucide-react";
 import { deleteAttachment } from "@/app/(portal)/attachments.actions";
+import { withBase } from "@/lib/base-path";
 import { act } from "@/lib/act";
 
 export type PrAttachment = {
@@ -45,7 +46,7 @@ export function PrAttachments({
       fd.append("file", file);
       fd.append("entityType", entityType);
       fd.append("entityId", entityId);
-      const res = await fetch("/api/v1/attachments", { method: "POST", body: fd });
+      const res = await fetch(withBase("/api/v1/attachments"), { method: "POST", body: fd });
       if (!res.ok) throw new Error((await res.json()).error ?? t("uploadFailed"));
       router.refresh();
     } catch (err) {

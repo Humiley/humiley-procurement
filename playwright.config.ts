@@ -17,9 +17,13 @@ export default defineConfig({
     locale: "en-US",
   },
   webServer: {
+    // Run the suite WITHOUT the /procurement basePath (a deploy-only concern) so the specs keep
+    // using root paths. The app logic is identical either way; basePath routing is verified
+    // separately. BASE_PATH="" wins over the "/procurement" default in next.config.mjs.
     command: "npm run dev",
+    env: { BASE_PATH: "" },
     url: "http://localhost:3000/login",
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
