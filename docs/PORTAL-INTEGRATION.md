@@ -99,7 +99,11 @@ same language-toggle convention as the portal — already enforced throughout (�
 3. Create the pilot users at /admin/users with their M365 emails; assign roles.
 4. Launcher + per-user app permission are already in the portal — just grant users the
    Procurement app in Access & Permissions and set the production URL in Company Portal.
-5. Seed reference data (C/O forms, HS codes, FX) via `npm run seed` equivalents for production
+5. Provision reference data + first admin with `npm run bootstrap` (NOT `npm run seed`, which
+   drops the DB). `bootstrap` seeds the §6 approval matrix and one ADMIN with a random one-time
+   password; it is idempotent and non-destructive. The Procurement app must be deployed and its
+   URL configured in the portal (Settings → Company Portal) BEFORE the sidebar launcher is used —
+   an unconfigured launcher now shows a message instead of opening a dead link.
    (reference-only seed script — do NOT run the demo-document seed in production).
 6. Decide the §19 signing mode under SSO (local signing password vs MSAL re-auth) and record it.
 7. Run /admin/settings → "Verify all chains" after go-live migration as the baseline integrity

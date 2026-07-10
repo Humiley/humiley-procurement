@@ -1116,5 +1116,27 @@
     "title": "Page not found",
     "body": "The page you are looking for does not exist, was moved, or you do not have access to it.",
     "home": "Back to dashboard"
+  },
+  "cp": {
+    "title": "Change password",
+    "titleForced": "Set your password",
+    "sub": "Choose a new password for your account.",
+    "subForced": "Your account uses a temporary password. Set your own to continue.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "rule": "At least 10 characters, with an upper- and lower-case letter and a number.",
+    "submit": "Update password",
+    "tooShort": "Password must be at least 10 characters.",
+    "tooWeak": "Use upper- and lower-case letters and a number.",
+    "mismatch": "The two passwords do not match.",
+    "wrongCurrent": "Your current password is incorrect.",
+    "reuse": "Choose a password different from the current one.",
+    "failed": "Could not change the password. Please try again."
+  },
+  "users": {
+    "tempPwTitle": "Temporary password",
+    "tempPwNote": "Give this to the user. They must change it at first sign-in. It will not be shown again.",
+    "tempPwCopy": "Copy"
   }
 }

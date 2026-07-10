@@ -16,7 +16,7 @@ npm run seed                   # demo data (DESTRUCTIVE reset — dev only)
 npm run dev                    # http://localhost:3000
 ```
 
-Sign in with any seeded user, password `Humiley@2026`:
+Sign in with any seeded user, password `Humiley@2026` (**demo/dev only** — production users are provisioned via `npm run bootstrap` / Admin → Users with random one-time passwords):
 `admin@` · `purchaser@` · `mgr.eng@` · `director.fin@` · `accountant@` · `warehouse@` ·
 `req.eng@` …`humiley.com`.
 

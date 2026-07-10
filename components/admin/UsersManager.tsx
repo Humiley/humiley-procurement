@@ -154,6 +154,7 @@ function UserFormModal({
   const [isActive, setIsActive] = useState(user?.isActive ?? true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tempPw, setTempPw] = useState<string | null>(null);
 
   function toggleRole(r: Role) {
     setRoles((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));
@@ -171,8 +172,10 @@ function UserFormModal({
           isChief,
           isActive,
         }));
+        router.refresh();
+        onClose();
       } else {
-        act(await createUser({
+        const res = act(await createUser({
           name,
           email,
           roles,
@@ -180,9 +183,9 @@ function UserFormModal({
           isChief,
           isActive,
         }));
+        router.refresh();
+        setTempPw(res.tempPassword ?? null); // show the one-time password before closing
       }
-      router.refresh();
-      onClose();
     } catch (e) {
       setError(fmtErr(e));
       setBusy(false);
@@ -191,13 +194,12 @@ function UserFormModal({
 
   async function reset() {
     if (!user) return;
+    if (!window.confirm(t("common.confirmIrreversible"))) return;
     setBusy(true);
     try {
-      if (!window.confirm(t("common.confirmIrreversible"))) return;
-      act(await resetUserPassword(user.id));
-      toast(t("common.done"));
+      const res = act(await resetUserPassword(user.id));
       router.refresh();
-      onClose();
+      setTempPw(res.tempPassword ?? null);
     } catch (e) {
       setError(fmtErr(e));
       setBusy(false);
@@ -207,6 +209,21 @@ function UserFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-body/40 p-4">
       <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-5">
+        {tempPw ? (
+          <div className="mb-4 rounded-lg border border-emerald/30 bg-emerald/5 p-4">
+            <p className="text-sm font-bold text-emeraldDeep">{t("users.tempPwTitle")}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="flex-1 rounded bg-white px-3 py-2 font-mono text-sm text-body ring-1 ring-line">{tempPw}</code>
+              <button type="button" className="btn-outline btn-sm" onClick={() => { navigator.clipboard?.writeText(tempPw); toast(t("common.done")); }}>
+                {t("users.tempPwCopy")}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-grey">{t("users.tempPwNote")}</p>
+            <div className="mt-3 flex justify-end">
+              <button type="button" className="btn-primary" onClick={onClose}>{t("common.close")}</button>
+            </div>
+          </div>
+        ) : null}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-navy">
             {isEdit ? t("admin.users.edit") : t("admin.users.new")}

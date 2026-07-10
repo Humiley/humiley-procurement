@@ -1116,5 +1116,27 @@
     "title": "Không tìm thấy trang",
     "body": "Trang bạn tìm không tồn tại, đã được di chuyển, hoặc bạn không có quyền truy cập.",
     "home": "Về bảng điều khiển"
+  },
+  "cp": {
+    "title": "Đổi mật khẩu",
+    "titleForced": "Đặt mật khẩu của bạn",
+    "sub": "Chọn mật khẩu mới cho tài khoản của bạn.",
+    "subForced": "Tài khoản của bạn đang dùng mật khẩu tạm. Hãy đặt mật khẩu riêng để tiếp tục.",
+    "current": "Mật khẩu hiện tại",
+    "new": "Mật khẩu mới",
+    "confirm": "Xác nhận mật khẩu mới",
+    "rule": "Tối thiểu 10 ký tự, gồm chữ hoa, chữ thường và số.",
+    "submit": "Cập nhật mật khẩu",
+    "tooShort": "Mật khẩu phải có ít nhất 10 ký tự.",
+    "tooWeak": "Dùng chữ hoa, chữ thường và số.",
+    "mismatch": "Hai mật khẩu không khớp.",
+    "wrongCurrent": "Mật khẩu hiện tại không đúng.",
+    "reuse": "Chọn mật khẩu khác với mật khẩu hiện tại.",
+    "failed": "Không thể đổi mật khẩu. Vui lòng thử lại."
+  },
+  "users": {
+    "tempPwTitle": "Mật khẩu tạm thời",
+    "tempPwNote": "Đưa mật khẩu này cho người dùng. Họ phải đổi khi đăng nhập lần đầu. Sẽ không hiển thị lại.",
+    "tempPwCopy": "Sao chép"
   }
 }

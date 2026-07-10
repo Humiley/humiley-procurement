@@ -8,7 +8,7 @@ import { audit } from "@/lib/audit";
 import {
   userSchema,
   userUpdateSchema,
-  DEFAULT_PASSWORD,
+  generateTempPassword,
   type UserInput,
   type UserUpdateInput,
 } from "@/lib/schemas/user";
@@ -22,11 +22,12 @@ async function _createUser(input: UserInput) {
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) throw new Error("A user with this email already exists.");
 
+  const tempPassword = generateTempPassword();
   const user = await db.user.create({
     data: {
       name: data.name,
       email,
-      passwordHash: await hashPassword(DEFAULT_PASSWORD),
+      passwordHash: await hashPassword(tempPassword),
       roles: data.roles,
       departmentId: data.departmentId || null,
       isChief: data.isChief ?? false,
@@ -42,7 +43,8 @@ async function _createUser(input: UserInput) {
     after: { email: user.email, roles: user.roles },
   });
   revalidatePath("/admin/users");
-  return { id: user.id };
+  // Returned ONCE so the admin can hand the temp password to the user; never stored in plaintext.
+  return { id: user.id, tempPassword };
 }
 
 async function _updateUser(id: string, input: UserUpdateInput) {
@@ -76,10 +78,11 @@ async function _updateUser(id: string, input: UserUpdateInput) {
 
 async function _resetUserPassword(id: string) {
   const admin = await requireRoles("ADMIN");
+  const tempPassword = generateTempPassword();
   await db.user.update({
     where: { id },
     data: {
-      passwordHash: await hashPassword(DEFAULT_PASSWORD),
+      passwordHash: await hashPassword(tempPassword),
       mustChangePw: true,
       failedLogins: 0,
       lockedUntil: null,
@@ -92,7 +95,7 @@ async function _resetUserPassword(id: string) {
     entityId: id,
   });
   revalidatePath("/admin/users");
-  return { ok: true };
+  return { ok: true, tempPassword };
 }
 
 /* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */

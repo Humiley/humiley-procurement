@@ -20,7 +20,14 @@ export const authConfig = {
         pathname.startsWith("/_next") ||
         pathname === "/favicon.ico";
       if (isPublic) return true;
-      return isLoggedIn; // false → Auth.js redirects to /login
+      if (!isLoggedIn) return false; // → Auth.js redirects to /login
+      // Force a first-login / reset user to set their own password before anything else loads —
+      // no provisioned account can operate on the shared temporary password.
+      const mustChange = (auth?.user as { mustChangePw?: boolean } | undefined)?.mustChangePw;
+      if (mustChange && pathname !== "/change-password") {
+        return Response.redirect(new URL("/change-password", request.nextUrl));
+      }
+      return true;
     },
     jwt({ token, user }) {
       if (user) {

@@ -48,10 +48,26 @@ external signature-chain anchoring · Entra SSO switch-on (documented, config-le
 
 ## Run it
 
+**Local / demo:**
 ```bash
 npm install
 npx prisma migrate deploy
-npm run seed        # demo data (destructive — dev only)
+npm run seed        # demo data (DESTRUCTIVE reset — DEV ONLY, never in production)
 npm run dev         # http://localhost:3000 — admin@humiley.com / Humiley@2026
 npm run test:e2e    # full journey suite
 ```
+
+**Production (empty DB — do NOT run `npm run seed`, it drops everything):**
+```bash
+npm ci
+npx prisma migrate deploy                 # schema only, no data
+BOOTSTRAP_ADMIN_EMAIL=admin@yourco.com \
+  BOOTSTRAP_ADMIN_NAME="Administrator" \
+  npm run bootstrap                       # approval matrix + ONE admin, random password (shown once)
+# then build/run the standalone server (see Dockerfile) behind Caddy at procurement.humiley.com
+```
+Required env in production: `DATABASE_URL`, `AUTH_SECRET` (aka NEXTAUTH_SECRET), `AUTH_TRUST_HOST=true`.
+The admin signs in with the printed one-time password and is forced to set a new one. Every user
+provisioned via **Admin → Users** likewise gets a random one-time password (shown once) and must
+change it at first sign-in — the shared `Humiley@2026` is demo-seed only and never provisions a
+real account.

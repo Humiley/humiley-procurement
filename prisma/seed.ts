@@ -91,7 +91,7 @@ async function main() {
         roles: u.roles,
         departmentId: deptByCode.get(u.dept),
         isChief: u.isChief ?? false,
-        mustChangePw: true,
+        mustChangePw: false,   // demo seed only — sign in with the documented shared password; real users are provisioned via bootstrap/admin with mustChangePw=true
       },
     });
     if (u.managesDept) managerAssignments.push({ deptCode: u.managesDept, userId: user.id });
