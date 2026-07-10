@@ -67,7 +67,7 @@ export function RfqForm({
   const field = "field w-full";
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {fromPr ? <p className="rounded-lg bg-navy/5 px-3 py-2 text-sm text-navy">{t("fromPr", { ref: fromPr.label })}</p> : null}
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
@@ -96,7 +96,7 @@ export function RfqForm({
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[620px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2">{t("lineDesc")}</th>
               <th className="w-32 px-3 py-2">{t("uom")}</th>
               <th className="w-28 px-3 py-2 text-right">{t("qty")}</th>

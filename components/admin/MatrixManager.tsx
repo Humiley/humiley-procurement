@@ -78,10 +78,10 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
 
       {grouped.map((g) => (
         <div key={g.et} className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{ta(g.et)}</h3>
+          <h3 className="label">{ta(g.et)}</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="py-1.5">{t("band")}</th><th className="py-1.5">{t("level")}</th><th className="py-1.5">{t("role")}</th><th className="w-10 py-1.5" />
               </tr>
             </thead>

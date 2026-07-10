@@ -5,7 +5,7 @@ export default function PortalError({ error, reset }: { error: Error & { digest?
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
       <p className="text-4xl font-black text-danger">⚠</p>
-      <h1 className="text-lg font-bold text-navy">Something went wrong · Đã xảy ra lỗi</h1>
+      <h1 className="page-title">Something went wrong · Đã xảy ra lỗi</h1>
       <p className="max-w-md text-sm text-grey">
         {error.message || "Unexpected error."}
         {error.digest ? <span className="block font-mono text-xs">ref {error.digest}</span> : null}

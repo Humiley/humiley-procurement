@@ -22,7 +22,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/reference/hs-codes" className="text-sm text-grey hover:text-navy">← {t("title")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">HS {h.code}</h1>
+        <h1 className="page-title font-mono">HS {h.code}</h1>
       </div>
 
       <div className="card p-4 text-sm">
@@ -40,10 +40,10 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("dutyMatrix")}</h3>
+          <h3 className="label">{t("dutyMatrix")}</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="py-2">{t("route")}</th>
                 <th className="py-2">{t("countries")}</th>
                 <th className="py-2 text-right">{t("duty")}</th>
@@ -69,7 +69,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
           </table>
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("linkedItems")}</h3>
+          <h3 className="label">{t("linkedItems")}</h3>
           {h.itemTrades.length === 0 ? (
             <p className="text-sm text-grey">{t("noItems")}</p>
           ) : (

@@ -93,7 +93,7 @@ export function ScanHub({ initialCode }: { initialCode?: string }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="flex items-center gap-2 text-lg font-bold text-navy">
+      <h1 className="page-title flex items-center gap-2">
         <ScanLine className="h-5 w-5" /> {t("title")}
       </h1>
       <p className="text-sm text-grey">{t("hint")}</p>

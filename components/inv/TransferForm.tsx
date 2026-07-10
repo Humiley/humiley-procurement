@@ -47,7 +47,7 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
   const field = "field w-full";
   return (
     <div className="space-y-4" onChange={() => setTouched(true)}>
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
       <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-2">
@@ -72,7 +72,7 @@ export function TransferForm({ warehouses, items, stock }: { warehouses: TrfOpt[
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2">{t("item")}</th>
               <th className="w-28 px-3 py-2 text-right">{t("onHandSource")}</th>
               <th className="w-36 px-3 py-2 text-right">{t("qty")}</th>

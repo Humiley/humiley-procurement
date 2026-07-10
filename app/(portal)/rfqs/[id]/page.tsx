@@ -70,7 +70,7 @@ export default async function RfqDetailPage({ params }: { params: { id: string }
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/rfqs" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{rfq.rfqNumber}</h1>
+        <h1 className="page-title font-mono">{rfq.rfqNumber}</h1>
         <StatusBadge status={rfq.status} label={st.has(rfq.status) ? st(rfq.status) : rfq.status} />
         <span className="text-sm text-grey">{rfq.title}</span>
         <span className="ml-auto text-xs text-grey">

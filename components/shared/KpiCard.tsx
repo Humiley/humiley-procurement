@@ -16,29 +16,27 @@ export function KpiCard({
   accent?: "navy" | "emerald";
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 px-6 py-5 transition hover:shadow-card-hover">
+    <div className="card flex items-center gap-4 px-6 py-[22px] transition hover:shadow-card-hover">
       {Icon && (
         <span
           className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+            "flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl",
             accent === "emerald" ? "bg-emerald/10 text-emerald" : "bg-navy/10 text-navy",
           )}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-[22px] w-[22px]" />
         </span>
       )}
       <div className="min-w-0">
-        {/* long VND figures scale down instead of truncating — every digit stays visible */}
+        {/* portal .kpi-value: fluid clamp + wrap so a long ₫ figure auto-scales and every digit
+            stays visible instead of spilling the card (navy, weight 600, line-height 1). */}
         <p
-          className={cn(
-            "font-bold leading-snug tabular-nums text-body",
-            String(value).length > 11 ? "text-lg" : "text-2xl",
-          )}
+          className="tabular-nums text-[clamp(22px,6vw,32px)] font-semibold leading-none text-navy [overflow-wrap:anywhere]"
           title={String(value)}
         >
           {value}
         </p>
-        <p className="truncate text-sm text-grey" title={label}>
+        <p className="mt-1 truncate text-xs font-medium text-grey" title={label}>
           {label}
         </p>
       </div>

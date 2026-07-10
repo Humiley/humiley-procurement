@@ -57,7 +57,7 @@ export function GrnForm({
   const field = "field w-full";
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
       <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
@@ -93,7 +93,7 @@ export function GrnForm({
           <div className="overflow-x-auto card">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+                <tr className="th">
                   <th className="px-3 py-2">{t("lineDesc")}</th>
                   <th className="w-20 px-3 py-2">{t("uom")}</th>
                   <th className="w-28 px-3 py-2 text-right">{t("ordered")}</th>

@@ -69,7 +69,7 @@ export function GiDetailActions({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2">{t("item")}</th>
                 <th className="w-28 px-3 py-2 text-right">{t("requested")}</th>
                 <th className="w-28 px-3 py-2 text-right">{t("onHand")}</th>

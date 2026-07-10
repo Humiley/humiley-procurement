@@ -73,10 +73,10 @@ export function TextPromptDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(22,56,102,0.45)] p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby={`${uid}-t`} className="card max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl p-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 id={`${uid}-t`} className="text-base font-semibold text-navy">{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label={t("close")} disabled={busy}>
+      <div role="dialog" aria-modal="true" aria-labelledby={`${uid}-t`} className="max-h-[90dvh] w-full max-w-[520px] overflow-y-auto rounded-2xl bg-white p-7 shadow-[0_24px_64px_rgba(0,0,0,0.2)]">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 id={`${uid}-t`} className="text-[17px] font-bold text-navy">{title}</h2>
+          <button className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md bg-panel text-grey transition hover:text-body" onClick={onClose} aria-label={t("close")} disabled={busy}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -101,7 +101,7 @@ export function TextPromptDialog({
               <p role="alert" className="mt-1 text-xs font-medium text-danger">{t("required")}</p>
             ) : null}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="mt-5 flex justify-end gap-2.5 border-t border-line pt-4">
             <button type="button" className="btn-outline" onClick={onClose} disabled={busy}>
               {t("cancel")}
             </button>

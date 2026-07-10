@@ -57,22 +57,22 @@ export default async function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="card p-4 lg:col-span-1">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("monthlyTrend")}</h2>
+              <h2 className="label">{t("monthlyTrend")}</h2>
               <SpendTrendChart data={mgr.monthlyTrend} />
             </div>
             <div className="card p-4">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("byCategory")}</h2>
+              <h2 className="label">{t("byCategory")}</h2>
               <CategoryDonut data={mgr.byCategory} />
             </div>
             <div className="card p-4">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("byDepartment")}</h2>
+              <h2 className="label">{t("byDepartment")}</h2>
               <DeptBarChart data={mgr.byDepartment} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="card p-4">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("topVendors")}</h2>
+              <h2 className="label">{t("topVendors")}</h2>
               {mgr.topVendors.length === 0 ? (
                 <p className="text-sm text-grey">{t("nothingYet")}</p>
               ) : (
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
               )}
             </div>
             <div className="card p-4">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("deliveriesDue")}</h2>
+              <h2 className="label">{t("deliveriesDue")}</h2>
               {mgr.deliveriesDue.length === 0 ? (
                 <p className="text-sm text-grey">{t("noDeliveries")}</p>
               ) : (
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
               )}
             </div>
             <div className="card p-4">
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("expiringContracts")}</h2>
+              <h2 className="label">{t("expiringContracts")}</h2>
               {mgr.expiringContracts.length === 0 ? (
                 <p className="text-sm text-grey">{t("noExpiring")}</p>
               ) : (

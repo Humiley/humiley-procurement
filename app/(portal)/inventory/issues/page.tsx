@@ -24,7 +24,7 @@ export default async function GoodsIssuesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-navy">{t("listTitle")}</h1>
+        <h1 className="page-title">{t("listTitle")}</h1>
         <Link href="/inventory/issues/new" className="btn-primary">
           {t("newButton")}
         </Link>
@@ -35,7 +35,7 @@ export default async function GoodsIssuesPage() {
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colNo")}</th>
                 <th className="px-3 py-2.5">{t("warehouse")}</th>
                 <th className="px-3 py-2.5">{t("colRequester")}</th>

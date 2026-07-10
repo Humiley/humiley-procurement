@@ -22,7 +22,7 @@ export default async function ReportPage({ params, searchParams }: { params: { k
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/reports" className="text-sm text-grey hover:text-navy">← {t("title")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t(`names.${params.key}`)}</h1>
+        <h1 className="page-title">{t(`names.${params.key}`)}</h1>
         <span className="flex-1" />
         <form className="flex items-center gap-2">
           <select name="fy" defaultValue={fy} className="field">
@@ -43,7 +43,7 @@ export default async function ReportPage({ params, searchParams }: { params: { k
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               {table.columns.map((c) => (
                 <th key={c} className="px-3 py-2.5">{t(`cols.${c}`)}</th>
               ))}

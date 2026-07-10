@@ -10,7 +10,7 @@ export default async function PortalNotFound() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
       <p className="text-5xl font-black tracking-tight text-navy">404</p>
-      <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+      <h1 className="page-title">{t("title")}</h1>
       <p className="max-w-md text-sm text-grey">{t("body")}</p>
       <Link href="/dashboard" className="btn-navy mt-2">
         {t("home")}

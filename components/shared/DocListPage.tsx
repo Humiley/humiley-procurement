@@ -159,7 +159,7 @@ export function DocListPage<T extends Record<string, unknown>>({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title">{title}</h1>
-          {subtitle && <p className="mt-0.5 text-sm text-grey">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-[13px] text-grey">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button type="button" className="btn-outline" onClick={exportCsv}>
@@ -174,19 +174,20 @@ export function DocListPage<T extends Record<string, unknown>>({
       </div>
 
       <div className="card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-card border-b border-line bg-panel p-3">
           {tabs && tabs.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
+            // portal segmented filter: sits on the soft toolbar band, active tab = white + emerald
+            <div className="inline-flex w-fit flex-wrap gap-1">
               {tabs.map((t) => (
                 <button
                   key={t.key}
                   type="button"
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-sm font-medium transition",
+                    "rounded-[7px] px-[15px] py-1.5 text-[13px] font-semibold transition",
                     t.key === tab
-                      ? "bg-navy text-white"
-                      : "text-grey hover:bg-panel hover:text-body",
+                      ? "bg-white text-emerald shadow-[0_1px_4px_rgba(0,0,0,0.1)]"
+                      : "text-grey hover:bg-white/60 hover:text-body",
                   )}
                 >
                   {t.label}
@@ -196,10 +197,10 @@ export function DocListPage<T extends Record<string, unknown>>({
           ) : (
             <div />
           )}
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
             {toolbar}
-            <div className="relative w-56 min-w-0 max-w-full">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-grey" />
+            <div className="relative min-w-[170px] max-w-[300px] flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-[13px] w-[13px] -translate-y-1/2 text-grey" />
               <input
                 className="field w-full pl-8"
                 placeholder={searchPlaceholder ?? tl("search")}
@@ -256,7 +257,7 @@ export function DocListPage<T extends Record<string, unknown>>({
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td className="td text-center text-grey" colSpan={columns.length}>
+                  <td className="td !py-12 text-center text-grey" colSpan={columns.length}>
                     {emptyLabel ?? tl("noRecords")}
                   </td>
                 </tr>
@@ -266,7 +267,10 @@ export function DocListPage<T extends Record<string, unknown>>({
                   return (
                     <tr
                       key={rowKey(row)}
-                      className={cn("group", href && "cursor-pointer hover:bg-panel")}
+                      className={cn(
+                        "group transition-colors hover:bg-panel [&:last-child>td]:border-b-0",
+                        href && "cursor-pointer",
+                      )}
                     >
                       {columns.map((c, ci) => {
                         const content = c.render ? c.render(row) : (rawValue(c, row) ?? "—");
@@ -302,7 +306,7 @@ export function DocListPage<T extends Record<string, unknown>>({
           </table>
         </div>
 
-        <div className="border-t border-line px-3 py-2 text-xs text-grey">
+        <div className="border-t border-line px-3 py-2 text-[11px] text-grey">
           {tl("countOf", { shown: filtered.length, total: rows.length })}
         </div>
       </div>

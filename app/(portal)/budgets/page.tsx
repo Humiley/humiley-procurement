@@ -25,7 +25,7 @@ export default async function BudgetsPage() {
   const n = (v: unknown) => Number(v as never) || 0;
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-navy">{t("title", { fy })}</h1>
+      <h1 className="page-title">{t("title", { fy })}</h1>
       {isAdmin ? (
         <BudgetUpsertForm
           costCenters={costCenters.map((c): BudgetOpt => ({ id: c.id, label: `${c.code} · ${c.nameEn}` }))}

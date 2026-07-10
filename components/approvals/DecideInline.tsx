@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Check, X, RotateCcw, type LucideIcon } from "lucide-react";
 import { SignatureDialog, type SignaturePayload } from "@/components/shared/SignatureDialog";
 import { decideEntity } from "@/app/(portal)/approvals/actions";
 import type { Decision } from "@/lib/workflow/engine";
@@ -33,9 +34,9 @@ export function DecideInline({
     startTransition(() => router.refresh());
   }
 
-  const btn = (d: Decision, cls: string, label: string) => (
-    <button type="button" onClick={() => setDecision(d)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${cls}`}>
-      {label}
+  const btn = (d: Decision, cls: string, Icon: LucideIcon, label: string) => (
+    <button type="button" onClick={() => setDecision(d)} className={cls}>
+      <Icon className="h-3 w-3" /> {label}
     </button>
   );
 
@@ -43,9 +44,14 @@ export function DecideInline({
     <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-navy/20 bg-navy/5 p-3">
       <span className="text-sm font-semibold text-navy">{t("yourTurn")}</span>
       <div className="ml-auto flex gap-2">
-        {btn("APPROVED", "bg-emerald text-white hover:opacity-90", t("approve"))}
-        {btn("RETURNED", "bg-warning/15 text-warning hover:bg-warning/25", t("return"))}
-        {btn("REJECTED", "bg-danger/10 text-danger hover:bg-danger/20", t("reject"))}
+        {btn("APPROVED", "btn-approve", Check, t("approve"))}
+        {btn(
+          "RETURNED",
+          "inline-flex items-center gap-[5px] rounded-md bg-[#FEF3C7] px-2.5 py-[5px] text-xs font-bold text-[#92400E] transition hover:bg-[#FDE68A]",
+          RotateCcw,
+          t("return"),
+        )}
+        {btn("REJECTED", "btn-reject", X, t("reject"))}
       </div>
       <SignatureDialog
         open={!!decision}

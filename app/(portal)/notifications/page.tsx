@@ -22,7 +22,7 @@ export default async function NotificationsPage() {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Bell className="h-5 w-5 text-navy" />
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         {unread > 0 ? (
           <span className="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-bold text-danger">{unread}</span>
         ) : null}

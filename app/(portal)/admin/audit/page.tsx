@@ -23,7 +23,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/admin/settings" className="text-sm text-grey hover:text-navy">← {t("back")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
       </div>
 
       <form className="flex flex-wrap items-end gap-2 card p-3">
@@ -50,7 +50,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[820px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("when")}</th>
               <th className="px-3 py-2.5">{t("user")}</th>
               <th className="px-3 py-2.5">{t("action")}</th>

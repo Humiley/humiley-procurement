@@ -43,7 +43,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/goods-receipts" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{grn.grnNumber}</h1>
+        <h1 className="page-title font-mono">{grn.grnNumber}</h1>
         <StatusBadge status={grn.status} label={st.has(grn.status) ? st(grn.status) : grn.status} />
         {hasLots ? (
           <a href={`/inventory/labels?grn=${grn.id}`} className="btn-outline">
@@ -59,7 +59,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("received")}</th>
               <th className="px-3 py-2.5 text-right">{t("accepted")}</th>
@@ -89,7 +89,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
 
       {signatures.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
+          <h3 className="label">{t("signatureBlock")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
               <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">

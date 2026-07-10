@@ -90,7 +90,7 @@ export function PayReqForm({
   const field = "field w-full";
   return (
     <div className="space-y-4" onChange={() => setTouched(true)}>
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
       <div className="flex flex-wrap gap-2">

@@ -69,7 +69,7 @@ export default async function GoodsIssueDetailPage({ params }: { params: { id: s
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory/issues" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{gi.issueNumber}</h1>
+        <h1 className="page-title font-mono">{gi.issueNumber}</h1>
         <StatusBadge status={gi.status} label={st.has(gi.status) ? st(gi.status) : gi.status} />
       </div>
 
@@ -96,7 +96,7 @@ export default async function GoodsIssueDetailPage({ params }: { params: { id: s
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="w-8 px-3 py-2.5">#</th>
               <th className="px-3 py-2.5">{t("item")}</th>
               <th className="px-3 py-2.5 text-right">{t("requested")}</th>
@@ -119,7 +119,7 @@ export default async function GoodsIssueDetailPage({ params }: { params: { id: s
       </div>
 
       <div className="card p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("tabApprovals")}</h3>
+        <h3 className="label">{t("tabApprovals")}</h3>
         {steps.length === 0 ? <p className="text-sm text-grey">{t("approvalsPending")}</p> : <ApprovalTimeline steps={timelineSteps} />}
         {myTurn ? <DecideInline entityType="GOODS_ISSUE" entityId={gi.id} refLabel={gi.issueNumber} /> : null}
         {signatures.length > 0 ? (

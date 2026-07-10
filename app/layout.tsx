@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
@@ -17,6 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("app");
   return { title: t("name"), description: t("tagline") };
 }
+
+// Extend under the iOS notch / home indicator so safe-area insets work (portal parity).
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#205090" };
 
 export default async function RootLayout({
   children,

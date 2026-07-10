@@ -38,12 +38,12 @@ export function Topbar({
         onClick={onMenu}
         aria-label={t("nav.menu")}
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-[17px] w-[17px]" strokeWidth={2.5} />
       </button>
 
       {/* Document-number search: submits to the scan hub, which resolves any code. */}
       <form role="search" className="relative hidden max-w-md flex-1 sm:block" onSubmit={submitSearch}>
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-grey" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-grey" />
         <input
           className="w-full rounded-2xl border-none bg-white py-[10px] pl-10 pr-3 text-[13px] text-body shadow-pill outline-none placeholder:text-grey focus:ring-2 focus:ring-navy/20"
           placeholder={t("common.search")}
@@ -70,7 +70,7 @@ export function Topbar({
           className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-grey shadow-pill transition hover:text-navy"
           aria-label={t("nav.notifications")}
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-[17px] w-[17px]" />
           {unreadCount > 0 && (
             <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald px-1 text-[10px] font-bold text-white">
               {unreadCount > 99 ? "99+" : unreadCount}

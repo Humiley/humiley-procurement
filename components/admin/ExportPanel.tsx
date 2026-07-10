@@ -67,7 +67,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
       </div>
 
       <div className="card p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("history")}</h3>
+        <h3 className="label">{t("history")}</h3>
         {batches.length === 0 ? (
           <p className="text-sm text-grey">{t("noBatches")}</p>
         ) : (

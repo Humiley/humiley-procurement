@@ -30,7 +30,7 @@ export default async function NewGrnPage({ searchParams }: { searchParams: { po?
           <ArrowLeft className="h-4 w-4" /> {tc("back")}
         </Link>
         <div className="card mx-auto max-w-lg p-6 text-center">
-          <h1 className="text-lg font-bold text-navy">{tp("title")}</h1>
+          <h1 className="page-title">{tp("title")}</h1>
           <p className="mt-2 text-sm text-grey">{tp("grnBody")}</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <Link href="/goods-receipts" className="btn-ghost">{tp("backToList")}</Link>

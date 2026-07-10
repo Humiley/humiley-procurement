@@ -66,7 +66,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/scan" className="text-sm text-grey hover:text-navy">← {t("backToScan")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <span className="rounded bg-navy/10 px-2 py-0.5 font-mono text-sm font-bold text-navy">{lot.lotNumber}</span>
       </div>
 

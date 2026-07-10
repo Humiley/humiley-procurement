@@ -32,7 +32,7 @@ export default async function NewRequisitionPage() {
           <ArrowLeft className="h-4 w-4" /> {tc("back")}
         </Link>
         <div className="card mx-auto max-w-lg p-6 text-center">
-          <h1 className="text-lg font-bold text-navy">{tp("title")}</h1>
+          <h1 className="page-title">{tp("title")}</h1>
           <p className="mt-2 text-sm text-grey">{tp("prBody")}</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {isAdmin(user) ? (
@@ -65,7 +65,7 @@ export default async function NewRequisitionPage() {
       <Link href="/requisitions" className="btn-ghost -ml-3 w-fit">
         <ArrowLeft className="h-4 w-4" /> {tc("back")}
       </Link>
-      <h1 className="text-[22px] font-bold text-navy">{t("new")}</h1>
+      <h1 className="page-title">{t("new")}</h1>
       <PrForm costCenters={ccOpts} items={itemOpts} uoms={uomOpts} departmentLabel={deptLabel} />
     </div>
   );

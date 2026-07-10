@@ -54,7 +54,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
   const field = "field w-full";
   return (
     <div className="space-y-4" onChange={() => setTouched(true)}>
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {error ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
 
       <div className="grid grid-cols-1 gap-3 card p-4 sm:grid-cols-3">
@@ -89,7 +89,7 @@ export function ContractForm({ vendors, items }: { vendors: CtrOpt[]; items: Ctr
       </div>
 
       <div className="card p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("priceList")}</h3>
+        <h3 className="label">{t("priceList")}</h3>
         <p className="mb-3 text-xs text-grey">{t("priceListHint")}</p>
         {prices.map((p, i) => (
           <div key={i} className="mb-2 flex items-center gap-2">

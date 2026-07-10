@@ -25,7 +25,7 @@ export default async function TransfersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-navy">{t("listTitle")}</h1>
+        <h1 className="page-title">{t("listTitle")}</h1>
         {canCreate ? (
           <Link href="/inventory/transfers/new" className="btn-primary">
             {t("newButton")}
@@ -38,7 +38,7 @@ export default async function TransfersPage() {
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colNo")}</th>
                 <th className="px-3 py-2.5">{t("route")}</th>
                 <th className="px-3 py-2.5">{t("colBy")}</th>

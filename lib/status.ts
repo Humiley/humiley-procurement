@@ -50,12 +50,13 @@ export function statusTone(status: string): Tone {
   return "navy"; // SUBMITTED, PENDING, IN_REVIEW, OPEN, APPROVING, …
 }
 
+// Portal badge tones — exact tint/ink pairs (soft-100 bg, dark-800 ink), never bright text.
 export const TONE_CLASSES: Record<Tone, string> = {
   navy: "bg-navy/10 text-navy",
-  emerald: "bg-emerald/10 text-emeraldDeep",
+  emerald: "bg-[#D1FAE5] text-[#065F46]",
   grey: "bg-grey/10 text-grey",
-  red: "bg-danger/10 text-danger",
-  amber: "bg-warning/15 text-warning",
+  red: "bg-[#FEE2E2] text-[#991B1B]",
+  amber: "bg-[#FEF3C7] text-[#92400E]",
 };
 
 /** "PARTIALLY_PAID" → "Partially paid" (fallback when no i18n label supplied). */

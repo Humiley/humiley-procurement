@@ -56,7 +56,7 @@ export default async function InventoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <Link href="/inventory/issues/new" className="btn-primary">
           {t("requestIssue")}
         </Link>
@@ -78,7 +78,7 @@ export default async function InventoryPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("valueByWarehouse")}</h3>
+          <h3 className="label">{t("valueByWarehouse")}</h3>
           {valueByWh.length === 0 ? (
             <p className="text-sm text-grey">{t("empty")}</p>
           ) : (
@@ -93,7 +93,7 @@ export default async function InventoryPage() {
           )}
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("slowMovers")}</h3>
+          <h3 className="label">{t("slowMovers")}</h3>
           {slowMovers.length === 0 ? (
             <p className="text-sm text-grey">{t("noSlowMovers")}</p>
           ) : (
@@ -115,7 +115,7 @@ export default async function InventoryPage() {
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colWarehouse")}</th>
                 <th className="px-3 py-2.5">{t("colItem")}</th>
                 <th className="px-3 py-2.5 text-right">{t("colOnHand")}</th>

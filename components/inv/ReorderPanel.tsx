@@ -57,7 +57,7 @@ export function ReorderPanel({ breaches, costCenters, canGenerate }: { breaches:
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="w-8 px-3 py-2.5" />
               <th className="px-3 py-2.5">{t("colWarehouse")}</th>
               <th className="px-3 py-2.5">{t("colItem")}</th>

@@ -116,7 +116,7 @@ export function PoForm({
   const field = "field w-full";
   return (
     <div className="space-y-4" onChange={() => setTouched(true)}>
-      <h1 className="text-lg font-bold text-navy">{t("newTitle")}</h1>
+      <h1 className="page-title">{t("newTitle")}</h1>
       {fromPr ? (
         <p className="rounded-lg bg-navy/5 px-3 py-2 text-sm text-navy">{t("fromPr", { ref: fromPr.label })}</p>
       ) : null}
@@ -185,7 +185,7 @@ export function PoForm({
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2">{t("lineDesc")}</th>
               <th className="w-32 px-3 py-2">{t("uom")}</th>
               <th className="w-28 px-3 py-2 text-right">{t("qty")}</th>

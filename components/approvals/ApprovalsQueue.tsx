@@ -70,7 +70,7 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <CheckSquare className="h-5 w-5 text-navy" />
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">{rows.length}</span>
       </div>
       {notice ? <p className="rounded-lg bg-emerald/10 px-3 py-2 text-sm text-emerald">{notice}</p> : null}
@@ -81,7 +81,7 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colType")}</th>
                 <th className="px-3 py-2.5">{t("colRef")}</th>
                 <th className="px-3 py-2.5">{t("colPurpose")}</th>

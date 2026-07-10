@@ -35,10 +35,10 @@ export function BankConfirmPanel({ rows, canConfirm }: { rows: FrozenVendorRow[]
             <span className="flex-1" />
             {canConfirm ? (
               <>
-                <button type="button" onClick={() => setTarget({ id: v.id, approve: true })} className="btn-emerald btn-sm">
+                <button type="button" onClick={() => setTarget({ id: v.id, approve: true })} className="btn-approve">
                   {t("confirm")}
                 </button>
-                <button type="button" onClick={() => setTarget({ id: v.id, approve: false })} className="btn-danger btn-sm">
+                <button type="button" onClick={() => setTarget({ id: v.id, approve: false })} className="btn-reject">
                   {t("reject")}
                 </button>
               </>

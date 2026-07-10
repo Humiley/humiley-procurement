@@ -168,7 +168,7 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
         {myTurn ? <DecideInline entityType="PR" entityId={pr.id} refLabel={pr.prNumber} /> : null}
         {signatures.length > 0 ? (
           <div className="mt-6">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
+            <h3 className="label">{t("signatureBlock")}</h3>
             <ul className="space-y-1.5">
               {signatures.map((s) => (
                 <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">

@@ -67,7 +67,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
   const field = "field w-full";
   return (
     <div className="space-y-4">
-      <h1 className="flex items-center gap-2 text-lg font-bold text-navy"><Calculator className="h-5 w-5" /> {t("title")}</h1>
+      <h1 className="page-title flex items-center gap-2"><Calculator className="h-5 w-5" /> {t("title")}</h1>
       <p className="text-sm text-grey">{t("subtitle")}</p>
 
       <div className="relative">
@@ -157,7 +157,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
           <div className="overflow-x-auto card">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+                <tr className="th">
                   <th className="px-3 py-2.5">{t("route")}</th>
                   <th className="px-3 py-2.5 text-right">{t("duty")}</th>
                   <th className="px-3 py-2.5 text-right">{t("dutyAmt")}</th>

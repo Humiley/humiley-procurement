@@ -15,7 +15,7 @@ export default async function AccountingExportPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/admin/settings" className="text-sm text-grey hover:text-navy">← {t("back")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
       </div>
       <ExportPanel invoiceCount={invoices} paymentCount={payments} batches={batches} />
     </div>

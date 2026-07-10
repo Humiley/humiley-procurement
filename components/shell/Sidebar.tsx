@@ -149,7 +149,7 @@ export function Sidebar({
                               : "text-white/65 hover:bg-white/[0.09] hover:text-white",
                           )}
                         >
-                          <Icon className="h-[18px] w-[18px] shrink-0" />
+                          <Icon className="h-[17px] w-[17px] shrink-0" />
                           <span className="truncate">{t(it.labelKey)}</span>
                         </Link>
                       </li>

@@ -70,7 +70,7 @@ export default async function EditRequisitionPage({ params }: { params: { id: st
       <Link href={`/requisitions/${pr.id}`} className="btn-ghost -ml-3 w-fit">
         <ArrowLeft className="h-4 w-4" /> {tc("back")}
       </Link>
-      <h1 className="text-[22px] font-bold text-navy">
+      <h1 className="page-title">
         {t("edit")} · {pr.prNumber}
       </h1>
       <PrForm

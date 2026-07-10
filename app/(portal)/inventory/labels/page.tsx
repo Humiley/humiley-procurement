@@ -35,7 +35,7 @@ export default async function LabelsPage({ searchParams }: { searchParams: { grn
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 print:hidden">
         <Link href="/inventory" className="text-sm text-grey hover:text-navy">← {t("back")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <span className="flex-1" />
         {labels.length > 0 ? <PrintButton label={t("print")} /> : null}
       </div>

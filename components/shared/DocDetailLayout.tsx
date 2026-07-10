@@ -60,29 +60,29 @@ export function DocDetailLayout({
       </div>
 
       <div className="card">
-        <div className="flex flex-wrap gap-1 border-b border-line px-2">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActive(t.key)}
-              className={cn(
-                "relative px-4 py-3 text-sm font-medium transition",
-                t.key === current?.key
-                  ? "text-navy"
-                  : "text-grey hover:text-body",
-              )}
-            >
-              {t.label}
-              {typeof t.count === "number" && (
-                <span className="ml-1.5 rounded-full bg-panel px-1.5 py-0.5 text-xs text-grey">
-                  {t.count}
-                </span>
-              )}
-              {t.key === current?.key && (
-                <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-emerald" />
-              )}
-            </button>
-          ))}
+        {/* portal segmented tabs: soft-bg track, active tab = white + emerald */}
+        <div className="border-b border-line p-3">
+          <div className="inline-flex flex-wrap gap-1 rounded-[10px] bg-panel p-1">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActive(t.key)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-[7px] px-[15px] py-1.5 text-[13px] font-semibold transition",
+                  t.key === current?.key
+                    ? "bg-white text-emerald shadow-[0_1px_4px_rgba(0,0,0,0.1)]"
+                    : "text-grey hover:text-body",
+                )}
+              >
+                {t.label}
+                {typeof t.count === "number" && (
+                  <span className="rounded-full bg-navy/10 px-1.5 py-0.5 text-[11px] font-bold text-navy">
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="p-5">{current?.content}</div>
       </div>

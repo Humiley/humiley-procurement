@@ -11,7 +11,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+      <h1 className="page-title">{t("title")}</h1>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {REPORT_KEYS.map((key) => (
           <Link key={key} href={`/reports/${key}`} className="card flex items-center gap-3 p-4 transition hover:shadow-md">

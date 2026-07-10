@@ -41,7 +41,7 @@ export default async function ApprovalMatrixPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <p className="mt-0.5 text-sm text-grey">{t("subtitle")}</p>
       </div>
       <MatrixManager rows={matrixRows} pending={pendingRows} users={userOpts} />

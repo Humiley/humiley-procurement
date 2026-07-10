@@ -29,7 +29,7 @@ export function IntegrityPanel() {
 
   return (
     <div className="card p-4">
-      <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("title")}</h3>
+      <h3 className="label">{t("title")}</h3>
       <p className="mb-3 text-sm text-grey">{t("hint")}</p>
       <button type="button" disabled={busy} onClick={run} className="btn-primary">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} {t("run")}

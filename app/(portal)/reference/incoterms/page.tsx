@@ -12,14 +12,14 @@ export default async function IncotermsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-lg font-bold text-navy">{t("title")}</h1>
+        <h1 className="page-title">{t("title")}</h1>
         <p className="mt-0.5 text-sm text-grey">{t("subtitle")}</p>
       </div>
 
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[860px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("term")}</th>
               <th className="px-3 py-2.5">{t("mode")}</th>
               <th className="px-3 py-2.5">{t("exportClearance")}</th>

@@ -68,7 +68,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/payment-requests" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{q.paymentRequestNumber}</h1>
+        <h1 className="page-title font-mono">{q.paymentRequestNumber}</h1>
         <StatusBadge status={q.status} label={st.has(q.status) ? st(q.status) : q.status} />
         <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{t(`type.${q.type}`)}</span>
         {q.verifiedById ? <span className="rounded bg-emerald/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald">{t("verifiedBadge")}</span> : null}
@@ -105,7 +105,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="w-8 px-3 py-2.5">#</th>
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("amount")}</th>
@@ -132,7 +132,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("tabApprovals")}</h3>
+          <h3 className="label">{t("tabApprovals")}</h3>
           {steps.length === 0 ? <p className="text-sm text-grey">{t("approvalsPending")}</p> : <ApprovalTimeline steps={timelineSteps} />}
           {myTurn ? <DecideInline entityType="PAYMENT_REQUEST" entityId={q.id} refLabel={q.paymentRequestNumber} /> : null}
           {signatures.length > 0 ? (
@@ -149,7 +149,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
           ) : null}
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("attachments")}</h3>
+          <h3 className="label">{t("attachments")}</h3>
           <PrAttachments
             entityId={q.id}
             entityType="PaymentRequest"

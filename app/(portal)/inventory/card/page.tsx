@@ -49,7 +49,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory" className="text-sm text-grey hover:text-navy">← {t("title")}</Link>
-        <h1 className="text-lg font-bold text-navy">{t("stockCard")}</h1>
+        <h1 className="page-title">{t("stockCard")}</h1>
         <span className="rounded bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">{warehouse.code}</span>
         <span className="text-sm text-body">{item.code} · {item.nameEn}</span>
       </div>
@@ -85,7 +85,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colMovement")}</th>
                 <th className="px-3 py-2.5">{t("colDate")}</th>
                 <th className="px-3 py-2.5">{t("colType")}</th>

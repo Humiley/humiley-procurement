@@ -210,7 +210,7 @@ export function RfqDetail({
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("compareLine")}</th>
                 {quoted.map((v) => (
                   <th key={v.vendorId} className="px-3 py-2.5 text-right">{v.code}</th>

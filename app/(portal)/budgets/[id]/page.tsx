@@ -42,7 +42,7 @@ export default async function BudgetDetailPage({ params }: { params: { id: strin
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/budgets" className="text-sm text-grey hover:text-navy">← {t("title", { fy: b.fiscalYear })}</Link>
-        <h1 className="text-lg font-bold text-navy">
+        <h1 className="page-title">
           {b.costCenter.code} · {b.costCenter.nameEn}
           <span className="ml-2 rounded bg-navy/10 px-1.5 py-0.5 text-xs font-bold text-navy">{b.category.code}</span>
           <span className="ml-2 text-sm font-normal text-grey">FY {b.fiscalYear}</span>
@@ -66,7 +66,7 @@ export default async function BudgetDetailPage({ params }: { params: { id: strin
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("colPr")}</th>
               <th className="px-3 py-2.5">{t("colItem")}</th>
               <th className="px-3 py-2.5">{t("colRequester")}</th>

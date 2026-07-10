@@ -24,7 +24,7 @@ export default async function CountsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-navy">{t("listTitle")}</h1>
+        <h1 className="page-title">{t("listTitle")}</h1>
         {canCreate ? <NewCountButton warehouses={warehouses.map((w) => ({ id: w.id, label: `${w.code} · ${w.nameEn}` }))} /> : null}
       </div>
       {counts.length === 0 ? (
@@ -33,7 +33,7 @@ export default async function CountsPage() {
         <div className="overflow-x-auto card">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+              <tr className="th">
                 <th className="px-3 py-2.5">{t("colNo")}</th>
                 <th className="px-3 py-2.5">{t("colWarehouse")}</th>
                 <th className="px-3 py-2.5">{t("colDate")}</th>

@@ -26,7 +26,7 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
           <ArrowLeft className="h-4 w-4" /> {tc("back")}
         </Link>
         <div className="card mx-auto max-w-lg p-6 text-center">
-          <h1 className="text-lg font-bold text-navy">{tp("title")}</h1>
+          <h1 className="page-title">{tp("title")}</h1>
           <p className="mt-2 text-sm text-grey">{tp("poBody")}</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <Link href="/purchase-orders" className="btn-ghost">{tp("backToList")}</Link>

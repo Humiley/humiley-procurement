@@ -36,7 +36,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory/transfers" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{trf.transferNumber}</h1>
+        <h1 className="page-title font-mono">{trf.transferNumber}</h1>
         <StatusBadge status={trf.status} label={st.has(trf.status) ? st(trf.status) : trf.status} />
       </div>
 
@@ -52,7 +52,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="w-8 px-3 py-2.5">#</th>
               <th className="px-3 py-2.5">{t("item")}</th>
               <th className="px-3 py-2.5 text-right">{t("qty")}</th>
@@ -72,7 +72,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
 
       {movements.length > 0 ? (
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("movements")}</h3>
+          <h3 className="label">{t("movements")}</h3>
           <ul className="space-y-1.5 text-xs">
             {movements.map((m) => (
               <li key={m.id} className="font-mono">
@@ -85,7 +85,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
 
       {signatures.length > 0 ? (
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatures")}</h3>
+          <h3 className="label">{t("signatures")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
               <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">

@@ -45,7 +45,7 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
     if (!canAct) return null;
     return (
       <div className="card p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("title")}</h3>
+        <h3 className="label">{t("title")}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <select className="field" value={cooId} onChange={(e) => setCooId(e.target.value)}>
             {cooForms.map((c) => (
@@ -64,12 +64,12 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
 
   return (
     <div className="card p-4">
-      <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("title")}</h3>
+      <h3 className="label">{t("title")}</h3>
       {error ? <p className="mb-2 rounded bg-danger/10 px-2 py-1 text-xs text-danger">{error}</p> : null}
       <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+          <tr className="th">
             <th className="py-2">{t("doc")}</th>
             <th className="w-40 py-2">{t("number")}</th>
             <th className="w-36 py-2">{t("issueDate")}</th>

@@ -37,7 +37,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/invoices" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{inv.invoiceNumber}</h1>
+        <h1 className="page-title font-mono">{inv.invoiceNumber}</h1>
         <StatusBadge status={inv.matchStatus} label={st.has(inv.matchStatus) ? st(inv.matchStatus) : inv.matchStatus} />
         <StatusBadge status={inv.paymentStatus} label={st.has(inv.paymentStatus) ? st(inv.paymentStatus) : inv.paymentStatus} />
         <span className="ml-auto text-xs text-grey">
@@ -68,7 +68,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[760px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("lineDesc")}</th>
               <th className="px-3 py-2.5 text-right">{t("poPrice")}</th>
               <th className="px-3 py-2.5 text-right">{t("invPrice")}</th>
@@ -100,7 +100,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
 
       {signatures.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("signatureBlock")}</h3>
+          <h3 className="label">{t("signatureBlock")}</h3>
           <ul className="space-y-1.5">
             {signatures.map((s) => (
               <li key={s.id} className="rounded-lg border border-line bg-white px-3 py-2 text-xs">

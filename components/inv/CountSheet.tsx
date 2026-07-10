@@ -57,7 +57,7 @@ export function CountSheet({
       <div className="overflow-x-auto card">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-grey">
+            <tr className="th">
               <th className="px-3 py-2.5">{t("item")}</th>
               <th className="w-28 px-3 py-2.5 text-right">{t("systemQty")}</th>
               <th className="w-36 px-3 py-2.5 text-right">{t("countedQty")}</th>

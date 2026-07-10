@@ -18,7 +18,7 @@ export default async function ChangePasswordPage() {
           <Logo variant="navy" className="h-12" />
         </div>
         <div className="card p-6">
-          <h1 className="text-lg font-bold text-navy">{forced ? t("titleForced") : t("title")}</h1>
+          <h1 className="page-title">{forced ? t("titleForced") : t("title")}</h1>
           <p className="mb-5 mt-0.5 text-sm text-grey">{forced ? t("subForced") : t("sub")}</p>
           <ChangePasswordForm forced={forced} />
         </div>

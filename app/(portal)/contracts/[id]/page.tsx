@@ -32,7 +32,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/contracts" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="font-mono text-lg font-bold text-navy">{c.contractNumber}</h1>
+        <h1 className="page-title font-mono">{c.contractNumber}</h1>
         <StatusBadge status={c.status} label={st.has(c.status) ? st(c.status) : c.status} />
       </div>
 
@@ -51,7 +51,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("priceList")}</h3>
+          <h3 className="label">{t("priceList")}</h3>
           {items.length === 0 ? (
             <p className="text-sm text-grey">{t("noPrices")}</p>
           ) : (
@@ -70,7 +70,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
           )}
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-grey">{t("linkedPos")}</h3>
+          <h3 className="label">{t("linkedPos")}</h3>
           {c.purchaseOrders.length === 0 ? (
             <p className="text-sm text-grey">{t("noPos")}</p>
           ) : (

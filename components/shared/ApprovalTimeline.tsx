@@ -28,7 +28,7 @@ export function ApprovalTimeline({ steps }: { steps: TimelineStep[] }) {
     return <p className="text-sm text-grey">No approval steps yet.</p>;
   }
   return (
-    <ol className="relative space-y-6 border-l border-black/10 pl-6">
+    <ol className="relative space-y-6 border-l-2 border-line pl-6">
       {steps.map((s, i) => {
         const { Icon, ring } = ICON[s.status];
         const overdue =

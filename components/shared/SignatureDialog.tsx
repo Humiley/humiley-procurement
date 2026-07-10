@@ -118,13 +118,13 @@ export function SignatureDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${uid}-title`}
-        className="card max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl p-7"
+        className="max-h-[90dvh] w-full max-w-[520px] overflow-y-auto rounded-2xl bg-white p-7 shadow-[0_24px_64px_rgba(0,0,0,0.2)]"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 id={`${uid}-title`} className="flex items-center gap-2 text-base font-semibold text-navy">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 id={`${uid}-title`} className="flex items-center gap-2 text-[17px] font-bold text-navy">
             <PenLine className="h-4 w-4" /> {title ?? t("title")}
           </h2>
-          <button className="btn-ghost" onClick={onClose} aria-label={t("close")} disabled={busy}>
+          <button className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md bg-panel text-grey transition hover:text-body" onClick={onClose} aria-label={t("close")} disabled={busy}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -188,7 +188,7 @@ export function SignatureDialog({
             </p>
           )}
 
-          <div className="mt-5 flex justify-end gap-2">
+          <div className="mt-5 flex justify-end gap-2.5 border-t border-line pt-4">
             <button type="button" className="btn-outline" onClick={onClose} disabled={busy}>
               {t("cancel")}
             </button>
