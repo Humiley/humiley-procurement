@@ -37,16 +37,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // A random password is set only so §19 e-sign re-auth has a credential; SSO login never
         // needs it (mustChangePw stays false — no change-password wall on a portal user).
         if (!user) {
-          user = await db.user.create({
-            data: {
-              email: identity.email,
-              name: identity.name,
-              passwordHash: await bcrypt.hash(crypto.randomUUID() + crypto.randomUUID(), 10),
-              roles: ["REQUESTER"],
-              isActive: true,
-              mustChangePw: false,
-            },
-          });
+          try {
+            user = await db.user.create({
+              data: {
+                email: identity.email,
+                name: identity.name,
+                passwordHash: await bcrypt.hash(crypto.randomUUID() + crypto.randomUUID(), 10),
+                roles: ["REQUESTER"],
+                isActive: true,
+                // mustChangePw stays TRUE until they set their own password — needed because §19
+                // e-sign re-auth (lib/esign/sign.ts) checks this password. The middleware only
+                // ACTS on the flag for users who actually sign (a signing role), so a pure
+                // REQUESTER is never walled and stays seamless; a signer sets a password once.
+                mustChangePw: true,
+              },
+            });
+          } catch {
+            // JIT create race (two concurrent first logins) → the other request won; re-read.
+            user = await db.user.findUnique({ where: { email: identity.email } });
+            if (!user) return null;
+          }
         }
         if (!user.isActive) return null; // an admin can revoke access by deactivating the user
         return {
@@ -57,8 +67,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           departmentId: user.departmentId,
           isChief: user.isChief,
           locale: user.locale,
-          // SSO users arrived via M365 — don't force a procurement password change on them.
-          mustChangePw: false,
+          // Report the REAL flag — an SSO user who holds an unknown random password must be able
+          // to set one before they can e-sign. The middleware only walls signing roles.
+          mustChangePw: user.mustChangePw,
         };
       },
     }),

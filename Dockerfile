@@ -1,9 +1,16 @@
 # Humiley Procurement — production image (Next.js standalone).
 # Build:  docker build -t humiley-procurement .
 # Run:    behind Caddy, reverse-proxying procurement.humiley.com -> this:3000
-#         env: DATABASE_URL, AUTH_SECRET, AUTH_TRUST_HOST=true
-# After first `prisma migrate deploy`, run the one-time bootstrap (see docs/PORTAL-INTEGRATION.md):
-#   docker compose exec procurement npx tsx prisma/bootstrap.ts   (BOOTSTRAP_ADMIN_EMAIL set)
+#         env: DATABASE_URL, PORTAL_SSO_SECRET (== portal TK_SSO_SECRET), AUTH_SECRET, AUTH_TRUST_HOST=true
+#
+# ONE-TIME DB SETUP (migrate + bootstrap): the standalone `runner` image below is deliberately
+# minimal and does NOT ship the prisma CLI or tsx (both are devDependencies). So run setup from
+# the `builder` stage, which has the full toolchain + source, as a throwaway container:
+#   docker build --target builder -t humiley-procurement-setup .
+#   docker run --rm --env-file .env --network <compose-net> humiley-procurement-setup \
+#     sh -c "npx prisma migrate deploy && npm run bootstrap"      (BOOTSTRAP_ADMIN_EMAIL set)
+# (DATABASE_URL must point at the prod DB; --network lets the one-off reach the db service.)
+# See docs/PORTAL-INTEGRATION.md §6 for the full rollout checklist.
 
 FROM node:20-alpine AS deps
 WORKDIR /app

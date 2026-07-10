@@ -23,18 +23,28 @@ async function _createUser(input: UserInput) {
   if (existing) throw new Error("A user with this email already exists.");
 
   const tempPassword = generateTempPassword();
-  const user = await db.user.create({
-    data: {
-      name: data.name,
-      email,
-      passwordHash: await hashPassword(tempPassword),
-      roles: data.roles,
-      departmentId: data.departmentId || null,
-      isChief: data.isChief ?? false,
-      isActive: data.isActive ?? true,
-      mustChangePw: true,
-    },
-  });
+  let user;
+  try {
+    user = await db.user.create({
+      data: {
+        name: data.name,
+        email,
+        passwordHash: await hashPassword(tempPassword),
+        roles: data.roles,
+        departmentId: data.departmentId || null,
+        isChief: data.isChief ?? false,
+        isActive: data.isActive ?? true,
+        mustChangePw: true,
+      },
+    });
+  } catch (e) {
+    // Lost a create race (concurrent duplicate) → the unique constraint fired. Surface the SAME
+    // friendly message the pre-check gives, not the raw Prisma "Unique constraint failed" string.
+    if (e && typeof e === "object" && (e as { code?: string }).code === "P2002") {
+      throw new Error("A user with this email already exists.");
+    }
+    throw e;
+  }
   await audit({
     userId: admin.id,
     action: "USER_CREATE",

@@ -110,12 +110,20 @@ same language-toggle convention as the portal — already enforced throughout (�
 3. Create the pilot users at /admin/users with their M365 emails; assign roles.
 4. Launcher + per-user app permission are already in the portal — just grant users the
    Procurement app in Access & Permissions and set the production URL in Company Portal.
-5. Provision reference data + first admin with `npm run bootstrap` (NOT `npm run seed`, which
-   drops the DB). `bootstrap` seeds the §6 approval matrix and one ADMIN with a random one-time
-   password; it is idempotent and non-destructive. The Procurement app must be deployed and its
-   URL configured in the portal (Settings → Company Portal) BEFORE the sidebar launcher is used —
-   an unconfigured launcher now shows a message instead of opening a dead link.
-   (reference-only seed script — do NOT run the demo-document seed in production).
-6. Decide the §19 signing mode under SSO (local signing password vs MSAL re-auth) and record it.
+5. Provision reference data + first admin: `npx prisma migrate deploy` then `npm run bootstrap`
+   (NOT `npm run seed`, which drops the DB). Because the standalone runtime image omits the prisma
+   CLI + tsx, run BOTH from a one-off container built off the `builder` stage (see the Dockerfile
+   header for the exact `docker build --target builder` / `docker run` commands). `migrate deploy`
+   applies every migration including `sso_token_single_use` (SSO replay protection); `bootstrap`
+   seeds the §6 approval matrix and one ADMIN with a random one-time password — idempotent and
+   non-destructive. The Procurement app must be deployed and its URL configured in the portal
+   (Settings → Company Portal) BEFORE the sidebar launcher is used — an unconfigured launcher now
+   shows a message instead of opening a dead link. (Do NOT run the demo-document seed in prod.)
+6. §19 signing mode under SSO — DECIDED: **local signing password**. An SSO/JIT user is
+   provisioned with an unknown random password and `mustChangePw:true`; a pure REQUESTER (submit is
+   unsigned) is never prompted and stays seamless, but the first time a user holds a signing role
+   (any role beyond REQUESTER) the middleware walls them to /change-password to set a signing
+   password once. That password is what §19 e-sign re-auth (lib/esign/sign.ts) verifies. (MSAL
+   step-up re-auth remains a future option if fully passwordless signing is required.)
 7. Run /admin/settings → "Verify all chains" after go-live migration as the baseline integrity
    snapshot.

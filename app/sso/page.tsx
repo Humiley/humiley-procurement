@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { SsoAutoSubmit } from "@/components/auth/SsoAutoSubmit";
 
@@ -14,9 +15,10 @@ export default async function SsoPage({ searchParams }: { searchParams: { t?: st
   const token = (raw ?? "").trim();
   if (!token) redirect("/login");
 
+  const t = await getTranslations("sso");
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-panel">
-      <p className="text-sm text-grey">Signing you in…</p>
+      <p className="text-sm text-grey">{t("signingIn")}</p>
       <SsoAutoSubmit token={token} />
     </div>
   );

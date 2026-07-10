@@ -180,7 +180,7 @@
       "resetPassword": "Reset password to default",
       "created": "User created.",
       "updated": "User updated.",
-      "defaultPassword": "The default password is Humiley@2026 (user must change on first login)."
+      "defaultPassword": "A one-time temporary password will be generated and shown once after you create the user; they must change it at first sign-in."
     },
     "md": {
       "fields": {
@@ -1138,5 +1138,8 @@
     "tempPwTitle": "Temporary password",
     "tempPwNote": "Give this to the user. They must change it at first sign-in. It will not be shown again.",
     "tempPwCopy": "Copy"
+  },
+  "sso": {
+    "signingIn": "Signing you in…"
   }
 }

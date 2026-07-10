@@ -180,7 +180,7 @@
       "resetPassword": "Đặt lại mật khẩu mặc định",
       "created": "Đã tạo người dùng.",
       "updated": "Đã cập nhật người dùng.",
-      "defaultPassword": "Mật khẩu mặc định là Humiley@2026 (người dùng phải đổi khi đăng nhập lần đầu)."
+      "defaultPassword": "Một mật khẩu tạm thời sẽ được tạo và hiển thị một lần sau khi bạn tạo người dùng; họ phải đổi mật khẩu khi đăng nhập lần đầu."
     },
     "md": {
       "fields": {
@@ -1138,5 +1138,8 @@
     "tempPwTitle": "Mật khẩu tạm thời",
     "tempPwNote": "Đưa mật khẩu này cho người dùng. Họ phải đổi khi đăng nhập lần đầu. Sẽ không hiển thị lại.",
     "tempPwCopy": "Sao chép"
+  },
+  "sso": {
+    "signingIn": "Đang đăng nhập cho bạn…"
   }
 }

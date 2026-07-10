@@ -22,10 +22,17 @@ export const authConfig = {
         pathname === "/favicon.ico";
       if (isPublic) return true;
       if (!isLoggedIn) return false; // → Auth.js redirects to /login
-      // Force a first-login / reset user to set their own password before anything else loads —
-      // no provisioned account can operate on the shared temporary password.
-      const mustChange = (auth?.user as { mustChangePw?: boolean } | undefined)?.mustChangePw;
-      if (mustChange && pathname !== "/change-password") {
+      // Force a user who still holds a system-issued password to set their own before anything
+      // that needs it. Two populations carry mustChangePw:
+      //   • admin-created / reset accounts (a temp password they were handed), and
+      //   • SSO/JIT accounts (an unknown random password minted only so §19 e-sign has a hash).
+      // e-sign re-auth (lib/esign/sign.ts) checks THIS password, so anyone who signs must own it.
+      // A pure REQUESTER never signs (submit is unsigned) — don't wall them, so a portal SSO
+      // requester stays seamless ("assign in the portal and they're in", like HR/CRM). The moment
+      // an admin elevates them to a signing role, their next request is walled here to set one.
+      const u = auth?.user as { mustChangePw?: boolean; roles?: string[] } | undefined;
+      const willSign = (u?.roles ?? []).some((r) => r !== "REQUESTER");
+      if (u?.mustChangePw && willSign && pathname !== "/change-password") {
         return Response.redirect(new URL("/change-password", request.nextUrl));
       }
       return true;
