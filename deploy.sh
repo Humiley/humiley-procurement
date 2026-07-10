@@ -62,6 +62,13 @@ grep -qE '^PORTAL_SSO_SECRET=..' .env || {
   echo "    procurement login screen until you set it to the portal's TK_SSO_SECRET." >&2
 }
 
+# 3.6) Ensure the shared `humiley_net` network exists so `up` never fails. On the portal VPS the
+#       portal's own compose owns/creates it (option B); standalone (option A) we create it here —
+#       harmless, the app just joins it and only the portal's Caddy ever uses it.
+docker network inspect humiley_net >/dev/null 2>&1 || {
+  say "Creating shared network humiley_net…"; docker network create humiley_net >/dev/null;
+}
+
 # 4) Build images (app + the builder-based setup image)
 say "Building images…"
 docker compose build

@@ -59,6 +59,9 @@ services:
       # localhost-only by default so the portal's Caddy (or an SSH tunnel) can reach it without
       # exposing the app directly. Set PROCUREMENT_BIND=0.0.0.0 only if nothing fronts it.
       - "${PROCUREMENT_BIND:-127.0.0.1}:${PROCUREMENT_PORT:-3000}:3000"
+    networks:
+      - default   # reach the db
+      - portal    # let the portal's Caddy reach this app by name (option B, same-VPS deploy)
 
   # ── One-time / update setup: run migrations. Uses the `builder` stage (it has the prisma CLI +
   #    tsx, which the slim runtime image omits). `docker compose --profile setup run --rm migrate`.
@@ -108,6 +111,14 @@ services:
       - proc_caddy_config:/config
     depends_on:
       - app
+
+networks:
+  # `portal` = the portal's shared network (humiley_net). External: the portal stack creates it,
+  # so run the portal's ./update.sh ONCE before deploying procurement (deploy.sh checks for it).
+  # Only the app joins it; the db stays on procurement's private default network.
+  portal:
+    name: humiley_net
+    external: true
 
 volumes:
   proc_db:

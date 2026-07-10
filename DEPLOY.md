@@ -33,37 +33,39 @@ Later updates: `cd /opt/humiley-procurement && ./deploy.sh` (migrations run auto
 
 ---
 
-## Option B — same VPS as the live portal
+## Option B — same VPS as the live portal (already pre-wired)
 
-The portal's Caddy already owns 80/443, so **do NOT use the bundled Caddy** (no `--edge`). Run the
-app privately and let the portal's Caddy proxy it.
+The portal's Caddy already owns 80/443, so **do NOT use the bundled Caddy** (no `--edge`). The
+portal side is already wired for this: its `Caddyfile` has a `procurement.humiley.com` block that
+reverse-proxies to this app over a shared `humiley_net` Docker network, and its compose names the
+network. You just run three things, in this order:
 
+**1. DNS** — in Mat Bao, add an A record: `procurement.humiley.com` → your portal VPS IP
+(`221.132.16.110`). (DNSSEC is already off for humiley.com from the portal go-live, so the cert
+should issue cleanly.)
+
+**2. Update the portal once** — picks up the round-5 fixes AND creates `humiley_net` + activates the
+procurement route:
+```bash
+cd /opt/humiley-timekeeping && ./update.sh
+```
+
+**3. Deploy procurement:**
 ```bash
 git clone https://github.com/Humiley/humiley-procurement.git /opt/humiley-procurement
 cd /opt/humiley-procurement
 cp .env.production.example .env
-nano .env            # as above; leave PROCUREMENT_BIND=127.0.0.1 (app stays private)
-./deploy.sh --bootstrap        # NOTE: no --edge
+nano .env      # set POSTGRES_PASSWORD, BOOTSTRAP_ADMIN_EMAIL, and PORTAL_SSO_SECRET =
+               # the portal's TK_SSO_SECRET (grep it: grep TK_SSO_SECRET /opt/humiley-timekeeping/.env)
+./deploy.sh --bootstrap        # NOTE: no --edge on the shared VPS
 ```
 
-Then expose it through the portal's Caddy. In `/opt/humiley-timekeeping/`:
+That's it — `https://procurement.humiley.com` comes up (the app prints a one-time admin password;
+copy it). Later updates are just `cd /opt/humiley-procurement && ./deploy.sh`.
 
-1. Add `host.docker.internal` to the portal's Caddy container — in `docker-compose.yml` under the
-   `caddy` service add:
-   ```yaml
-       extra_hosts:
-         - "host.docker.internal:host-gateway"
-   ```
-2. Add a block to `/opt/humiley-timekeeping/Caddyfile`:
-   ```
-   procurement.humiley.com {
-       header Strict-Transport-Security "max-age=31536000; includeSubDomains"
-       reverse_proxy host.docker.internal:3000
-   }
-   ```
-3. `docker compose up -d caddy` (rebuilds only the web layer; the portal app + DB are untouched).
-
-DNS + DNSSEC caveat is the same as Option A.
+> Order matters only in that the portal `./update.sh` (step 2) should run before step 3 so the
+> shared network exists — but `deploy.sh` creates `humiley_net` itself if it's missing, so it's
+> resilient either way.
 
 ---
 
