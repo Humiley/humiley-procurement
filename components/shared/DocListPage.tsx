@@ -158,7 +158,7 @@ export function DocListPage<T extends Record<string, unknown>>({
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold text-navy">{title}</h1>
+          <h1 className="page-title">{title}</h1>
           {subtitle && <p className="mt-0.5 text-sm text-grey">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-2">

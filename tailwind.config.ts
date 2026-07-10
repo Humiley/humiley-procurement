@@ -32,15 +32,26 @@ const config: Config = {
         success: "#10B981",
       },
       fontFamily: {
-        sans: ["Calibri", "Segoe UI", "system-ui", "Arial", "sans-serif"],
+        // Poppins is the portal's face (its "Crextio" theme). Falls back to the system stack.
+        sans: ["var(--font-poppins)", "Poppins", "Segoe UI", "system-ui", "Arial", "sans-serif"],
       },
       borderRadius: {
-        card: "10px",
+        card: "24px", // portal Crextio: soft rounded cards everywhere
       },
       boxShadow: {
-        card: "0 1px 4px rgba(32,80,144,0.08)",
-        "card-hover": "0 6px 16px rgba(32,80,144,0.14), 0 2px 4px rgba(32,80,144,0.08)",
+        // portal Crextio soft card shadow (0 14px 34px rgba(32,80,144,.09))
+        card: "0 14px 34px rgba(32,80,144,0.09)",
+        "card-hover": "0 20px 44px rgba(32,80,144,0.15), 0 4px 10px rgba(32,80,144,0.08)",
         topbar: "0 1px 3px rgba(32,80,144,0.06)",
+        // floating white pill controls in the transparent topbar
+        pill: "0 6px 18px rgba(32,80,144,0.08)",
+        sidebar: "0 22px 48px rgba(23,58,107,0.28)",
+      },
+      backgroundImage: {
+        // the portal's floating navy sidebar gradient + the airy page background
+        sidebar: "linear-gradient(180deg,#1b417a 0%,#205090 55%,#1d6e6a 130%)",
+        appbg:
+          "radial-gradient(700px 360px at 92% -6%, rgba(0,176,96,.07), transparent 60%), radial-gradient(680px 360px at 4% 2%, rgba(32,80,144,.06), transparent 55%), linear-gradient(180deg,#f7f9fc 0%,#eef1f6 100%)",
       },
     },
   },

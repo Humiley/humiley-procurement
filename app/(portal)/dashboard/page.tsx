@@ -35,8 +35,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px] font-bold text-navy">{t("title")}</h1>
-        <p className="mt-0.5 text-sm text-grey">{t("welcome", { name: user.name })}</p>
+        <h1 className="page-title">{t("welcome", { name: user.name })}</h1>
+        <p className="mt-1 text-sm text-grey">{t("title")}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

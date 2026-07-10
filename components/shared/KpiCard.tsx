@@ -16,11 +16,11 @@ export function KpiCard({
   accent?: "navy" | "emerald";
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 px-5 py-[18px] transition hover:shadow-card-hover">
+    <div className="card flex items-center gap-4 px-6 py-5 transition hover:shadow-card-hover">
       {Icon && (
         <span
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg",
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
             accent === "emerald" ? "bg-emerald/10 text-emerald" : "bg-navy/10 text-navy",
           )}
         >
