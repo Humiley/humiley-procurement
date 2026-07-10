@@ -17,7 +17,7 @@ export function EntityLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center rounded border border-navy/20 bg-navy/5 px-1.5 py-0.5 font-mono text-xs font-bold text-navy transition hover:bg-navy/10",
+        "inline-flex items-center rounded border border-navy/20 bg-navy/5 px-1.5 py-0.5 font-mono text-[11px] font-bold text-navy transition hover:bg-navy/10",
         className,
       )}
     >

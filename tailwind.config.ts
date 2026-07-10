@@ -34,6 +34,9 @@ const config: Config = {
       fontFamily: {
         // Poppins is the portal's face (its "Crextio" theme). Falls back to the system stack.
         sans: ["var(--font-poppins)", "Poppins", "Segoe UI", "system-ui", "Arial", "sans-serif"],
+        // Doc-numbers/codes: the portal uses BARE `monospace` (browser default) so it renders
+        // Consolas on Windows / Menlo on macOS — match it exactly (not Tailwind's SF-Mono stack).
+        mono: ["monospace"],
       },
       borderRadius: {
         card: "24px", // portal Crextio: soft rounded cards everywhere
