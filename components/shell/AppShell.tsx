@@ -29,8 +29,10 @@ export function AppShell({
       <Sidebar user={user} open={open} onClose={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={user} unreadCount={unreadCount} onMenu={() => setOpen(true)} />
-        <main id="main" tabIndex={-1} className="flex-1 px-4 pb-8 pt-1 outline-none sm:px-7">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        {/* Content fills the width like the portal (no centered max-w cap that left a huge empty
+            right side on wide screens); a high ceiling only reins in ultra-wide monitors. */}
+        <main id="main" tabIndex={-1} className="w-full flex-1 px-4 pb-8 pt-1 outline-none sm:px-7">
+          <div className="mx-auto w-full max-w-[1760px]">{children}</div>
         </main>
       </div>
     </div>

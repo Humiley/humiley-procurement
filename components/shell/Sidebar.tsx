@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Role } from "@prisma/client";
-import { X, LogOut } from "lucide-react";
+import { X, LogOut, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/shared/Logo";
 import { signOutAction } from "@/app/actions/session";
@@ -45,6 +45,26 @@ export function Sidebar({
   const asideRef = useRef<HTMLElement>(null);
   const current = activeHref(pathname);
   const roles = user.roles;
+
+  // Collapsible nav groups (portal parity). The group holding the active item opens by default;
+  // on a title-less page (Dashboard) the primary "Procurement" group opens so the main nav shows.
+  const activeGroup = useMemo(() => {
+    for (let i = 0; i < NAV.length; i++) {
+      if (NAV[i].items.some((it) => it.href === current)) return i;
+    }
+    return -1;
+  }, [current]);
+  const [openGroups, setOpenGroups] = useState<Set<number>>(new Set([1]));
+  useEffect(() => {
+    setOpenGroups((prev) => new Set(prev).add(activeGroup >= 1 ? activeGroup : 1));
+  }, [activeGroup]);
+  const toggleGroup = (gi: number) =>
+    setOpenGroups((prev) => {
+      const n = new Set(prev);
+      if (n.has(gi)) n.delete(gi);
+      else n.add(gi);
+      return n;
+    });
 
   const initials =
     user.name
@@ -125,13 +145,24 @@ export function Sidebar({
           {NAV.map((group, gi) => {
             const items = group.items.filter((it) => canSeeNav(it, roles));
             if (items.length === 0) return null;
+            const hasTitle = !!group.titleKey;
+            const isOpen = !hasTitle || openGroups.has(gi);
             return (
               <div key={gi} className="mb-0.5">
-                {group.titleKey && (
-                  <p className="px-5 pb-[5px] pt-3.5 text-[9px] font-medium uppercase tracking-[1.5px] text-white/40">
-                    {t(group.titleKey)}
-                  </p>
+                {hasTitle && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(gi)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-5 pb-[5px] pt-3.5 text-[9px] font-medium uppercase tracking-[1.5px] text-white/40 transition hover:text-white/70"
+                  >
+                    <span>{t(group.titleKey!)}</span>
+                    <ChevronDown
+                      className={cn("h-3 w-3 transition-transform", isOpen ? "" : "-rotate-90")}
+                    />
+                  </button>
                 )}
+                {isOpen && (
                 <ul>
                   {items.map((it) => {
                     const active = it.href === current;
@@ -156,6 +187,7 @@ export function Sidebar({
                     );
                   })}
                 </ul>
+                )}
               </div>
             );
           })}

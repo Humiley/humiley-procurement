@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Menu, Search, Bell } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { UserMenu } from "./UserMenu";
+import { NAV } from "./nav";
 
 export function Topbar({
   user,
@@ -20,7 +21,18 @@ export function Topbar({
 }) {
   const t = useTranslations();
   const router = useRouter();
+  const pathname = usePathname();
   const [q, setQ] = useState("");
+
+  // Current page name (portal shows it in the topbar) — longest matching nav href wins.
+  const pageTitle = useMemo(() => {
+    let best: { href: string; labelKey: string } | null = null;
+    for (const g of NAV)
+      for (const it of g.items)
+        if (pathname === it.href || pathname.startsWith(it.href + "/"))
+          if (!best || it.href.length > best.href.length) best = it;
+    return best ? t(`nav.${best.labelKey}`) : "";
+  }, [pathname, t]);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +52,13 @@ export function Topbar({
       >
         <Menu className="h-[17px] w-[17px]" strokeWidth={2.5} />
       </button>
+
+      {/* Current page name (portal parity) */}
+      {pageTitle && (
+        <span className="hidden shrink-0 truncate text-[12px] font-semibold text-grey md:block md:max-w-[150px]">
+          {pageTitle}
+        </span>
+      )}
 
       {/* Document-number search: submits to the scan hub, which resolves any code. */}
       <form role="search" className="relative hidden max-w-md flex-1 sm:block" onSubmit={submitSearch}>

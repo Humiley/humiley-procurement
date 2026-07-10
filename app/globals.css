@@ -29,6 +29,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Brand the native form controls (were default browser blue in the audit screenshots). */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #205090;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+/* Selects styled as .field get the same chevron treatment as the portal's .sel-filter. */
+select.field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235C6470' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+}
+
 @layer components {
   /* Portal "Crextio" pill buttons (radius 14, px 3.5 / py 7). Primary = NAVY; emerald = the
      success/commit accent. Hovers step to the deep brand shade (not brightness) like the portal. */
