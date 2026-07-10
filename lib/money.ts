@@ -46,12 +46,12 @@ export function vatAmount(base: DecimalValue, pct: DecimalValue, scale = 2): Pri
   return new Prisma.Decimal(base).times(new Prisma.Decimal(pct).div(100)).toDecimalPlaces(scale);
 }
 
-const vndFmt = new Intl.NumberFormat("vi-VN", {
+const vndFmt = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "VND",
   maximumFractionDigits: 0,
 });
-const plainFmt = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+const plainFmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 /** Format a VND money value for display, e.g. "1.234.567 ₫". Accepts Decimal, string or number. */
 export function formatVnd(
@@ -67,7 +67,7 @@ export function formatVnd(
 export function formatQty(v: Prisma.Decimal | string | number | null | undefined): string {
   if (v === null || v === undefined) return "—";
   const d = new Prisma.Decimal(v);
-  return d.toDecimalPlaces(4).toNumber().toLocaleString("vi-VN", { maximumFractionDigits: 4 });
+  return d.toDecimalPlaces(4).toNumber().toLocaleString("en-US", { maximumFractionDigits: 4 });
 }
 
 /** Parse a user-typed money string ("1.234.567" or "1234567") into a Decimal. */

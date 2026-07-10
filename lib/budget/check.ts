@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { currentFiscalYear } from "@/lib/dates";
+import { fiscalYearOf } from "@/lib/dates";
 
 const D = Prisma.Decimal;
 
@@ -23,12 +23,15 @@ export type BudgetCheckRow = {
  * unbudgeted and never block (§9 keeps the ledger best-effort).
  */
 export async function checkPrBudget(prId: string): Promise<BudgetCheckRow[]> {
-  const fy = currentFiscalYear();
   const pr = await db.purchaseRequisition.findUnique({
     where: { id: prId },
     include: { lines: { include: { item: { select: { categoryId: true } } } } },
   });
   if (!pr) return [];
+  // The document's FY, matching what the commit ledger (lib/budget/index.ts) will later charge —
+  // NOT the processing year. A PR created 2025-12-30 and submitted 2026-01-02 must screen the
+  // same Budget row commitPr mutates, or the §9 BLOCK gate checks the wrong row.
+  const fy = fiscalYearOf(pr.createdAt);
 
   // aggregate the PR's would-be commitment per budget row
   const commitByBudget = new Map<string, Prisma.Decimal>();

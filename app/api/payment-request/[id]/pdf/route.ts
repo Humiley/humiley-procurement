@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { currentUser } from "@/lib/rbac";
+import { canViewPaymentRequest } from "@/lib/doc-authz";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { formatVnDate, formatVnDateTime } from "@/lib/dates";
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await canViewPaymentRequest(user, params.id))) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const q = await db.paymentRequest.findUnique({
     where: { id: params.id },
     include: {

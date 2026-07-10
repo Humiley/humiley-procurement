@@ -45,7 +45,7 @@ body {
   }
   /* compact modifier (portal .btn-sm) — declare-after so it overrides the base padding */
   .btn-sm {
-    @apply px-2.5 py-1 text-xs;
+    @apply !px-2.5 !py-1 !text-xs;
   }
   /* portal .btn-danger */
   .btn-danger {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useActionError } from "@/lib/use-action-error";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "@/components/shared/Toaster";
@@ -25,26 +24,21 @@ export function InvoiceDetailActions({
 }) {
   const t = useTranslations("invoice");
   const tc = useTranslations("common");
-  const fmtErr = useActionError();
   const router = useRouter();
   const [dialog, setDialog] = useState<null | "verify" | "paid" | "partial">(null);
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
 
   async function onSign(payload: SignaturePayload) {
-    try {
-      if (dialog === "verify") {
-        act(await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason }));
-      } else {
-        act(await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial" }));
-      }
-      setDialog(null);
-      toast(tc("done"));
-      start(() => router.refresh());
-    } catch (e) {
-      setDialog(null);
-      setError(fmtErr(e));
+    // errors propagate to SignatureDialog (shown inline, typed password kept) — was closing + discarding
+    if (dialog === "verify") {
+      act(await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason }));
+    } else {
+      act(await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial" }));
     }
+    setDialog(null);
+    toast(tc("done"));
+    start(() => router.refresh());
   }
 
   return (

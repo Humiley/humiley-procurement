@@ -126,10 +126,17 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string 
         data: { qtyAccepted: new D(l.qtyAccepted), qtyRejected: new D(l.qtyRejected), rejectReason: (l.rejectReason || "").trim() || null },
       });
       if (Number(l.qtyAccepted) > 0) {
-        await tx.poLine.update({
-          where: { id: gl.poLineId },
-          data: { receivedQty: new D(gl.poLine.receivedQty).plus(l.qtyAccepted) },
+        // §9 0% tolerance enforced AT ACCEPTANCE (not just creation): guarded increment so
+        // two open GRNs on the same PO line can't each accept the full outstanding qty and
+        // push receivedQty past the ordered qty. Only bumps when the result stays ≤ qty.
+        const maxPrev = new D(gl.poLine.qty).minus(l.qtyAccepted);
+        const bumped = await tx.poLine.updateMany({
+          where: { id: gl.poLineId, receivedQty: { lte: maxPrev.toString() } },
+          data: { receivedQty: { increment: new D(l.qtyAccepted) } },
         });
+        if (bumped.count === 0) {
+          throw new Error(`Over-receipt: accepting ${l.qtyAccepted} would exceed the ordered quantity for this line (another receipt was accepted first).`);
+        }
         // §10b: accepted catalog items enter stock at the PO price (moving-average IN);
         // rejected quantities never enter stock. Free-text lines carry no item → no stock.
         if (gl.poLine.itemId) {

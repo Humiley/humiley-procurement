@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { staleError } from "@/lib/workflow/transition";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
@@ -176,13 +177,20 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
   }
 
   await db.$transaction(async (tx) => {
+    // Atomic claim BEFORE any ledger mutation: only one verify can move the invoice off
+    // UNMATCHED. A concurrent second verify (both passed the pre-check, both signed, both
+    // reach here) finds count 0 and aborts — no double invoicedQty post, no double spend.
+    const claimed = await tx.invoice.updateMany({
+      where: { id: inv.id, matchStatus: "UNMATCHED" },
+      data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" },
+    });
+    if (claimed.count === 0) throw staleError();
     for (const l of inv.lines) {
       await tx.poLine.update({
         where: { id: l.poLineId },
         data: { invoicedQty: { increment: new D(l.qty) } },
       });
     }
-    await tx.invoice.update({ where: { id: inv.id }, data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" } });
   });
 
   if (match.matched) {
