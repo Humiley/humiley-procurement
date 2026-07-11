@@ -2,45 +2,29 @@
 
 Procurement is an **app of the Humiley Portal** — no separate login and **no separate domain**. It
 is served **under the one portal domain as a path**: `https://portal.humiley.com/procurement`
-(Next.js `basePath`). It ships as a standalone image with a bundled PostgreSQL 16 and a one-command
-`deploy.sh`, and runs as its own compose stack that the portal's Caddy routes to over a shared
-Docker network.
+(Next.js `basePath`).
 
-> **The one secret that must match:** `PORTAL_SSO_SECRET` (here) must equal the portal's
-> `TK_SSO_SECRET` (in `/opt/humiley-timekeeping/.env`). Otherwise the no-second-login handoff
-> silently falls back to the procurement login page. Copy it verbatim.
+## Recommended: the ONE combined stack (deploy with the portal)
 
----
+Procurement runs in the **portal's single docker-compose stack** — Portal + Procurement + Postgres +
+one Caddy, started by **one command**. Its SSO secret is the *same variable* as the portal's, so it
+can never drift out of sync. On the VPS:
 
-## Deploy (same VPS as the portal — recommended)
-
-Because it lives under `portal.humiley.com/procurement`, there is **no new DNS record and no new
-TLS certificate** — it rides the portal's existing domain and cert. The portal side is already
-wired: its `Caddyfile` routes `/procurement*` to this app over the shared `humiley_net` network.
-Two steps:
-
-**1. Update the portal once** — applies the round-5 fixes AND creates `humiley_net` + activates the
-`/procurement` route:
 ```bash
-cd /opt/humiley-timekeeping && ./update.sh
+cd /opt/humiley-timekeeping                 # the portal repo
+# (Procurement is cloned into ./humiley-procurement automatically by update.sh)
+./update.sh --bootstrap                     # first time — builds + migrates + seeds everything
+#   later:  ./update.sh                      # one command updates the whole stack
 ```
 
-**2. Deploy procurement:**
-```bash
-git clone https://github.com/Humiley/humiley-procurement.git /opt/humiley-procurement
-cd /opt/humiley-procurement
-cp .env.production.example .env
-nano .env      # set POSTGRES_PASSWORD, BOOTSTRAP_ADMIN_EMAIL, and PORTAL_SSO_SECRET =
-               # the portal's TK_SSO_SECRET (grep it: grep TK_SSO_SECRET /opt/humiley-timekeeping/.env)
-./deploy.sh --bootstrap        # do NOT use --edge (the portal's Caddy fronts it)
-```
+`update.sh` pulls both repos, generates every secret once into the single `.env`
+(`TK_SSO_SECRET`/`AUTH_SECRET`/`POSTGRES_PASSWORD`), builds the Portal + Procurement images, runs the
+Procurement migrations, and starts all containers. `--bootstrap` also seeds the §6 matrix + one
+ADMIN (**random password printed once — copy it**). `https://portal.humiley.com/procurement` comes
+up with the Portal at the root — one server, one domain, one command.
 
-That's it — `https://portal.humiley.com/procurement` comes up (the app prints a one-time admin
-password; **copy it**). Later updates are just `cd /opt/humiley-procurement && ./deploy.sh`.
-
-> Run the portal `./update.sh` (step 1) before step 2 so the shared network + route exist — but
-> `deploy.sh` creates `humiley_net` itself if missing, so it's resilient either way. Caddy 502s the
-> `/procurement` path until step 2 finishes; the portal itself is unaffected.
+> Everything below (this repo's own `docker-compose.yml` + `deploy.sh`) is the **standalone
+> alternative** — only for running Procurement on a *separate* host, not the combined stack.
 
 ---
 
