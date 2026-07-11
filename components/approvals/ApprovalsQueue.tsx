@@ -121,9 +121,19 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
                   </td>
                   <td className="sticky right-0 bg-white px-3 py-2.5 shadow-[-8px_0_8px_-8px_rgba(32,80,144,0.15)]">
                     <div className="flex justify-end gap-1.5">
-                      {decideBtn(r, "APPROVED", "bg-emerald text-white hover:opacity-90", t("approve"))}
-                      {decideBtn(r, "RETURNED", "bg-warning/15 text-warning hover:bg-warning/25", t("return"))}
-                      {decideBtn(r, "REJECTED", "bg-danger/10 text-danger hover:bg-danger/20", t("reject"))}
+                      {r.entityType === "VENDOR" ? (
+                        <>
+                          {decideBtn(r, "APPROVED", "bg-emerald text-white hover:opacity-90", t("approve"))}
+                          {decideBtn(r, "RETURNED", "bg-warning/15 text-warning hover:bg-warning/25", t("return"))}
+                          {decideBtn(r, "REJECTED", "bg-danger/10 text-danger hover:bg-danger/20", t("reject"))}
+                        </>
+                      ) : (
+                        // Documents are decided on their detail page, where the approver sees the
+                        // request form, the bill/receipt attachment and the full approval trail.
+                        <Link href={r.link} className="inline-flex items-center gap-1 rounded-lg bg-navy px-3 py-1 text-xs font-semibold text-white hover:bg-navyDeep">
+                          {t("reviewDecide")} →
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>

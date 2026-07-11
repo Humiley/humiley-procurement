@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
@@ -13,9 +14,15 @@ export default async function PaymentRequestsPage() {
   const t = await getTranslations("payreq");
   const st = await getTranslations("status");
   const seeAll = hasAnyRole(user, ["ACCOUNTANT", "ADMIN", "DIRECTOR", "PURCHASER"]);
+  // Visibility: staff see their own; a dept manager sees their department (+ own); Finance/PO/Director/Admin see all.
+  const where: Prisma.PaymentRequestWhereInput = seeAll
+    ? {}
+    : hasAnyRole(user, ["DEPT_MANAGER"]) && user.departmentId
+      ? { OR: [{ departmentId: user.departmentId }, { requesterId: user.id }] }
+      : { requesterId: user.id };
 
   const preqs = await db.paymentRequest.findMany({
-    where: seeAll ? {} : { requesterId: user.id },
+    where,
     orderBy: { createdAt: "desc" },
     include: { requester: { select: { name: true } }, vendor: { select: { code: true } } },
   });

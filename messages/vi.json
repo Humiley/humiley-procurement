@@ -337,7 +337,8 @@
       "VENDOR": "NCC",
       "PAYMENT_REQUEST": "Thanh toán",
       "GOODS_ISSUE": "Xuất kho"
-    }
+    },
+    "reviewDecide": "Xem & quyết định"
   },
   "notifications": {
     "title": "Thông báo",

@@ -337,7 +337,8 @@
       "VENDOR": "Vendor",
       "PAYMENT_REQUEST": "Payment",
       "GOODS_ISSUE": "Goods issue"
-    }
+    },
+    "reviewDecide": "Review & decide"
   },
   "notifications": {
     "title": "Notifications",

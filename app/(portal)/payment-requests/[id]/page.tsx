@@ -32,8 +32,8 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
   if (!q) notFound();
   const isRequester = q.requesterId === user.id;
   const isAccountant = hasAnyRole(user, ["ACCOUNTANT", "ADMIN"]);
-  const canSee = isRequester || isAccountant || hasAnyRole(user, ["PURCHASER", "DIRECTOR", "DEPT_MANAGER"]);
-  if (!canSee) notFound();
+  // A dept manager sees only their own department; Finance/Purchasing/Director see all.
+  const isDeptMgr = hasAnyRole(user, ["DEPT_MANAGER"]) && !!user.departmentId && q.departmentId === user.departmentId;
 
   const [steps, signatures, attachments] = await Promise.all([
     db.approvalStep.findMany({
@@ -44,6 +44,10 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
     db.electronicSignature.findMany({ where: { entityType: "PaymentRequest", entityId: q.id }, orderBy: { signedAt: "asc" } }),
     db.attachment.findMany({ where: { entityType: "PaymentRequest", entityId: q.id }, orderBy: { createdAt: "desc" } }),
   ]);
+
+  // An assigned approver can always open the request they must decide (even if out of dept scope).
+  const canSee = isRequester || isAccountant || hasAnyRole(user, ["PURCHASER", "DIRECTOR"]) || isDeptMgr || steps.some((s) => s.approverId === user.id);
+  if (!canSee) notFound();
 
   const timelineSteps = steps.map((s) => ({
     level: s.level,
