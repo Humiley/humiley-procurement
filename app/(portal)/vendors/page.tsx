@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import {
   MasterDataManager,
   type FieldDef,
@@ -84,6 +85,7 @@ export default async function VendorsPage() {
 
   return (
     <>
+      <HowItWorks guide="vendors" />
     <>
       <BankConfirmPanel rows={frozenRows} canConfirm={hasAnyRole(me, ["DIRECTOR", "ADMIN"])} />
       <VendorLifecyclePanel rows={lcRows} canManage={hasAnyRole(me, ["ADMIN", "PURCHASER", "DIRECTOR"])} />

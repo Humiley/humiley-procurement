@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { chapterOf, sectionOfChapter } from "@/lib/trade/hs-structure";
 import { HsExplorer, type HsRow } from "@/components/reference/HsExplorer";
 import { HsImportPanel } from "@/components/reference/HsImportPanel";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 
 /** §20 HS-code register — searchable/filterable HS 2022 catalogue + full chapter index. */
 export default async function HsCodesPage() {
@@ -49,6 +50,7 @@ export default async function HsCodesPage() {
         </div>
         {canImport ? <HsImportPanel /> : null}
       </div>
+      <HowItWorks guide="hs-codes" />
       <HsExplorer rows={rows} chapterCounts={chapterCounts} />
     </div>
   );

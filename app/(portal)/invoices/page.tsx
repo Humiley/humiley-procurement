@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import { decToString } from "@/lib/money";
 import { formatVnDate, daysBetween } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -44,6 +45,8 @@ export default async function InvoicesPage() {
           </Link>
         ) : null}
       </div>
+
+      <HowItWorks guide="invoices" />
 
       {agingTotals.size > 0 ? (
         <div className="flex flex-wrap gap-2">

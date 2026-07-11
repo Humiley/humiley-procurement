@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { FileText, CheckSquare, ShoppingCart, Bell, TrendingUp, PiggyBank, Timer, Banknote } from "lucide-react";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatVnDate, formatVnDateTime } from "@/lib/dates";
@@ -38,6 +39,8 @@ export default async function DashboardPage() {
         <h1 className="page-title">{t("welcome", { name: user.name })}</h1>
         <p className="mt-1 text-sm text-grey">{t("title")}</p>
       </div>
+
+      <HowItWorks guide="dashboard" />
 
       <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label={t("myRequisitions")} value={myPrs.length} icon={FileText} href="/requisitions" />

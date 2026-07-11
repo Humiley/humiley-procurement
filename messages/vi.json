@@ -485,7 +485,7 @@
     "colValue": "Giá trị",
     "stockCard": "Thẻ kho",
     "movements": "Giao dịch",
-    "noMovements": "Chưa có giao dịch cho vật tư này tại kho này.",
+    "noMovements": "Không có biến động kho trong 6 tháng qua.",
     "colMovement": "Số giao dịch",
     "colDate": "Ngày giờ",
     "colType": "Loại",
@@ -503,7 +503,13 @@
       "ADJUST_IN": "Điều chỉnh tăng",
       "ADJUST_OUT": "Điều chỉnh giảm",
       "RETURN_IN": "Nhập trả lại"
-    }
+    },
+    "chartByCategory": "Giá trị tồn theo nhóm",
+    "chartByWarehouse": "Giá trị tồn theo kho",
+    "chartMovementTrend": "Biến động kho — 6 tháng gần nhất",
+    "movementIn": "Nhập",
+    "movementOut": "Xuất",
+    "otherCategory": "Khác"
   },
   "trf": {
     "listTitle": "Chuyển kho",
@@ -1176,5 +1182,10 @@
   },
   "sso": {
     "signingIn": "Đang đăng nhập cho bạn…"
+  },
+  "guide": {
+    "how": "Cách hoạt động",
+    "roles": "Ai làm gì",
+    "tips": "Nên biết"
   }
 }

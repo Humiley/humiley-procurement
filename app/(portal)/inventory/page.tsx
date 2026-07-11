@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { HowItWorks } from "@/components/shared/HowItWorks";
+import { InventoryCharts } from "@/components/inv/InventoryCharts";
 import { findReorderBreaches } from "@/lib/stock/reorder";
 
 /** §10b stock overview — balances + dashboard (value, below-min, in-transit, slow movers). */
@@ -12,11 +14,12 @@ export default async function InventoryPage() {
   const t = await getTranslations("inventory");
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 3600 * 1000);
-  const [balances, breaches, inTransit, recentMoves] = await Promise.all([
+  const sixMonthsAgo = new Date(Date.now() - 183 * 24 * 3600 * 1000);
+  const [balances, breaches, inTransit, recentMoves, trendMoves] = await Promise.all([
     db.stockBalance.findMany({
       include: {
         warehouse: { select: { code: true } },
-        item: { select: { code: true, nameEn: true, uom: { select: { code: true } } } },
+        item: { select: { code: true, nameEn: true, category: { select: { nameEn: true } }, uom: { select: { code: true } } } },
       },
       orderBy: [{ warehouseId: "asc" }, { itemId: "asc" }],
     }),
@@ -26,6 +29,10 @@ export default async function InventoryPage() {
       where: { postedAt: { gte: ninetyDaysAgo } },
       select: { warehouseId: true, itemId: true },
       distinct: ["warehouseId", "itemId"],
+    }),
+    db.stockMovement.findMany({
+      where: { postedAt: { gte: sixMonthsAgo } },
+      select: { type: true, qty: true, unitCostVnd: true, postedAt: true },
     }),
   ]);
   const movedRecently = new Set(recentMoves.map((m) => `${m.warehouseId}|${m.itemId}`));
@@ -40,6 +47,7 @@ export default async function InventoryPage() {
         warehouseId: b.warehouseId,
         itemId: b.itemId,
         wh: b.warehouse.code,
+        cat: b.item.category.nameEn,
         item: `${b.item.code} · ${b.item.nameEn}`,
         uom: b.item.uom.code,
         qty,
@@ -53,6 +61,40 @@ export default async function InventoryPage() {
     rows.reduce((m, r) => m.set(r.wh, (m.get(r.wh) ?? 0) + r.value), new Map<string, number>()).entries(),
   );
 
+  // ── chart data ──
+  const byWarehouse = valueByWh.map(([name, value]) => ({ name, value: Math.round(value) }));
+  const catSorted = Array.from(
+    rows.reduce((m, r) => m.set(r.cat, (m.get(r.cat) ?? 0) + r.value), new Map<string, number>()).entries(),
+  ).sort((a, b) => b[1] - a[1]);
+  const byCategory = catSorted.slice(0, 6).map(([name, value]) => ({ name, value: Math.round(value) }));
+  const catRest = catSorted.slice(6).reduce((s, [, v]) => s + v, 0);
+  if (catRest > 0) byCategory.push({ name: t("otherCategory"), value: Math.round(catRest) });
+
+  // 6-month stock-movement trend (value in vs. out per month)
+  const buckets = new Map<string, { month: string; in: number; out: number; k: number }>();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    buckets.set(`${d.getFullYear()}-${d.getMonth()}`, {
+      month: d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+      in: 0,
+      out: 0,
+      k: d.getFullYear() * 12 + d.getMonth(),
+    });
+  }
+  for (const m of trendMoves) {
+    const d = new Date(m.postedAt);
+    const b = buckets.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (!b) continue;
+    const val = Number(decToString(m.qty, 4)) * Number(decToString(m.unitCostVnd, 2));
+    if (m.type.endsWith("_IN")) b.in += val;
+    else b.out += val;
+  }
+  const trend = Array.from(buckets.values())
+    .sort((a, b) => a.k - b.k)
+    .map(({ month, in: i, out }) => ({ month, in: Math.round(i), out: Math.round(out) }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -61,6 +103,8 @@ export default async function InventoryPage() {
           {t("requestIssue")}
         </Link>
       </div>
+
+      <HowItWorks guide="inventory" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard label={t("kpiLines")} value={rows.length.toLocaleString("en-US")} />
@@ -76,37 +120,22 @@ export default async function InventoryPage() {
         </Link>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="card p-4">
-          <h3 className="label">{t("valueByWarehouse")}</h3>
-          {valueByWh.length === 0 ? (
-            <p className="text-sm text-grey">{t("empty")}</p>
-          ) : (
-            <ul className="space-y-1.5 text-sm">
-              {valueByWh.map(([wh, v]) => (
-                <li key={wh} className="flex items-center justify-between">
-                  <span className="font-semibold">{wh}</span>
-                  <span className="tabular-nums">{Math.round(v).toLocaleString("en-US")} ₫</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="card p-4">
-          <h3 className="label">{t("slowMovers")}</h3>
-          {slowMovers.length === 0 ? (
-            <p className="text-sm text-grey">{t("noSlowMovers")}</p>
-          ) : (
-            <ul className="space-y-1.5 text-sm">
-              {slowMovers.slice(0, 8).map((r) => (
-                <li key={r.id} className="flex items-center justify-between">
-                  <span>{r.wh} · {r.item}</span>
-                  <span className="tabular-nums text-grey">{r.qty.toLocaleString("en-US")} {r.uom}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <InventoryCharts byCategory={byCategory} byWarehouse={byWarehouse} trend={trend} />
+
+      <div className="card p-4">
+        <h3 className="label">{t("slowMovers")}</h3>
+        {slowMovers.length === 0 ? (
+          <p className="text-sm text-grey">{t("noSlowMovers")}</p>
+        ) : (
+          <ul className="space-y-1.5 text-sm">
+            {slowMovers.slice(0, 8).map((r) => (
+              <li key={r.id} className="flex items-center justify-between">
+                <span>{r.wh} · {r.item}</span>
+                <span className="tabular-nums text-grey">{r.qty.toLocaleString("en-US")} {r.uom}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {rows.length === 0 ? (

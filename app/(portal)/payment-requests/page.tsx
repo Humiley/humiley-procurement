@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import { decToString } from "@/lib/money";
 import { formatVnDate } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -30,6 +31,8 @@ export default async function PaymentRequestsPage() {
           {t("newButton")}
         </Link>
       </div>
+
+      <HowItWorks guide="payment-requests" />
 
       {seeAll && toPay.length > 0 ? (
         <div className="rounded-xl border border-emerald/30 bg-emerald/5 p-3">

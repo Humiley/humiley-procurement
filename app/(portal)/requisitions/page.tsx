@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { formatVnDate } from "@/lib/dates";
 import { PrList, type PrRow } from "@/components/pr/PrList";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 
 export default async function RequisitionsPage() {
   const user = await requireUser();
@@ -40,5 +41,10 @@ export default async function RequisitionsPage() {
     requesterName: p.requester.name,
   }));
 
-  return <PrList rows={rows} />;
+  return (
+    <div className="space-y-4">
+      <HowItWorks guide="requisitions" />
+      <PrList rows={rows} />
+    </div>
+  );
 }

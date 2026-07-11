@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import { formatVnDate } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
@@ -31,6 +32,8 @@ export default async function RfqsPage() {
           </Link>
         ) : null}
       </div>
+
+      <HowItWorks guide="rfqs" />
       {rfqs.length === 0 ? (
         <p className="card p-6 text-sm text-grey">{t("empty")}</p>
       ) : (

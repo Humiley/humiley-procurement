@@ -485,7 +485,7 @@
     "colValue": "Value",
     "stockCard": "Stock card",
     "movements": "Movements",
-    "noMovements": "No movements for this item in this warehouse yet.",
+    "noMovements": "No stock movements in the last 6 months.",
     "colMovement": "Movement",
     "colDate": "Date & time",
     "colType": "Type",
@@ -503,7 +503,13 @@
       "ADJUST_IN": "Adjust in",
       "ADJUST_OUT": "Adjust out",
       "RETURN_IN": "Return in"
-    }
+    },
+    "chartByCategory": "Stock value by category",
+    "chartByWarehouse": "Stock value by warehouse",
+    "chartMovementTrend": "Stock movement — last 6 months",
+    "movementIn": "In",
+    "movementOut": "Out",
+    "otherCategory": "Other"
   },
   "trf": {
     "listTitle": "Stock Transfers",
@@ -1176,5 +1182,10 @@
   },
   "sso": {
     "signingIn": "Signing you in…"
+  },
+  "guide": {
+    "how": "How it works",
+    "roles": "Who does what",
+    "tips": "Good to know"
   }
 }
