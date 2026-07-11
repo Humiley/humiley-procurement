@@ -69,7 +69,7 @@ export default async function GoodsIssueDetailPage({ params }: { params: { id: s
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory/issues" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{gi.issueNumber}</h1>
+        <h1 className="page-title tabular-nums">{gi.issueNumber}</h1>
         <StatusBadge status={gi.status} label={st.has(gi.status) ? st(gi.status) : gi.status} />
       </div>
 

@@ -1092,6 +1092,9 @@ model HsCode {
   mfnDutyPct    Decimal @default(0) @db.Decimal(6, 3)
   vatImportPct  Decimal @default(10) @db.Decimal(6, 3)
   notes         String?
+  category      String? // Humiley procurement grouping (HVAC, Electrical, …) for filtering
+  keywords      String? // extra search synonyms (comma-separated), e.g. "AHU, air handling unit"
+  dutyVerified  Boolean @default(false) // true = MFN/VAT/route researched; false = reference entry, confirm against the live tariff
 
   duties          HsCodeDuty[]
   itemTrades      ItemTrade[]

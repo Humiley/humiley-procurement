@@ -95,7 +95,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
           </ul>
         )}
         <p className="mt-3 text-xs text-grey">
-          {t("openapiHint")} <a href="/api/v1/openapi" className="font-mono text-navy hover:underline">/api/v1/openapi</a>
+          {t("openapiHint")} <a href="/api/v1/openapi" className="font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">/api/v1/openapi</a>
         </p>
       </div>
 

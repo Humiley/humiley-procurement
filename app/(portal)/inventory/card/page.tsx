@@ -100,7 +100,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">{r.number}</td>
+                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{r.number}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">{r.when}</td>
                   <td className="px-3 py-2.5">
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${r.isIn ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"}`}>
@@ -111,7 +111,7 @@ export default async function StockCardPage({ searchParams }: { searchParams: { 
                   <td className="px-3 py-2.5 text-right tabular-nums text-danger">{!r.isIn ? r.qty.toLocaleString("en-US") : ""}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{r.unitCost.toLocaleString("en-US")} ₫</td>
                   <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{r.balance.toLocaleString("en-US")}</td>
-                  <td className="px-3 py-2.5 font-mono text-xs">{r.ref}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums">{r.ref}</td>
                   <td className="px-3 py-2.5">{r.by}</td>
                 </tr>
               ))}

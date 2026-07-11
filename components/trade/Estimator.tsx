@@ -95,7 +95,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
                   }}
                 >
                   <span>{h.label}</span>
-                  <span className="font-mono text-xs font-bold text-navy">HS {h.hsCode}</span>
+                  <span className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap">HS {h.hsCode}</span>
                 </button>
               </li>
             ))}
@@ -151,7 +151,7 @@ export function Estimator({ rates }: { rates: Record<string, number> }) {
       {result ? (
         <div className="space-y-3">
           <div className="card p-4 text-sm">
-            <span className="font-mono font-bold text-navy">HS {result.hs.code}</span> — {result.hs.descriptionEn}
+            <span className="font-semibold text-navy tabular-nums whitespace-nowrap">HS {result.hs.code}</span> — {result.hs.descriptionEn}
             {result.hs.notes ? <p className="mt-1 rounded-lg bg-warning/10 px-3 py-1.5 text-xs text-body"><b className="text-warning">{t("note")}:</b> {result.hs.notes}</p> : null}
           </div>
           <div className="overflow-x-auto card">

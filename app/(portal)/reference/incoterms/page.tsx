@@ -33,7 +33,7 @@ export default async function IncotermsPage() {
             {INCOTERMS_BOOK.map((i) => (
               <tr key={i.code} className="border-b border-line last:border-0 hover:bg-grey/5">
                 <td className="px-3 py-2.5">
-                  <span className="font-mono text-sm font-bold text-navy">{i.code}</span>
+                  <span className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{i.code}</span>
                   <span className="ml-2">{i.nameEn}</span>
                   <span className="block text-xs italic text-grey">{i.nameVn}</span>
                 </td>

@@ -49,11 +49,11 @@ export default async function RfqsPage() {
             <tbody>
               {rfqs.map((r) => (
                 <tr key={r.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                     <Link href={`/rfqs/${r.id}`} className="hover:underline">{r.rfqNumber}</Link>
                   </td>
                   <td className="max-w-[260px] truncate px-3 py-2.5">{r.title}</td>
-                  <td className="px-3 py-2.5 font-mono text-xs">{r.pr?.prNumber || "—"}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums">{r.pr?.prNumber || "—"}</td>
                   <td className="px-3 py-2.5">{formatVnDate(r.dueDate)}</td>
                   <td className="px-3 py-2.5 text-center">{r.quotes.length} / {r.vendors.length}</td>
                   <td className="px-3 py-2.5"><StatusBadge status={r.status} label={st.has(r.status) ? st(r.status) : r.status} /></td>

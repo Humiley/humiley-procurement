@@ -37,11 +37,11 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/invoices" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{inv.invoiceNumber}</h1>
+        <h1 className="page-title tabular-nums">{inv.invoiceNumber}</h1>
         <StatusBadge status={inv.matchStatus} label={st.has(inv.matchStatus) ? st(inv.matchStatus) : inv.matchStatus} />
         <StatusBadge status={inv.paymentStatus} label={st.has(inv.paymentStatus) ? st(inv.paymentStatus) : inv.paymentStatus} />
         <span className="ml-auto text-xs text-grey">
-          {inv.vendorInvoiceNo} · {inv.vendor.code} · {t("po")}: <Link className="font-mono text-navy hover:underline" href={`/purchase-orders/${inv.po.id}`}>{inv.po.poNumber}</Link>
+          {inv.vendorInvoiceNo} · {inv.vendor.code} · {t("po")}: <Link className="font-semibold text-navy tabular-nums whitespace-nowrap hover:underline" href={`/purchase-orders/${inv.po.id}`}>{inv.po.poNumber}</Link>
           {" · "}{t("colDue")}: <b>{formatVnDate(inv.dueDate)}</b>
           {inv.paidDate ? <> · {t("paidOn")}: {formatVnDate(inv.paidDate)}</> : null}
         </span>

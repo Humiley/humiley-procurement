@@ -32,7 +32,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/contracts" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{c.contractNumber}</h1>
+        <h1 className="page-title tabular-nums">{c.contractNumber}</h1>
         <StatusBadge status={c.status} label={st.has(c.status) ? st(c.status) : c.status} />
       </div>
 
@@ -77,7 +77,7 @@ export default async function ContractDetailPage({ params }: { params: { id: str
             <ul className="space-y-1.5 text-sm">
               {c.purchaseOrders.map((p) => (
                 <li key={p.id} className="flex items-center justify-between">
-                  <Link href={`/purchase-orders/${p.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{p.poNumber}</Link>
+                  <Link href={`/purchase-orders/${p.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{p.poNumber}</Link>
                   <span className="tabular-nums">{Number(decToString(p.total, 0)).toLocaleString("en-US")} ₫</span>
                   <StatusBadge status={p.status} label={st.has(p.status) ? st(p.status) : p.status} />
                 </li>

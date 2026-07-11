@@ -36,7 +36,7 @@ export default async function TransferDetailPage({ params }: { params: { id: str
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory/transfers" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{trf.transferNumber}</h1>
+        <h1 className="page-title tabular-nums">{trf.transferNumber}</h1>
         <StatusBadge status={trf.status} label={st.has(trf.status) ? st(trf.status) : trf.status} />
       </div>
 

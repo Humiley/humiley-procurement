@@ -66,7 +66,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { enti
                 <tr key={r.id} className="border-b border-line last:border-0">
                   <td className="px-3 py-2 whitespace-nowrap text-xs">{formatVnDateTime(r.createdAt)}</td>
                   <td className="px-3 py-2">{r.user?.name ?? "—"}</td>
-                  <td className="px-3 py-2 font-mono text-xs font-bold text-navy">{r.action}</td>
+                  <td className="px-3 py-2 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{r.action}</td>
                   <td className="px-3 py-2 font-mono text-xs">{r.entityType}<span className="text-grey"> · {r.entityId.slice(-8)}</span></td>
                   <td className="max-w-[320px] truncate px-3 py-2 font-mono text-[11px] text-grey">{r.afterJson ? JSON.stringify(r.afterJson).slice(0, 120) : "—"}</td>
                 </tr>

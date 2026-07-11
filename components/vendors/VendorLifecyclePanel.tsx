@@ -50,7 +50,7 @@ export function VendorLifecyclePanel({ rows, canManage }: { rows: VendorLcRow[];
       <ul className="space-y-1.5">
         {actionable.map((v) => (
           <li key={v.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm">
-            <span className="font-mono text-xs font-bold text-navy">{v.code}</span>
+            <span className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{v.code}</span>
             <span className="min-w-0 flex-1 truncate">{v.nameEn}</span>
             <span className="rounded bg-grey/10 px-1.5 py-0.5 text-[10px] font-bold text-grey">{v.status}</span>
             {v.status === "DRAFT" ? (

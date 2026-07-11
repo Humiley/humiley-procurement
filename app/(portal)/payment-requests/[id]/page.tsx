@@ -68,7 +68,7 @@ export default async function PaymentRequestDetailPage({ params }: { params: { i
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/payment-requests" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{q.paymentRequestNumber}</h1>
+        <h1 className="page-title tabular-nums">{q.paymentRequestNumber}</h1>
         <StatusBadge status={q.status} label={st.has(q.status) ? st(q.status) : q.status} />
         <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{t(`type.${q.type}`)}</span>
         {q.verifiedById ? <span className="rounded bg-emerald/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald">{t("verifiedBadge")}</span> : null}

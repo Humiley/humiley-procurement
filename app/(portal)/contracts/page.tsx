@@ -56,7 +56,7 @@ export default async function ContractsPage() {
                 const expiring = c.status === "ACTIVE" && daysLeft <= c.renewalAlertDays;
                 return (
                   <tr key={c.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                    <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                    <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                       <Link href={`/contracts/${c.id}`} className="hover:underline">{c.contractNumber}</Link>
                     </td>
                     <td className="px-3 py-2.5">{c.vendor.code} <span className="text-grey">· {c.vendor.nameEn}</span></td>

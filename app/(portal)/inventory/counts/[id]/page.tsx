@@ -39,7 +39,7 @@ export default async function CountDetailPage({ params }: { params: { id: string
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/inventory/counts" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{count.countNumber}</h1>
+        <h1 className="page-title tabular-nums">{count.countNumber}</h1>
         <StatusBadge status={count.status} label={st.has(count.status) ? st(count.status) : count.status} />
         <span className="rounded bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">{count.warehouse.code}</span>
         <span className="text-sm text-grey">{formatVnDate(count.countDate)}</span>

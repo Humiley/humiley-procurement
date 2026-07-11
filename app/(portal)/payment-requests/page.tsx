@@ -37,7 +37,7 @@ export default async function PaymentRequestsPage() {
           <ul className="space-y-1">
             {toPay.map((q) => (
               <li key={q.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <Link href={`/payment-requests/${q.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{q.paymentRequestNumber}</Link>
+                <Link href={`/payment-requests/${q.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{q.paymentRequestNumber}</Link>
                 <span className="min-w-0 flex-1 truncate">{q.payeeName}</span>
                 <span className="text-xs text-grey">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</span>
                 <b className="text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</b>
@@ -66,10 +66,10 @@ export default async function PaymentRequestsPage() {
             <tbody>
               {preqs.map((q) => (
                 <tr key={q.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                     <Link href={`/payment-requests/${q.id}`} className="hover:underline">{q.paymentRequestNumber}</Link>
                   </td>
-                  <td className="px-3 py-2.5 text-xs">{t(`type.${q.type}`)}</td>
+                  <td className="px-3 py-2.5">{t(`type.${q.type}`)}</td>
                   <td className="max-w-[200px] truncate px-3 py-2.5">{q.payeeName}{q.vendor ? <span className="text-xs text-grey"> · {q.vendor.code}</span> : null}</td>
                   <td className="px-3 py-2.5">{q.requester.name}</td>
                   <td className="px-3 py-2.5">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</td>

@@ -104,7 +104,7 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
                   <td className="px-3 py-2.5">
                     <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{t(`type.${r.entityType}`)}</span>
                   </td>
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                     <Link href={r.link} className="hover:underline">{r.ref}</Link>
                   </td>
                   <td className="max-w-[240px] truncate px-3 py-2.5" title={r.title}>{r.title}</td>

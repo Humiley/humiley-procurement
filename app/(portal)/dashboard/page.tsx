@@ -94,7 +94,7 @@ export default async function DashboardPage() {
                 <ul className="space-y-1.5 text-sm">
                   {mgr.deliveriesDue.map((d) => (
                     <li key={d.id} className="flex items-center justify-between">
-                      <Link href={`/purchase-orders/${d.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{d.poNumber}</Link>
+                      <Link href={`/purchase-orders/${d.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{d.poNumber}</Link>
                       <span className="text-grey">{d.vendor}</span>
                       <span>{formatVnDate(d.expected)}</span>
                     </li>
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
                 <ul className="space-y-1.5 text-sm">
                   {mgr.expiringContracts.map((c) => (
                     <li key={c.id} className="flex items-center justify-between">
-                      <Link href={`/contracts/${c.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{c.contractNumber}</Link>
+                      <Link href={`/contracts/${c.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{c.contractNumber}</Link>
                       <span className="text-grey">{c.vendor}</span>
                       <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-warning">{t("inDays", { days: c.daysLeft })}</span>
                     </li>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
               <ul className="divide-y divide-line">
                 {myPrs.slice(0, 6).map((p) => (
                   <li key={p.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                    <Link href={`/requisitions/${p.id}`} className="font-mono text-xs font-bold text-navy hover:underline">{p.prNumber}</Link>
+                    <Link href={`/requisitions/${p.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{p.prNumber}</Link>
                     <span className="min-w-0 flex-1 truncate text-grey">{p.purpose}</span>
                     <StatusBadge status={p.status} label={st.has(p.status) ? st(p.status) : p.status} />
                   </li>

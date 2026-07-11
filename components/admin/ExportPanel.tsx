@@ -74,7 +74,7 @@ export function ExportPanel({ invoiceCount, paymentCount, batches }: { invoiceCo
           <ul className="space-y-1.5 text-sm">
             {batches.map((b) => (
               <li key={b.batchNumber} className="flex flex-wrap items-center gap-3">
-                <span className="font-mono text-xs font-bold text-navy">{b.batchNumber}</span>
+                <span className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{b.batchNumber}</span>
                 <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{b.kind}</span>
                 <span className="tabular-nums">{b.rowCount} {t("rows")}</span>
                 <span className="text-xs text-grey">{b.by} · {b.at}</span>

@@ -79,11 +79,11 @@ export default async function InvoicesPage() {
                 const b = bucket(i.dueDate, i.paymentStatus);
                 return (
                   <tr key={i.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                    <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                    <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                       <Link href={`/invoices/${i.id}`} className="hover:underline">{i.invoiceNumber}</Link>
                     </td>
                     <td className="px-3 py-2.5 text-xs">{i.vendorInvoiceNo} <span className="text-grey">· {i.vendor.code}</span></td>
-                    <td className="px-3 py-2.5 font-mono text-xs">{i.po.poNumber}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums">{i.po.poNumber}</td>
                     <td className="px-3 py-2.5">{formatVnDate(i.dueDate)}</td>
                     <td className="px-3 py-2.5 text-right font-semibold text-navy">{Number(decToString(i.total, 0)).toLocaleString("en-US")} ₫</td>
                     <td className="px-3 py-2.5"><StatusBadge status={i.matchStatus} label={st.has(i.matchStatus) ? st(i.matchStatus) : i.matchStatus} /></td>

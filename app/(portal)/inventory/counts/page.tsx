@@ -45,7 +45,7 @@ export default async function CountsPage() {
             <tbody>
               {counts.map((c) => (
                 <tr key={c.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                  <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                     <Link href={`/inventory/counts/${c.id}`} className="hover:underline">{c.countNumber}</Link>
                   </td>
                   <td className="px-3 py-2.5 font-semibold">{c.warehouse.code}</td>

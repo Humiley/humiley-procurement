@@ -43,7 +43,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/goods-receipts" className="text-sm text-grey hover:text-navy">← {t("listTitle")}</Link>
-        <h1 className="page-title font-mono">{grn.grnNumber}</h1>
+        <h1 className="page-title tabular-nums">{grn.grnNumber}</h1>
         <StatusBadge status={grn.status} label={st.has(grn.status) ? st(grn.status) : grn.status} />
         {hasLots ? (
           <a href={`/inventory/labels?grn=${grn.id}`} className="btn-outline">
@@ -51,7 +51,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
           </a>
         ) : null}
         <span className="ml-auto text-xs text-grey">
-          {t("po")}: <Link className="font-mono text-navy hover:underline" href={`/purchase-orders/${grn.po.id}`}>{grn.po.poNumber}</Link>
+          {t("po")}: <Link className="font-semibold text-navy tabular-nums whitespace-nowrap hover:underline" href={`/purchase-orders/${grn.po.id}`}>{grn.po.poNumber}</Link>
           {" · "}{grn.po.vendor.code} · {grn.warehouse.code} · {formatVnDate(grn.receivedDate)} · {grn.receivedBy.name}
         </span>
       </div>
@@ -76,7 +76,7 @@ export default async function GrnDetailPage({ params }: { params: { id: string }
                 <td className="px-3 py-2.5 text-right tabular-nums text-emerald">{formatQty(l.qtyAccepted)}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums text-danger">{formatQty(l.qtyRejected)}</td>
                 <td className="px-3 py-2.5 text-xs text-grey">{l.rejectReason || "—"}</td>
-                <td className="px-3 py-2.5 font-mono text-xs">{l.lot ? l.lot.lotNumber : "—"}</td>
+                <td className="px-3 py-2.5 text-xs tabular-nums">{l.lot ? l.lot.lotNumber : "—"}</td>
               </tr>
             ))}
           </tbody>

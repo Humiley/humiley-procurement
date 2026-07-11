@@ -1,5 +1,6 @@
 import { PrismaClient, type Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { HS_CATALOG } from "../lib/trade/hs-catalog";
 
 const db = new PrismaClient();
 const YEAR = new Date().getFullYear();   // demo docs follow the current year
@@ -393,26 +394,27 @@ async function seedTradeReference() {
     formIds.set(f.code, row.id);
   }
 
-  const HS: { code: string; en: string; vn: string; uom: string; mfn: number; vat: number; notes?: string; pref: [string, number][] }[] = [
-    { code: "8415.83", en: "Air conditioning machines, not incorporating a refrigerating unit (AHU)", vn: "Máy điều hòa không khí không gắn bộ lạnh (AHU)", uom: "unit", mfn: 20, vat: 10, notes: "MEPS energy-efficiency check per MOIT for finished units.", pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5], ["EUR1", 7.5]] },
-    { code: "8414.59", en: "Fans — other (industrial/plug fans)", vn: "Quạt công nghiệp — loại khác", uom: "unit", mfn: 12.5, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 3], ["EUR1", 5]] },
-    { code: "8414.30", en: "Compressors of a kind used in refrigerating equipment", vn: "Máy nén dùng trong thiết bị lạnh", uom: "unit", mfn: 3, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 0], ["CPTPP", 0]] },
-    { code: "8421.39", en: "Filtering/purifying machinery for gases (HEPA housings, filter units)", vn: "Thiết bị lọc/làm sạch khí (hộp lọc HEPA)", uom: "unit", mfn: 7, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["EUR1", 2]] },
-    { code: "7019.90", en: "Glass fibre articles (filter media)", vn: "Sản phẩm sợi thủy tinh (vật liệu lọc)", uom: "kg", mfn: 10, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0]] },
-    { code: "8504.40", en: "Static converters (VFD, inverters, rectifiers)", vn: "Bộ biến đổi tĩnh điện (biến tần, chỉnh lưu)", uom: "unit", mfn: 10, vat: 10, notes: "Energy-label check for motors/drives per MOIT circulars.", pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_VK", 0], ["EUR1", 3]] },
-    { code: "8537.10", en: "Control panels/boards ≤ 1,000 V", vn: "Tủ/bảng điều khiển điện áp ≤ 1.000 V", uom: "unit", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5]] },
-    { code: "9032.89", en: "Automatic regulating/controlling instruments — other (controllers, sensors)", vn: "Thiết bị điều chỉnh/điều khiển tự động — loại khác", uom: "unit", mfn: 5, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 0], ["CPTPP", 0]] },
-    { code: "8481.80", en: "Taps, cocks, valves — other (dampers, control valves)", vn: "Van, vòi — loại khác (van gió, van điều khiển)", uom: "unit", mfn: 12, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["EUR1", 4]] },
-    { code: "8536.20", en: "Automatic circuit breakers ≤ 1,000 V (MCB)", vn: "Áptômát tự động ≤ 1.000 V (MCB)", uom: "unit", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_VK", 5]] },
-    { code: "8536.49", en: "Relays/contactors > 60 V", vn: "Rơle, khởi động từ > 60 V", uom: "unit", mfn: 10, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0]] },
-    { code: "8544.49", en: "Insulated electric conductors ≤ 1,000 V (cable)", vn: "Dây dẫn điện cách điện ≤ 1.000 V (cáp)", uom: "kg", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5]] },
+  // Traded codes: MFN/VAT/route researched (dutyVerified) + linked to catalog items.
+  const HS: { code: string; en: string; vn: string; uom: string; cat: string; mfn: number; vat: number; notes?: string; pref: [string, number][] }[] = [
+    { code: "8415.83", en: "Air conditioning machines, not incorporating a refrigerating unit (AHU)", vn: "Máy điều hòa không khí không gắn bộ lạnh (AHU)", uom: "unit", cat: "HVAC & Refrigeration", mfn: 20, vat: 10, notes: "MEPS energy-efficiency check per MOIT for finished units.", pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5], ["EUR1", 7.5]] },
+    { code: "8414.59", en: "Fans — other (industrial/plug fans)", vn: "Quạt công nghiệp — loại khác", uom: "unit", cat: "Air Movement", mfn: 12.5, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 3], ["EUR1", 5]] },
+    { code: "8414.30", en: "Compressors of a kind used in refrigerating equipment", vn: "Máy nén dùng trong thiết bị lạnh", uom: "unit", cat: "HVAC & Refrigeration", mfn: 3, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 0], ["CPTPP", 0]] },
+    { code: "8421.39", en: "Filtering/purifying machinery for gases (HEPA housings, filter units)", vn: "Thiết bị lọc/làm sạch khí (hộp lọc HEPA)", uom: "unit", cat: "Air Filtration", mfn: 7, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["EUR1", 2]] },
+    { code: "7019.90", en: "Glass fibre articles (filter media)", vn: "Sản phẩm sợi thủy tinh (vật liệu lọc)", uom: "kg", cat: "Air Filtration", mfn: 10, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0]] },
+    { code: "8504.40", en: "Static converters (VFD, inverters, rectifiers)", vn: "Bộ biến đổi tĩnh điện (biến tần, chỉnh lưu)", uom: "unit", cat: "Electrical", mfn: 10, vat: 10, notes: "Energy-label check for motors/drives per MOIT circulars.", pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_VK", 0], ["EUR1", 3]] },
+    { code: "8537.10", en: "Control panels/boards ≤ 1,000 V", vn: "Tủ/bảng điều khiển điện áp ≤ 1.000 V", uom: "unit", cat: "Electrical", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5]] },
+    { code: "9032.89", en: "Automatic regulating/controlling instruments — other (controllers, sensors)", vn: "Thiết bị điều chỉnh/điều khiển tự động — loại khác", uom: "unit", cat: "Instruments", mfn: 5, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AJ", 0], ["CPTPP", 0]] },
+    { code: "8481.80", en: "Taps, cocks, valves — other (dampers, control valves)", vn: "Van, vòi — loại khác (van gió, van điều khiển)", uom: "unit", cat: "Valves & Actuators", mfn: 12, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["EUR1", 4]] },
+    { code: "8536.20", en: "Automatic circuit breakers ≤ 1,000 V (MCB)", vn: "Áptômát tự động ≤ 1.000 V (MCB)", uom: "unit", cat: "Electrical", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_VK", 5]] },
+    { code: "8536.49", en: "Relays/contactors > 60 V", vn: "Rơle, khởi động từ > 60 V", uom: "unit", cat: "Electrical", mfn: 10, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0]] },
+    { code: "8544.49", en: "Insulated electric conductors ≤ 1,000 V (cable)", vn: "Dây dẫn điện cách điện ≤ 1.000 V (cáp)", uom: "kg", cat: "Cable & Wiring", mfn: 15, vat: 10, pref: [["FORM_E", 0], ["FORM_D", 0], ["FORM_AK", 5]] },
   ];
   const hsIds = new Map<string, string>();
   for (const h of HS) {
     const row = await db.hsCode.upsert({
       where: { code: h.code },
-      update: { descriptionEn: h.en, descriptionVn: h.vn, uomCustoms: h.uom, mfnDutyPct: h.mfn, vatImportPct: h.vat, notes: h.notes ?? null },
-      create: { code: h.code, descriptionEn: h.en, descriptionVn: h.vn, uomCustoms: h.uom, mfnDutyPct: h.mfn, vatImportPct: h.vat, notes: h.notes ?? null },
+      update: { descriptionEn: h.en, descriptionVn: h.vn, uomCustoms: h.uom, category: h.cat, mfnDutyPct: h.mfn, vatImportPct: h.vat, dutyVerified: true, notes: h.notes ?? null },
+      create: { code: h.code, descriptionEn: h.en, descriptionVn: h.vn, uomCustoms: h.uom, category: h.cat, mfnDutyPct: h.mfn, vatImportPct: h.vat, dutyVerified: true, notes: h.notes ?? null },
     });
     hsIds.set(h.code, row.id);
     for (const [form, pct] of h.pref) {
@@ -422,6 +424,17 @@ async function seedTradeReference() {
         create: { hsCodeId: row.id, cooFormTypeId: formIds.get(form)!, preferentialDutyPct: pct },
       });
     }
+  }
+
+  // Reference catalogue: curated HS 2022 subheadings across Humiley's procurement domains.
+  // Duty/VAT are NOT asserted (dutyVerified = false) — the team confirms against the live tariff.
+  for (const h of HS_CATALOG) {
+    if (hsIds.has(h.code)) continue; // never override a traded code
+    await db.hsCode.upsert({
+      where: { code: h.code },
+      update: { descriptionEn: h.en, descriptionVn: h.vn, category: h.category, keywords: h.keywords ?? null, dutyVerified: false },
+      create: { code: h.code, descriptionEn: h.en, descriptionVn: h.vn, category: h.category, keywords: h.keywords ?? null, dutyVerified: false },
+    });
   }
 
   const ITEM_TRADE: [string, string, string, boolean][] = [

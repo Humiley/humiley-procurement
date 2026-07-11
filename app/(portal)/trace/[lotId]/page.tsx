@@ -67,7 +67,7 @@ export default async function TracePage({ params }: { params: { lotId: string } 
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/scan" className="text-sm text-grey hover:text-navy">← {t("backToScan")}</Link>
         <h1 className="page-title">{t("title")}</h1>
-        <span className="rounded bg-navy/10 px-2 py-0.5 font-mono text-sm font-bold text-navy">{lot.lotNumber}</span>
+        <span className="rounded bg-navy/10 px-2 py-0.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{lot.lotNumber}</span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -115,13 +115,13 @@ export default async function TracePage({ params }: { params: { lotId: string } 
                   <li key={m.id} className="rounded-lg border border-line px-3 py-2 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${IN_TYPES.has(m.type) ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"}`}>{ti(m.type)}</span>
-                      <span className="font-mono text-xs font-bold text-navy">{m.movementNumber}</span>
+                      <span className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{m.movementNumber}</span>
                       <span className="tabular-nums">{Number(decToString(m.qty, 4)).toLocaleString("en-US")} {lot.item.uom.code}</span>
                       <span className="text-xs text-grey">{m.warehouse.code} · {formatVnDateTime(m.postedAt)} · {m.createdBy.name}</span>
                     </div>
                     {gi ? (
                       <p className="mt-1 text-xs text-grey">
-                        <Link href={`/inventory/issues/${gi.id}`} className="font-mono font-bold text-navy hover:underline">{gi.issueNumber}</Link>
+                        <Link href={`/inventory/issues/${gi.id}`} className="font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{gi.issueNumber}</Link>
                         {" → "}{gi.costCenter.code} · {gi.costCenter.nameEn} ({gi.department.code}{gi.projectCode ? ` · ${gi.projectCode}` : ""}) — {gi.purpose} — {gi.requester.name}
                       </p>
                     ) : m.note ? (

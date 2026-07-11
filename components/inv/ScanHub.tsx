@@ -137,7 +137,7 @@ export function ScanHub({ initialCode }: { initialCode?: string }) {
       {result?.kind === "lot" ? (
         <div className="space-y-3 card p-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded bg-navy/10 px-2 py-0.5 font-mono text-sm font-bold text-navy">{result.label}</span>
+            <span className="rounded bg-navy/10 px-2 py-0.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">{result.label}</span>
             <span className="text-sm">{result.item}</span>
             {result.expiryDate ? <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-warning">EXP {result.expiryDate}</span> : null}
             <span className="flex-1" />
@@ -196,7 +196,7 @@ export function ScanHub({ initialCode }: { initialCode?: string }) {
               <ul className="space-y-1 text-sm">
                 {result.lots.map((l) => (
                   <li key={l.lotId} className="flex items-center justify-between">
-                    <Link href={`/trace/${l.lotId}`} className="font-mono text-xs font-bold text-navy hover:underline">{l.lotNumber}</Link>
+                    <Link href={`/trace/${l.lotId}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{l.lotNumber}</Link>
                     {l.expiryDate ? <span className="text-xs text-warning">EXP {l.expiryDate}</span> : <span className="text-xs text-grey">—</span>}
                     <span className="tabular-nums">{Number(l.onHand).toLocaleString("en-US")}</span>
                   </li>

@@ -53,10 +53,10 @@ export default async function GoodsReceiptsPage() {
                 const rec = g.lines.reduce((s, l) => s + Number(l.qtyReceived), 0);
                 return (
                   <tr key={g.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                    <td className="px-3 py-2.5 font-mono text-xs font-bold text-navy">
+                    <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                       <Link href={`/goods-receipts/${g.id}`} className="hover:underline">{g.grnNumber}</Link>
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-xs">{g.po.poNumber} <span className="text-grey">· {g.po.vendor.code}</span></td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums">{g.po.poNumber} <span className="text-grey">· {g.po.vendor.code}</span></td>
                     <td className="px-3 py-2.5">{g.warehouse.code}</td>
                     <td className="px-3 py-2.5">{g.receivedBy.name}</td>
                     <td className="px-3 py-2.5">{formatVnDate(g.receivedDate)}</td>

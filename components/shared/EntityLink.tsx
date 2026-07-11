@@ -2,7 +2,10 @@ import Link from "next/link";
 import { cn } from "@/lib/cn";
 
 /**
- * Document-number chip that always links to the document (spec §22.3 <EntityLink>).
+ * Document-number link that always links to the document (spec §22.3 <EntityLink>).
+ * Rendered in the app font (Poppins) with tabular figures so codes align like monospace
+ * while staying consistent with every other cell — navy + semibold for emphasis. Inherits
+ * the surrounding text size so it never looks larger/smaller than its row.
  */
 export function EntityLink({
   href,
@@ -17,7 +20,7 @@ export function EntityLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center rounded border border-navy/20 bg-navy/5 px-1.5 py-0.5 font-mono text-[11px] font-bold text-navy transition hover:bg-navy/10",
+        "font-semibold text-navy tabular-nums whitespace-nowrap transition hover:underline",
         className,
       )}
     >

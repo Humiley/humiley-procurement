@@ -114,7 +114,7 @@ export function MatrixManager({ rows, pending, users }: { rows: MatrixRow[]; pen
             {pending.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{ta(s.entityType)}</span>
-                <span className="font-mono text-xs font-bold">{s.refLabel}</span>
+                <span className="text-xs font-semibold tabular-nums">{s.refLabel}</span>
                 <span className="text-xs text-grey">L{s.level} · {s.approver}</span>
                 <span className="flex-1" />
                 <select className="field" value={reassign[s.id] ?? ""} onChange={(e) => setReassign({ ...reassign, [s.id]: e.target.value })}>
