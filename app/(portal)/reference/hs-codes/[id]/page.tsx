@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { chapterOf, chapterInfo, sectionOfChapter } from "@/lib/trade/hs-structure";
@@ -22,6 +22,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
   const chapter = chapterOf(h.code);
   const chInfo = chapterInfo(chapter);
   const section = sectionOfChapter(chapter);
+  const vi = (await getLocale()) === "vi";
 
   return (
     <div className="space-y-4">
@@ -36,7 +37,7 @@ export default async function HsCodeDetailPage({ params }: { params: { id: strin
         <p className="text-xs italic text-grey">{h.descriptionVn}</p>
         {chInfo && section ? (
           <p className="mt-2 text-xs text-grey">
-            {t("section")} {section.roman} · {t("chapter")} {String(chapter).padStart(2, "0")} — {chInfo.en}
+            {t("section")} {section.roman} · {t("chapter")} {String(chapter).padStart(2, "0")} — {vi ? chInfo.vn : chInfo.en}
           </p>
         ) : null}
         <div className="mt-2 flex flex-wrap gap-4 text-xs">

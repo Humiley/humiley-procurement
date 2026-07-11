@@ -119,14 +119,12 @@ export const HS_CATALOG: HsCatalogEntry[] = [
   { code: "8501.52", en: "AC motors, multi-phase, output 750 W to 75 kW", vn: "Động cơ điện xoay chiều, nhiều pha, 750 W đến 75 kW", category: "Electrical", keywords: "motor, 3-phase motor, fan motor" },
   { code: "8501.53", en: "AC motors, multi-phase, output > 75 kW", vn: "Động cơ điện xoay chiều, nhiều pha, > 75 kW", category: "Electrical", keywords: "large motor" },
   { code: "8504.31", en: "Electrical transformers, power handling ≤ 1 kVA", vn: "Máy biến áp điện, công suất ≤ 1 kVA", category: "Electrical", keywords: "transformer, control transformer" },
-  { code: "8504.40", en: "Static converters (VFD, inverters, rectifiers, UPS)", vn: "Bộ biến đổi tĩnh (biến tần, bộ chỉnh lưu, UPS)", category: "Electrical", keywords: "VFD, inverter, drive, rectifier, UPS" },
   { code: "8536.10", en: "Fuses, for a voltage ≤ 1,000 V", vn: "Cầu chì, điện áp ≤ 1.000 V", category: "Electrical", keywords: "fuse" },
   { code: "8536.30", en: "Other apparatus for protecting electrical circuits", vn: "Thiết bị khác để bảo vệ mạch điện", category: "Electrical", keywords: "surge protector, SPD, protection relay" },
   { code: "8536.41", en: "Relays for a voltage ≤ 60 V", vn: "Rơ le cho điện áp ≤ 60 V", category: "Electrical", keywords: "relay" },
   { code: "8536.50", en: "Switches, other, for a voltage ≤ 1,000 V", vn: "Công tắc, loại khác, điện áp ≤ 1.000 V", category: "Electrical", keywords: "switch, selector, push button" },
   { code: "8536.69", en: "Plugs and sockets, for a voltage ≤ 1,000 V", vn: "Phích cắm và ổ cắm, điện áp ≤ 1.000 V", category: "Electrical", keywords: "socket, plug, connector" },
   { code: "8536.90", en: "Other apparatus (connectors, terminals) ≤ 1,000 V", vn: "Thiết bị khác (đầu nối, cực đấu dây) ≤ 1.000 V", category: "Electrical", keywords: "terminal block, connector, junction" },
-  { code: "8537.10", en: "Boards/panels for electric control ≤ 1,000 V", vn: "Bảng/tủ điều khiển điện ≤ 1.000 V", category: "Electrical", keywords: "control panel, distribution board, MCC" },
   { code: "8538.10", en: "Boards/panels/consoles for goods of 8537 (empty enclosures)", vn: "Bảng/tủ/bàn điều khiển cho hàng thuộc 8537 (vỏ tủ rỗng)", category: "Electrical", keywords: "enclosure, empty panel" },
   { code: "8538.90", en: "Parts for apparatus of headings 8535/8536/8537", vn: "Bộ phận cho thiết bị thuộc nhóm 8535/8536/8537", category: "Electrical", keywords: "din rail, panel parts" },
   { code: "8539.52", en: "Light-emitting diode (LED) lamps", vn: "Bóng đèn điốt phát quang (LED)", category: "Electrical", keywords: "LED lamp, bulb, tube" },
@@ -136,7 +134,6 @@ export const HS_CATALOG: HsCatalogEntry[] = [
 
   // ── Cable & wiring ─────────────────────────────────────────────────────
   { code: "8544.42", en: "Electric conductors ≤ 1,000 V, fitted with connectors", vn: "Dây dẫn điện ≤ 1.000 V, có đầu nối", category: "Cable & Wiring", keywords: "patch cable, harness, cordset" },
-  { code: "8544.49", en: "Electric conductors ≤ 1,000 V, not fitted with connectors", vn: "Dây dẫn điện ≤ 1.000 V, không có đầu nối", category: "Cable & Wiring", keywords: "cable, power cable, wire" },
   { code: "8544.60", en: "Electric conductors, for a voltage > 1,000 V", vn: "Dây dẫn điện, điện áp > 1.000 V", category: "Cable & Wiring", keywords: "MV cable, high voltage cable" },
   { code: "8544.20", en: "Co-axial cable and other co-axial electric conductors", vn: "Cáp đồng trục và dây dẫn điện đồng trục khác", category: "Cable & Wiring", keywords: "coaxial, signal cable" },
   { code: "8547.20", en: "Insulating fittings of plastics", vn: "Phụ kiện cách điện bằng plastic", category: "Cable & Wiring", keywords: "cable gland, insulator, bushing" },

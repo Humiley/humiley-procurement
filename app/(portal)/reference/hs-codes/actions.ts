@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
@@ -11,7 +12,8 @@ export type HsImportResult = {
   updated: number;
   skipped: number;
   errors: string[];
-  message?: string;
+  /** Message key for the client to translate (see HsImportPanel): done | notAuth | noRows | noCols. */
+  code: "done" | "notAuth" | "noRows" | "noCols";
 };
 
 /** Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded commas/newlines, "" escapes. */
@@ -50,7 +52,9 @@ const HEADER_ALIASES: Record<string, string> = {
   notes: "notes", note: "notes",
 };
 
-const HS_CODE_RE = /^\d{4}(\.\d{2}){0,3}$/; // 8415 · 8415.83 · 8415.83.10 · 8415.83.10.00
+// Dotted (8415 · 8415.83 · 8415.83.10 · 8415.83.10.00) OR plain 6/8/10-digit — the official
+// General Department of Vietnam Customs tariff is usually exported without dots.
+const HS_CODE_RE = /^(\d{4}(\.\d{2}){0,3}|\d{6}|\d{8}|\d{10})$/;
 
 /**
  * Import the official HS tariff from CSV (Admin / Purchasing only). Upserts by `code`, so it is
@@ -60,12 +64,12 @@ const HS_CODE_RE = /^\d{4}(\.\d{2}){0,3}$/; // 8415 · 8415.83 · 8415.83.10 · 
 export async function importHsCodes(csvText: string): Promise<HsImportResult> {
   const user = await requireUser();
   if (!hasAnyRole(user, ["ADMIN", "PURCHASER"])) {
-    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], message: "Not authorised to import HS codes." };
+    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], code: "notAuth" };
   }
 
   const rows = parseCsv(csvText || "");
   if (rows.length < 2) {
-    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], message: "No data rows found. Include a header row and at least one code." };
+    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], code: "noRows" };
   }
 
   const header = rows[0].map((h) => HEADER_ALIASES[h.trim().toLowerCase()] ?? h.trim().toLowerCase());
@@ -73,7 +77,7 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
   const ci = idx("code");
   const ei = idx("en");
   if (ci === -1 || ei === -1) {
-    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], message: 'CSV must have at least "code" and "descriptionEn" columns.' };
+    return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], code: "noCols" };
   }
   const vi = idx("vn"), gi = idx("category"), ki = idx("keywords"), ui = idx("uom"), mi = idx("mfn"), ti = idx("vat"), ni = idx("notes");
 
@@ -81,7 +85,10 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
   const errors: string[] = [];
   const num = (v: string | undefined) => {
     if (v == null || v.trim() === "") return null;
-    const n = Number(v.replace(/[%\s,]/g, ""));
+    let s = v.replace(/[%\s]/g, "");
+    // A single comma with no dot is a decimal separator (VN/EU); otherwise commas are thousands.
+    s = s.includes(",") && !s.includes(".") ? s.replace(",", ".") : s.replace(/,/g, "");
+    const n = Number(s);
     return Number.isFinite(n) ? n : null;
   };
 
@@ -95,15 +102,15 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
 
     const mfn = mi >= 0 ? num(cells[mi]) : null;
     const vat = ti >= 0 ? num(cells[ti]) : null;
-    const data = {
-      descriptionEn: en,
-      descriptionVn: vi >= 0 ? (cells[vi] ?? "").trim() : "",
-      category: gi >= 0 && cells[gi]?.trim() ? cells[gi].trim() : null,
-      keywords: ki >= 0 && cells[ki]?.trim() ? cells[ki].trim() : null,
-      uomCustoms: ui >= 0 && cells[ui]?.trim() ? cells[ui].trim() : null,
-      notes: ni >= 0 && cells[ni]?.trim() ? cells[ni].trim() : null,
-      ...(mfn != null ? { mfnDutyPct: mfn, vatImportPct: vat ?? 10, dutyVerified: true } : {}),
-    };
+    // Only set fields whose column is actually present + non-blank, so a partial re-import
+    // (e.g. the official tariff, which has no category/keywords) never wipes curated data.
+    const data: Prisma.HsCodeUncheckedUpdateInput = { descriptionEn: en };
+    if (vi >= 0 && cells[vi]?.trim()) data.descriptionVn = cells[vi].trim();
+    if (gi >= 0 && cells[gi]?.trim()) data.category = cells[gi].trim();
+    if (ki >= 0 && cells[ki]?.trim()) data.keywords = cells[ki].trim();
+    if (ui >= 0 && cells[ui]?.trim()) data.uomCustoms = cells[ui].trim();
+    if (ni >= 0 && cells[ni]?.trim()) data.notes = cells[ni].trim();
+    if (mfn != null) { data.mfnDutyPct = mfn; data.vatImportPct = vat ?? 10; data.dutyVerified = true; }
 
     try {
       const existing = await db.hsCode.findUnique({ where: { code }, select: { id: true } });
@@ -111,7 +118,7 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
         await db.hsCode.update({ where: { code }, data });
         updated++;
       } else {
-        await db.hsCode.create({ data: { code, ...data } });
+        await db.hsCode.create({ data: { code, descriptionVn: "", ...data } as Prisma.HsCodeUncheckedCreateInput });
         created++;
       }
     } catch {
@@ -129,12 +136,5 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
   });
   revalidatePath("/reference/hs-codes");
 
-  return {
-    ok: created + updated > 0,
-    created,
-    updated,
-    skipped,
-    errors,
-    message: `Imported ${created + updated} code(s): ${created} new, ${updated} updated${skipped ? `, ${skipped} skipped` : ""}.`,
-  };
+  return { ok: created + updated > 0, created, updated, skipped, errors, code: "done" };
 }

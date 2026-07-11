@@ -87,7 +87,11 @@ export function HsImportPanel() {
                 <div className={`flex items-start gap-2 rounded-lg p-3 text-[13px] ${result.ok ? "bg-emerald/10 text-emerald" : "bg-warning/10 text-warning"}`}>
                   {result.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none" /> : <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />}
                   <div>
-                    <p className="font-semibold">{result.message}</p>
+                    <p className="font-semibold">
+                      {result.code === "done"
+                        ? t("importResultDone", { total: result.created + result.updated, created: result.created, updated: result.updated, skipped: result.skipped })
+                        : t(`importResult_${result.code}`)}
+                    </p>
                     {result.errors.length ? (
                       <ul className="mt-1 list-inside list-disc text-body/70">
                         {result.errors.map((e, i) => <li key={i}>{e}</li>)}

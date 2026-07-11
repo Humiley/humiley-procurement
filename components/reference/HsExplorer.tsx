@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Search, Download, X, ChevronRight, BadgeCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { HS_SECTIONS, HS_CHAPTERS, chapterInfo, sectionOfChapter } from "@/lib/trade/hs-structure";
@@ -31,6 +31,7 @@ export type HsRow = {
  */
 export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCounts: Record<number, number> }) {
   const t = useTranslations("hs");
+  const vi = useLocale() === "vi";
   const [view, setView] = useState<"codes" | "chapters">("codes");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");
@@ -84,7 +85,12 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
 
   function exportCsv() {
     const head = ["HS code", "Description (EN)", "Description (VN)", "Chapter", "Category", "MFN %", "VAT %", "Duty verified", "Best route", "Linked items"];
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    // Quote for CSV, and neutralise spreadsheet formula injection (a leading = + - @ tab CR).
+    const esc = (v: unknown) => {
+      let s = String(v ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
     const lines = filtered.map((r) =>
       [r.code, r.en, r.vn, r.chapter ?? "", r.category ?? "", r.dutyVerified ? r.mfn : "", r.dutyVerified ? r.vat : "", r.dutyVerified ? "yes" : "reference", r.bestRoute ? `${r.bestRoute} ${r.bestRoutePct}%` : "", r.items]
         .map(esc)
@@ -140,10 +146,10 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
-            <select className="field w-auto" value={section} onChange={(e) => setSection(Number(e.target.value))}>
+            <select className="field w-auto max-w-[240px]" value={section} onChange={(e) => setSection(Number(e.target.value))}>
               <option value={0}>{t("allSections")}</option>
               {HS_SECTIONS.map((s) => (
-                <option key={s.no} value={s.no}>{s.roman}. {s.en}</option>
+                <option key={s.no} value={s.no}>{s.roman}. {vi ? s.vn : s.en}</option>
               ))}
             </select>
             <button
@@ -169,7 +175,7 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
             <div className="flex items-center gap-2 border-b border-line px-3 py-2 text-[13px]">
               <span className="text-grey">{t("filteredBy")}:</span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-2.5 py-1 font-semibold text-navy">
-                {t("chapter")} {String(activeChapter.ch).padStart(2, "0")} · {activeChapter.en}
+                {t("chapter")} {String(activeChapter.ch).padStart(2, "0")} · {vi ? activeChapter.vn : activeChapter.en}
                 <button type="button" onClick={() => setChapter(0)} className="hover:text-navyDeep" aria-label={t("clear")}>
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -239,7 +245,7 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
         <div className="space-y-3">
           <p className="text-[13px] text-grey">{t("chaptersIntro")}</p>
           {HS_SECTIONS.map((s) => (
-            <SectionBlock key={s.no} sectionNo={s.no} chapterCounts={chapterCounts} onPick={pickChapter} t={t} />
+            <SectionBlock key={s.no} sectionNo={s.no} chapterCounts={chapterCounts} onPick={pickChapter} t={t} vi={vi} />
           ))}
         </div>
       )}
@@ -261,8 +267,10 @@ function SectionBlock({
   chapterCounts,
   onPick,
   t,
+  vi,
 }: {
   sectionNo: number;
+  vi: boolean;
   chapterCounts: Record<number, number>;
   onPick: (ch: number) => void;
   t: ReturnType<typeof useTranslations>;
@@ -302,7 +310,7 @@ function SectionBlock({
                 )}
               >
                 <span className="w-6 flex-none font-bold tabular-nums text-navy">{String(c.ch).padStart(2, "0")}</span>
-                <span className="min-w-0 flex-1 truncate text-body">{c.en}</span>
+                <span className="min-w-0 flex-1 truncate text-body">{vi ? c.vn : c.en}</span>
                 {count > 0 ? <span className="flex-none rounded-full bg-navy/[0.07] px-1.5 text-[11px] font-semibold tabular-nums text-navy">{count}</span> : null}
               </button>
             );

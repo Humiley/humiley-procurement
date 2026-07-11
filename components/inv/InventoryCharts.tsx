@@ -37,7 +37,7 @@ export function InventoryCharts({ byCategory, byWarehouse, trend }: { byCategory
         <div className="card p-4">
           <h3 className="label mb-2">{t("chartByCategory")}</h3>
           {hasCat ? (
-            <div className="h-[260px]">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={byCategory} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2} stroke="none">
@@ -59,7 +59,7 @@ export function InventoryCharts({ byCategory, byWarehouse, trend }: { byCategory
         <div className="card p-4">
           <h3 className="label mb-2">{t("chartByWarehouse")}</h3>
           {hasWh ? (
-            <div className="h-[260px]">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={byWarehouse} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eef2f8" vertical={false} />
