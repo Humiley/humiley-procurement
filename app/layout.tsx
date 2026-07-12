@@ -27,8 +27,17 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   return (
-    <html lang={locale} className={poppins.variable}>
+    <html lang={locale} className={poppins.variable} suppressHydrationWarning>
       <body className="min-h-full text-body antialiased">
+        {/* When the Humiley Portal embeds this app in an iframe (Procurement as an in-portal
+            section), mark the root so our own top bar is hidden — the portal already provides the
+            user menu, language toggle and notifications. Runs before paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(window.self!==window.top){document.documentElement.setAttribute('data-embed','1')}}catch(e){document.documentElement.setAttribute('data-embed','1')}",
+          }}
+        />
         <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
       </body>
     </html>

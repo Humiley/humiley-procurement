@@ -209,3 +209,27 @@ select.field {
     opacity: 1;
   }
 }
+
+/* ── Embedded-in-portal mode ─────────────────────────────────────────────────
+   When the Humiley Portal frames this app as its in-portal "Procurement" section,
+   app/layout.tsx sets html[data-embed="1"]. On desktop (lg+, where our sidebar is
+   always visible) hide our own top bar so the portal's chrome — user menu, language
+   toggle, notifications — isn't duplicated. Below lg we keep it, because the mobile
+   menu button there is the only way to open our sidebar drawer. */
+/* Always hide our own user menu / language toggle / notifications when embedded — the portal's
+   own top bar already provides them, at any iframe width. The menu button, page name and search
+   stay, so a narrow embed (where our sidebar collapses to a drawer) is still navigable. */
+html[data-embed="1"] .app-topbar-tools {
+  display: none;
+}
+/* Wide embed: our sidebar is visible and the portal supplies the title + search, so drop our whole
+   bar for a seamless native-section look. (Below this our sidebar is a drawer and the bar's menu
+   button is the only way to open it, so we keep the slim bar there.) */
+@media (min-width: 1024px) {
+  html[data-embed="1"] .app-topbar {
+    display: none;
+  }
+  html[data-embed="1"] #main {
+    padding-top: 1rem;
+  }
+}

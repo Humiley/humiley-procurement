@@ -43,7 +43,7 @@ export function Topbar({
 
   return (
     // portal "Crextio" topbar: transparent, controls float as white pills with a soft shadow
-    <header className="flex items-center gap-2 bg-transparent px-4 pb-1 pt-4 sm:gap-3 sm:px-7">
+    <header className="app-topbar flex items-center gap-2 bg-transparent px-4 pb-1 pt-4 sm:gap-3 sm:px-7">
       <button
         type="button"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-grey shadow-pill transition hover:text-navy lg:hidden"
@@ -82,7 +82,7 @@ export function Topbar({
         <Search className="h-5 w-5" />
       </Link>
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="app-topbar-tools ml-auto flex items-center gap-2 sm:gap-3">
         <LocaleSwitcher />
         <Link
           href="/notifications"

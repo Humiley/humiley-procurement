@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Role } from "@prisma/client";
 import { Sidebar } from "./Sidebar";
@@ -18,6 +18,16 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const tc = useTranslations("common");
+  // Mark the root when the portal frames us (in-portal Procurement section) so the embed CSS in
+  // globals.css hides our own top bar. A pre-paint script in app/layout.tsx does this too; this
+  // runs after hydration to guarantee the attribute survives React's reconciliation of <html>.
+  useEffect(() => {
+    try {
+      if (window.self !== window.top) document.documentElement.setAttribute("data-embed", "1");
+    } catch {
+      document.documentElement.setAttribute("data-embed", "1"); // cross-origin access threw → we're framed
+    }
+  }, []);
   return (
     <div className="flex min-h-screen">
       <a
