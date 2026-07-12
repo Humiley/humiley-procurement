@@ -70,11 +70,16 @@ The Humiley Portal now carries Procurement as a first-class app (implemented in 
 `templates/index.html` + `app.py`):
 
 - **Sidebar section "Procurement"** with a "Procurement Portal · Cổng Mua hàng" entry
-  (external-link arrow, shopping-cart icon) — opens this app in a new tab at
-  `<procurementUrl>/sso?t=<signed token>` for a seamless no-password sign-in (falls back to
-  `/login?email=<user>` if `TK_SSO_SECRET`/`PORTAL_SSO_SECRET` are not configured)
-  (see §2.3 — the address is the join key). Already-authenticated users are bounced straight
-  to their procurement dashboard.
+  (shopping-cart icon). Clicking it renders this app **inline as an in-portal section**
+  (like HR/Projects) — NOT a new tab — in an `<iframe>` inside the portal content area,
+  loaded from `<procurementUrl>/sso?t=<signed token>` for a seamless no-password sign-in
+  (falls back to `/login?email=<user>` in-frame if `TK_SSO_SECRET`/`PORTAL_SSO_SECRET` are not
+  configured; shows a "not configured yet" message if no URL is set). In production this app is
+  served from the SAME origin (`portal.humiley.com/procurement`), so the frame + its session
+  cookie are same-origin and seamless. When framed, the app hides its own top bar (the portal
+  supplies the user menu / language / notifications) — see `app/layout.tsx` (sets
+  `html[data-embed="1"]`) + `globals.css`. A "Reload / Open in new tab" toolbar lets the user
+  pop it out full-screen (`tkOpenProcurement`).
 - **Opt-in access** exactly like HR/Finance: `procurement` is an appsAllowed opt-in app —
   hidden for everyone until an admin ticks the **Procurement** checkbox per employee in
   Access & Permissions (admins always see it). The permission matrix documents the capability;
