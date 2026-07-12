@@ -794,7 +794,7 @@
     "importTitle": "Import HS codes",
     "importSubtitle": "Load the official Vietnam Customs tariff. Rows are matched by code — existing codes are updated, new ones added, nothing is deleted.",
     "importColumns": "Columns (header row required):",
-    "importNote": "Only code and descriptionEn are required. A row with an mfn value is marked verified; rows without stay reference-only. Source: General Department of Vietnam Customs.",
+    "importNote": "Only code and descriptionEn are required. mfn = import duty %, vat = VAT % (usually 10), and each form column (form_e=ACFTA, form_d=ATIGA, eur1=EVFTA, cptpp…) is the preferential % under that Certificate of Origin. Rows with a rate become verified. Source: General Department of Vietnam Customs.",
     "chooseFile": "Choose CSV",
     "downloadTemplate": "Template",
     "close": "Close",

@@ -35,9 +35,9 @@ export function HsImportPanel() {
 
   function downloadTemplate() {
     const csvTpl =
-      "code,descriptionEn,descriptionVn,category,keywords,uom,mfn,vat\r\n" +
-      '8415.83,"Air conditioning machines, AHU","Máy điều hòa không khí (AHU)",HVAC & Refrigeration,"AHU, air handling",unit,20,10\r\n' +
-      '7318.15,"Screws and bolts, threaded","Vít và bu lông có ren",Fasteners,"bolt, screw",kg,,\r\n';
+      "code,descriptionEn,descriptionVn,uom,mfn,vat,form_e,form_d,form_ak,form_vk,form_aj,form_aanz,eur1,cptpp,form_s\r\n" +
+      '8415.83,"Air conditioning machines, AHU","Máy điều hòa không khí (AHU)",unit,20,10,0,0,5,,,,7.5,,\r\n' +
+      '7318.15,"Screws and bolts, threaded","Vít và bu lông có ren",kg,10,10,0,0,,,,,3,,\r\n';
     const url = URL.createObjectURL(new Blob(["﻿" + csvTpl], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -68,7 +68,7 @@ export function HsImportPanel() {
             <div className="mt-4 space-y-3">
               <div className="rounded-lg bg-panel p-3 text-xs text-grey">
                 <p className="font-semibold text-body">{t("importColumns")}</p>
-                <p className="mt-1"><code className="tabular-nums">code, descriptionEn, descriptionVn, category, keywords, uom, mfn, vat</code></p>
+                <p className="mt-1"><code className="tabular-nums">code, descriptionEn, descriptionVn, uom, mfn, vat, form_e, form_d, form_ak, form_vk, form_aj, form_aanz, eur1, cptpp, form_s</code></p>
                 <p className="mt-2">{t("importNote")}</p>
               </div>
 

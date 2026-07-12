@@ -52,6 +52,20 @@ const HEADER_ALIASES: Record<string, string> = {
   notes: "notes", note: "notes",
 };
 
+// C/O-form preferential-rate columns → CooFormCode. Import a rate per applicable form so the
+// duty-by-C/O matrix is populated from the official tariff (e.g. a Form E column of 0 = 0% ACFTA).
+const FORM_ALIASES: Record<string, string> = {
+  form_e: "FORM_E", forme: "FORM_E", "form e": "FORM_E", acfta: "FORM_E",
+  form_d: "FORM_D", formd: "FORM_D", "form d": "FORM_D", atiga: "FORM_D",
+  form_ak: "FORM_AK", formak: "FORM_AK", "form ak": "FORM_AK", akfta: "FORM_AK",
+  form_vk: "FORM_VK", formvk: "FORM_VK", "form vk": "FORM_VK", vkfta: "FORM_VK",
+  form_aj: "FORM_AJ", formaj: "FORM_AJ", "form aj": "FORM_AJ", ajcep: "FORM_AJ",
+  form_aanz: "FORM_AANZ", formaanz: "FORM_AANZ", "form aanz": "FORM_AANZ", aanzfta: "FORM_AANZ",
+  eur1: "EUR1", "eur.1": "EUR1", eur_1: "EUR1", evfta: "EUR1",
+  cptpp: "CPTPP",
+  form_s: "FORM_S", "form s": "FORM_S",
+};
+
 // Dotted (8415 · 8415.83 · 8415.83.10 · 8415.83.10.00) OR plain 6/8/10-digit — the official
 // General Department of Vietnam Customs tariff is usually exported without dots.
 const HS_CODE_RE = /^(\d{4}(\.\d{2}){0,3}|\d{6}|\d{8}|\d{10})$/;
@@ -80,6 +94,17 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
     return { ok: false, created: 0, updated: 0, skipped: 0, errors: [], code: "noCols" };
   }
   const vi = idx("vn"), gi = idx("category"), ki = idx("keywords"), ui = idx("uom"), mi = idx("mfn"), ti = idx("vat"), ni = idx("notes");
+
+  // C/O-form columns present in this CSV → their DB ids (skip forms that aren't seeded).
+  const rawHeader = rows[0].map((h) => h.trim().toLowerCase());
+  const forms = await db.cooFormType.findMany({ select: { id: true, code: true } });
+  const formIdByCode = new Map(forms.map((f) => [String(f.code), f.id]));
+  const formCols: { col: number; formId: string }[] = [];
+  rawHeader.forEach((h, col) => {
+    const fc = FORM_ALIASES[h];
+    const fid = fc ? formIdByCode.get(fc) : undefined;
+    if (fid) formCols.push({ col, formId: fid });
+  });
 
   let created = 0, updated = 0, skipped = 0;
   const errors: string[] = [];
@@ -110,16 +135,32 @@ export async function importHsCodes(csvText: string): Promise<HsImportResult> {
     if (ki >= 0 && cells[ki]?.trim()) data.keywords = cells[ki].trim();
     if (ui >= 0 && cells[ui]?.trim()) data.uomCustoms = cells[ui].trim();
     if (ni >= 0 && cells[ni]?.trim()) data.notes = cells[ni].trim();
-    if (mfn != null) { data.mfnDutyPct = mfn; data.vatImportPct = vat ?? 10; data.dutyVerified = true; }
+    if (mfn != null) { data.mfnDutyPct = mfn; data.vatImportPct = vat ?? 10; }
+    else if (vat != null) data.vatImportPct = vat; // VAT can be imported on its own
+    const formRatesPresent = formCols.some(({ col }) => num(cells[col]) != null);
+    if (mfn != null || formRatesPresent) data.dutyVerified = true; // researched duty/route → not a bare reference
 
     try {
       const existing = await db.hsCode.findUnique({ where: { code }, select: { id: true } });
+      let hsId: string;
       if (existing) {
         await db.hsCode.update({ where: { code }, data });
+        hsId = existing.id;
         updated++;
       } else {
-        await db.hsCode.create({ data: { code, descriptionVn: "", ...data } as Prisma.HsCodeUncheckedCreateInput });
+        const row = await db.hsCode.create({ data: { code, descriptionVn: "", ...data } as Prisma.HsCodeUncheckedCreateInput });
+        hsId = row.id;
         created++;
+      }
+      // Preferential rate per applicable C/O form → the duty-by-C/O matrix.
+      for (const { col, formId } of formCols) {
+        const rate = num(cells[col]);
+        if (rate == null) continue;
+        await db.hsCodeDuty.upsert({
+          where: { hsCodeId_cooFormTypeId: { hsCodeId: hsId, cooFormTypeId: formId } },
+          update: { preferentialDutyPct: rate },
+          create: { hsCodeId: hsId, cooFormTypeId: formId, preferentialDutyPct: rate },
+        });
       }
     } catch {
       skipped++;

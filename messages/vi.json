@@ -794,7 +794,7 @@
     "importTitle": "Nhập mã HS",
     "importSubtitle": "Tải biểu thuế Hải quan Việt Nam chính thức. Các dòng được đối chiếu theo mã — mã hiện có được cập nhật, mã mới được thêm, không xóa dữ liệu.",
     "importColumns": "Cột (bắt buộc có dòng tiêu đề):",
-    "importNote": "Chỉ bắt buộc code và descriptionEn. Dòng có giá trị mfn sẽ được đánh dấu đã xác minh; dòng không có sẽ chỉ là tham chiếu. Nguồn: Tổng cục Hải quan Việt Nam.",
+    "importNote": "Chỉ bắt buộc code và descriptionEn. mfn = thuế nhập khẩu %, vat = thuế GTGT % (thường 10), và mỗi cột form (form_e=ACFTA, form_d=ATIGA, eur1=EVFTA, cptpp…) là thuế suất ưu đãi theo mẫu C/O đó. Dòng có thuế suất sẽ được xác minh. Nguồn: Tổng cục Hải quan Việt Nam.",
     "chooseFile": "Chọn CSV",
     "downloadTemplate": "Mẫu",
     "close": "Đóng",
