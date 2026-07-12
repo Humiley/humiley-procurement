@@ -198,7 +198,7 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {filtered.slice(0, 200).map((r) => (
                   <tr key={r.id} className="border-b border-line last:border-0 hover:bg-grey/5">
                     <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
                       <Link href={`/reference/hs-codes/${r.id}`} className="hover:underline">{r.code}</Link>
@@ -228,6 +228,13 @@ export function HsExplorer({ rows, chapterCounts }: { rows: HsRow[]; chapterCoun
                     <td className="px-3 py-2.5 text-right tabular-nums">{r.items || "—"}</td>
                   </tr>
                 ))}
+                {filtered.length > 200 ? (
+                  <tr>
+                    <td colSpan={7} className="bg-panel/60 px-3 py-3 text-center text-xs text-grey">
+                      {t("cappedRows", { shown: 200, total: filtered.length })}
+                    </td>
+                  </tr>
+                ) : null}
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-3 py-10 text-center text-sm text-grey">

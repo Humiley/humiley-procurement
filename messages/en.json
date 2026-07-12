@@ -803,7 +803,8 @@
     "importResultDone": "Imported {total} code(s): {created} new, {updated} updated, {skipped} skipped.",
     "importResult_notAuth": "You are not authorised to import HS codes.",
     "importResult_noRows": "No data rows found — include a header row and at least one code.",
-    "importResult_noCols": "The CSV needs at least a code and descriptionEn column."
+    "importResult_noCols": "The CSV needs at least a code and descriptionEn column.",
+    "cappedRows": "Showing the first {shown} of {total} — refine your search or filters to narrow."
   },
   "estimator": {
     "title": "Landed-Cost Estimator",

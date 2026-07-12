@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { HS_CATALOG } from "../lib/trade/hs-catalog";
+import { HS_FULL_2022 } from "./hs-full-2022";
 
 /**
  * §20 TRADE REFERENCE DATA — genuine reference data (not demo): C/O forms, HS 2022 codes
@@ -30,6 +31,22 @@ export async function seedTradeReference(db: PrismaClient): Promise<Map<string, 
       create: { code: f.code as never, agreementName: f.agreementName, countries: f.countries, preferentialDutyNote: f.note ?? null },
     });
     formIds.set(f.code, row.id);
+  }
+
+  // Full HS 2022 nomenclature (5,613 codes) as bare reference rows — English description only,
+  // no duty/VAT/VN yet (those come from the official tariff import). Loaded FIRST and with an
+  // empty `update`, so it NEVER overwrites the curated catalogue, the traded codes' duty, or any
+  // rates an admin has already imported; the richer loops below layer their data on top.
+  // Guarded on the row count so re-running bootstrap on every update doesn't repeat 5,613 upserts.
+  if ((await db.hsCode.count()) < HS_FULL_2022.length) {
+    for (const h of HS_FULL_2022) {
+      await db.hsCode.upsert({
+        where: { code: h.code },
+        update: {},
+        create: { code: h.code, descriptionEn: h.en, descriptionVn: h.en, dutyVerified: false },
+      });
+    }
+    console.log(`Seeded ${HS_FULL_2022.length} HS 2022 codes (full nomenclature).`);
   }
 
   // Traded codes: MFN/VAT/route researched (dutyVerified).

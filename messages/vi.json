@@ -803,7 +803,8 @@
     "importResultDone": "Đã nhập {total} mã: {created} mới, {updated} cập nhật, {skipped} bỏ qua.",
     "importResult_notAuth": "Bạn không có quyền nhập mã HS.",
     "importResult_noRows": "Không có dòng dữ liệu — cần dòng tiêu đề và ít nhất một mã.",
-    "importResult_noCols": "CSV cần tối thiểu cột code và descriptionEn."
+    "importResult_noCols": "CSV cần tối thiểu cột code và descriptionEn.",
+    "cappedRows": "Đang hiển thị {shown} trong {total} mã — hãy tìm hoặc lọc để thu hẹp."
   },
   "estimator": {
     "title": "Ước tính chi phí hạ cánh",
