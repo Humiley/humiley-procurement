@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { requireUser } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
@@ -12,6 +12,7 @@ import { findReorderBreaches } from "@/lib/stock/reorder";
 export default async function InventoryPage() {
   await requireUser();
   const t = await getTranslations("inventory");
+  const vi = (await getLocale()) === "vi";
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 3600 * 1000);
   const sixMonthsAgo = new Date(Date.now() - 183 * 24 * 3600 * 1000);
@@ -19,7 +20,7 @@ export default async function InventoryPage() {
     db.stockBalance.findMany({
       include: {
         warehouse: { select: { code: true } },
-        item: { select: { code: true, nameEn: true, category: { select: { nameEn: true } }, uom: { select: { code: true } } } },
+        item: { select: { code: true, nameEn: true, category: { select: { nameEn: true, nameVn: true } }, uom: { select: { code: true } } } },
       },
       orderBy: [{ warehouseId: "asc" }, { itemId: "asc" }],
     }),
@@ -47,7 +48,7 @@ export default async function InventoryPage() {
         warehouseId: b.warehouseId,
         itemId: b.itemId,
         wh: b.warehouse.code,
-        cat: b.item.category.nameEn,
+        cat: vi ? b.item.category.nameVn : b.item.category.nameEn,
         item: `${b.item.code} · ${b.item.nameEn}`,
         uom: b.item.uom.code,
         qty,
@@ -77,7 +78,7 @@ export default async function InventoryPage() {
     d.setDate(1);
     d.setMonth(d.getMonth() - i);
     buckets.set(`${d.getFullYear()}-${d.getMonth()}`, {
-      month: d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+      month: d.toLocaleDateString(vi ? "vi-VN" : "en-US", { month: "short", year: "2-digit" }),
       in: 0,
       out: 0,
       k: d.getFullYear() * 12 + d.getMonth(),

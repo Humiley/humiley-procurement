@@ -30,8 +30,6 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
   if (!po) notFound();
 
   const canManage = hasAnyRole(user, ["PURCHASER", "ADMIN"]);
-  const canSee = canManage || hasAnyRole(user, ["DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]) || po.createdById === user.id;
-  if (!canSee) notFound();
 
   const [steps, signatures, audits, shipDocs, cooForms] = await Promise.all([
     db.approvalStep.findMany({
@@ -51,6 +49,11 @@ export default async function PoDetailPage({ params }: { params: { id: string } 
     db.shipmentDoc.findMany({ where: { poId: po.id }, orderBy: { id: "asc" }, include: { cooFormType: { select: { code: true } } } }),
     db.cooFormType.findMany({ orderBy: { code: "asc" } }),
   ]);
+
+  // An assigned approver can always open the PO they must decide (even without a privileged role).
+  const canSee = canManage || hasAnyRole(user, ["DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]) || po.createdById === user.id || steps.some((s) => s.approverId === user.id);
+  if (!canSee) notFound();
+
   const shipDocRows: ShipDocRow[] = shipDocs.map((d) => ({
     id: d.id,
     type: d.type,

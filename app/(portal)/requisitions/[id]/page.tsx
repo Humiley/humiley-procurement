@@ -41,7 +41,6 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
 
   const isOwner = pr.requesterId === user.id;
   const privileged = hasAnyRole(user, ["ADMIN", "PURCHASER", "DIRECTOR", "ACCOUNTANT", "DEPT_MANAGER"]);
-  if (!isOwner && !privileged) notFound();
 
   const [attachments, audits, steps, signatures] = await Promise.all([
     db.attachment.findMany({
@@ -63,6 +62,9 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
       orderBy: { signedAt: "asc" },
     }),
   ]);
+
+  // An assigned approver can always open the requisition they must decide (even without a role).
+  if (!isOwner && !privileged && !steps.some((s) => s.approverId === user.id)) notFound();
 
   const attRows: PrAttachment[] = attachments.map((a) => ({
     id: a.id,

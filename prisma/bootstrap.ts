@@ -16,6 +16,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { generateTempPassword } from "../lib/schemas/user";
+import { seedTradeReference } from "./seed-reference";
 
 const db = new PrismaClient();
 
@@ -52,7 +53,12 @@ async function main() {
     console.log(`• Approval matrix already has ${existingMatrix} rows — left untouched.`);
   }
 
-  // 2) exactly one admin, from env, with a random one-time password
+  // 2) trade reference data — C/O forms, HS 2022 codes (12 traded + 150 catalogue) + FX.
+  //    Genuine reference (not demo); all idempotent upserts, so the HS Code Explorer is
+  //    populated on a fresh OR existing production DB.
+  await seedTradeReference(db);
+
+  // 3) exactly one admin, from env, with a random one-time password
   const email = (process.env.BOOTSTRAP_ADMIN_EMAIL || "").toLowerCase().trim();
   if (!email) {
     console.log("• BOOTSTRAP_ADMIN_EMAIL not set — skipping admin creation.");
