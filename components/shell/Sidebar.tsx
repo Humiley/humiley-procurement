@@ -114,7 +114,7 @@ export function Sidebar({
         aria-hidden={!open}
         tabIndex={open ? 0 : -1}
         className={cn(
-          "fixed inset-0 z-30 bg-navyDeep/50 transition-opacity lg:hidden",
+          "app-scrim fixed inset-0 z-30 bg-navyDeep/50 transition-opacity lg:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
@@ -123,7 +123,7 @@ export function Sidebar({
       <aside
         ref={asideRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col bg-sidebar text-white transition-transform",
+          "app-sidebar fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col bg-sidebar text-white transition-transform",
           "lg:sticky lg:top-3.5 lg:my-3.5 lg:ml-3.5 lg:h-[calc(100vh-28px)] lg:w-[228px] lg:translate-x-0 lg:rounded-[26px] lg:shadow-sidebar",
           open ? "translate-x-0" : "-translate-x-full",
         )}

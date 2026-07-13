@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Role } from "@prisma/client";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { EmbedBridge } from "./EmbedBridge";
 
 /** Client shell coordinating the mobile drawer; server layout supplies user + unread count. */
 export function AppShell({
@@ -30,6 +31,7 @@ export function AppShell({
   }, []);
   return (
     <div className="flex min-h-screen">
+      <EmbedBridge />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-navy focus:shadow-card"
