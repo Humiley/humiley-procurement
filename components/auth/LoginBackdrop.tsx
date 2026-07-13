@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { withBase } from "@/lib/base-path";
 
 /**
  * The Humiley Portal login backdrop, replicated exactly: the SAME photos
@@ -16,7 +17,8 @@ export function LoginBackdrop() {
       if (!el) return;
       const img = new Date().getDate() % 2 === 1 ? "a" : "b";
       const orient = window.innerHeight > window.innerWidth ? "mobile" : "desktop";
-      el.style.backgroundImage = `url('/brand/login/login-${img}-${orient}.jpg')`;
+      // withBase(): raw CSS url() is not basePath-prefixed by Next, so add /procurement (else 404).
+      el.style.backgroundImage = `url('${withBase(`/brand/login/login-${img}-${orient}.jpg`)}')`;
     };
     set();
     window.addEventListener("resize", set);
