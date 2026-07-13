@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/cn";
+import { withBase } from "@/lib/base-path";
 
 /**
  * The official Humiley Engineering & Solutions logo — the SAME master files the
@@ -17,26 +18,34 @@ export function Logo({
   showWordmark?: boolean;
   className?: string;
 }) {
+  // Serve the raw PNG straight from /public rather than through the Next image optimizer:
+  //  • `unoptimized` — the brand marks are already tiny (~20 KB) and fixed, so the optimizer buys
+  //    nothing and was a failure point (a cold/​restarting dev optimizer rendered a broken image,
+  //    e.g. inside the portal iframe).
+  //  • `withBase()` — under the portal the app has basePath "/procurement", and Next does NOT
+  //    auto-prefix that onto an unoptimized image's raw src, so we add it (else it 404s at /brand/…).
   if (!showWordmark) {
     return (
       <Image
-        src={variant === "white" ? "/brand/H-mark-white.png" : "/brand/H-mark-color.png"}
+        src={withBase(variant === "white" ? "/brand/H-mark-white.png" : "/brand/H-mark-color.png")}
         alt="Humiley"
         width={36}
         height={34}
         className={cn("h-9 w-auto", className)}
         priority
+        unoptimized
       />
     );
   }
   return (
     <Image
-      src={variant === "white" ? "/brand/Humiley_Logo_White.png" : "/brand/Humiley_Logo_Navy.png"}
+      src={withBase(variant === "white" ? "/brand/Humiley_Logo_White.png" : "/brand/Humiley_Logo_Navy.png")}
       alt="Humiley Engineering & Solutions"
       width={500}
       height={175}
       className={cn("h-9 w-auto", className)}
       priority
+      unoptimized
     />
   );
 }
