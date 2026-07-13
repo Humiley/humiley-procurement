@@ -4,9 +4,12 @@ import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { db } from "@/lib/db";
 import { verifyPortalToken } from "@/lib/portal-sso";
+import type { Role } from "@prisma/client";
 
 const MAX_FAILED = 5;
 const LOCK_MINUTES = 15;
+// Roles the portal's Access & Permissions page can assign via the SSO token.
+const ASSIGNABLE_ROLES = new Set<string>(["REQUESTER", "DEPT_MANAGER", "PURCHASER", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "ADMIN"]);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -21,6 +24,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(creds) {
         const identity = verifyPortalToken(String(creds?.token ?? ""));
         if (!identity) return null;
+        // The portal may ASSIGN this user's procurement role (Access & Permissions). When present
+        // it is the source of truth, applied on every sign-in; blank → role is managed here.
+        const wantRole = identity.role && ASSIGNABLE_ROLES.has(identity.role) ? (identity.role as Role) : null;
         // SINGLE USE: record the token id; a unique-insert collision means it was already
         // consumed → reject the replay. Prune expired rows opportunistically.
         try {
@@ -43,7 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 email: identity.email,
                 name: identity.name,
                 passwordHash: await bcrypt.hash(crypto.randomUUID() + crypto.randomUUID(), 10),
-                roles: ["REQUESTER"],
+                roles: [wantRole ?? "REQUESTER"],
                 isActive: true,
                 // mustChangePw stays TRUE until they set their own password — needed because §19
                 // e-sign re-auth (lib/esign/sign.ts) checks this password. The middleware only
@@ -57,6 +63,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             user = await db.user.findUnique({ where: { email: identity.email } });
             if (!user) return null;
           }
+        }
+        // Portal-assigned role wins on every sign-in (applied only when it actually changes, so
+        // roles you manage in Admin → Users are left alone unless the portal sets one).
+        if (wantRole && !(user.roles.length === 1 && user.roles[0] === wantRole)) {
+          user = await db.user.update({ where: { id: user.id }, data: { roles: [wantRole] } });
         }
         if (!user.isActive) return null; // an admin can revoke access by deactivating the user
         return {

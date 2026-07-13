@@ -12,7 +12,7 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
  * The HMAC covers the base64 payload STRING, so both languages sign identical bytes (no JSON
  * canonicalization needed). exp is a unix second; tokens live ~2 minutes.
  */
-export type PortalIdentity = { email: string; name: string; tokenId: string; expiresAt: Date };
+export type PortalIdentity = { email: string; name: string; role?: string; tokenId: string; expiresAt: Date };
 
 const SECRET = process.env.PORTAL_SSO_SECRET || "";
 
@@ -31,7 +31,7 @@ export function verifyPortalToken(token: string): PortalIdentity | null {
   const got = b64urlToBuf(sigB64);
   if (got.length !== expected.length || !timingSafeEqual(got, expected)) return null;
 
-  let claims: { email?: string; name?: string; exp?: number };
+  let claims: { email?: string; name?: string; role?: string; exp?: number };
   try {
     claims = JSON.parse(b64urlToBuf(payloadB64).toString("utf8"));
   } catch {
@@ -45,6 +45,9 @@ export function verifyPortalToken(token: string): PortalIdentity | null {
   return {
     email: String(claims.email).toLowerCase().trim(),
     name: String(claims.name || claims.email),
+    // Optional procurement role assigned from the portal's Access & Permissions page; when present
+    // it is applied to the user on sign-in (see lib/auth.ts). Absent/blank → role managed here.
+    role: claims.role ? String(claims.role).toUpperCase().trim() : undefined,
     tokenId,
     expiresAt: new Date(claims.exp * 1000),
   };
