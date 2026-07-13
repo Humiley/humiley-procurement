@@ -26,17 +26,22 @@ export function EmbedBridge() {
     }
     if (!framed) return;
 
+    // In production the portal frames us same-origin, so ONLY same-origin is trusted; the
+    // localhost/127.0.0.1 allowance is dev-only (portal :8000 framing procurement :3000).
+    const devOrigins = process.env.NODE_ENV !== "production";
     const trusted = (origin: string) =>
       origin === window.location.origin ||
-      /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
-      /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+      (devOrigins &&
+        (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)));
 
     function onMessage(e: MessageEvent) {
       if (!trusted(e.origin)) return;
       const d = e.data as { humileyNav?: unknown };
       if (!d || typeof d !== "object" || typeof d.humileyNav !== "string") return;
       const raw = d.humileyNav;
-      if (!raw.startsWith("/")) return;
+      // Must be an app-relative path — reject protocol-relative ("//evil") / backslash tricks that
+      // would let router.push() hard-navigate the frame off-site.
+      if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return;
       // Accept either an app-relative ("/requisitions") or basePath-prefixed path; router.push()
       // wants app-relative (it re-adds the basePath itself).
       const p = BASE_PATH && raw.startsWith(BASE_PATH) ? raw.slice(BASE_PATH.length) || "/" : raw;
