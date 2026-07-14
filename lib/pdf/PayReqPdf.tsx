@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/alt-text */
 import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { registerPdfFonts } from "./fonts";
 
 /** §10a payment-request voucher — brand letterhead, bilingual, three signature blocks. */
@@ -55,7 +55,7 @@ export type PayReqPdfData = {
   dueDate?: string | null;
   lines: { no: number; description: string; amount: string }[];
   total: string;
-  signatures: { name: string; meaning: string; signedAt: string; reason?: string | null }[];
+  signatures: { name: string; meaning: string; signedAt: string; reason?: string | null; imageData?: string | null }[];
 };
 
 function Bi({ en, vn }: { en: string; vn: string }) {
@@ -69,7 +69,7 @@ function Bi({ en, vn }: { en: string; vn: string }) {
 export function PayReqPdf({ d }: { d: PayReqPdfData }) {
   registerPdfFonts();
   const sigOf = (m: string) => d.signatures.filter((g) => g.meaning === m).slice(-1)[0];
-  const blocks: { label: string; vn: string; sig?: { name: string; signedAt: string } }[] = [
+  const blocks: { label: string; vn: string; sig?: { name: string; signedAt: string; imageData?: string | null } }[] = [
     { label: "Requester", vn: "Người đề nghị", sig: sigOf("AUTHORED") ?? { name: d.requester, signedAt: "" } },
     { label: "Chief Accountant", vn: "Kế toán trưởng", sig: sigOf("VERIFIED") },
     { label: "Approved by", vn: "Người duyệt", sig: sigOf("APPROVED") },
@@ -128,7 +128,11 @@ export function PayReqPdf({ d }: { d: PayReqPdfData }) {
         <View style={s.sigRow}>
           {blocks.map((b) => (
             <View style={s.sigBox} key={b.label}>
-              <View style={{ height: 42 }} />
+              {b.sig?.imageData ? (
+                <Image src={b.sig.imageData} style={{ height: 42, width: 120, objectFit: "contain" }} />
+              ) : (
+                <View style={{ height: 42 }} />
+              )}
               <View style={s.sigLine} />
               <Text style={{ fontSize: 8.5, fontWeight: 700 }}>{b.label}</Text>
               <Text style={{ fontSize: 7.5, color: GREY, fontStyle: "italic" }}>{b.vn}</Text>

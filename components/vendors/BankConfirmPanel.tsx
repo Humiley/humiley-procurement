@@ -59,7 +59,7 @@ export function BankConfirmPanel({ rows, canConfirm }: { rows: FrozenVendorRow[]
         requireReason={!target?.approve}
         context={(() => { const v = rows.find((r) => r.id === target?.id); return v ? `${v.code} · ${v.nameEn} — ${v.bankName ?? "—"} / ${v.bankAccount ?? "—"}` : undefined; })()}
         onConfirm={async (p) => {
-          act(await confirmVendorBank({ vendorId: target!.id, approve: target!.approve, password: p.password, comment: p.reason }));
+          act(await confirmVendorBank({ vendorId: target!.id, approve: target!.approve, password: p.password, comment: p.reason, imageData: p.imageData }));
           setTarget(null);
           toast(tc("done"));
           router.refresh();

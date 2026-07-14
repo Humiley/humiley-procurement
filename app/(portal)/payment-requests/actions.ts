@@ -167,7 +167,7 @@ async function _submitPaymentRequest(id: string) {
 }
 
 /** §10a: the mandatory ACCOUNTANT verification (invoice validity / tax compliance) — a VERIFIED signature. */
-async function _verifyPaymentRequest(params: { id: string; password: string; comment?: string }) {
+async function _verifyPaymentRequest(params: { id: string; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -186,6 +186,7 @@ async function _verifyPaymentRequest(params: { id: string; password: string; com
       entityId: preq.id,
       meaning: "VERIFIED",
       reason: params.comment,
+      imageData: params.imageData ?? null,
       record: { number: preq.paymentRequestNumber, type: preq.type, amount: preq.amount, payee: preq.payeeName, bank: preq.payeeBankAccount },
     });
   } catch (e) {
@@ -200,7 +201,7 @@ async function _verifyPaymentRequest(params: { id: string; password: string; com
 }
 
 /** §6 + §19 decision; the FINAL approval is blocked until accounting has verified (§10a). */
-async function _decidePaymentRequest(params: { id: string; decision: Decision; password: string; comment?: string }) {
+async function _decidePaymentRequest(params: { id: string; decision: Decision; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireUser();
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id } });
   if (!preq) throw new Error("Payment request not found.");
@@ -226,6 +227,7 @@ let sig;
       entityId: preq.id,
       meaning,
       reason: params.comment,
+      imageData: params.imageData ?? null,
       record: { number: preq.paymentRequestNumber, type: preq.type, amount: preq.amount, payee: preq.payeeName, status: preq.status },
     });
   } catch (e) {
@@ -261,7 +263,7 @@ let sig;
 }
 
 /** §10a payment execution: PAID signature + bank reference; cascades PAID to the linked invoices. */
-async function _markPaymentRequestPaid(params: { id: string; password: string; paymentRef: string }) {
+async function _markPaymentRequestPaid(params: { id: string; password: string; paymentRef: string; imageData?: string | null }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   if (!params.paymentRef.trim()) throw new Error("Enter the bank/payment reference.");
   const preq = await db.paymentRequest.findUnique({ where: { id: params.id }, include: { lines: true } });
@@ -277,6 +279,7 @@ async function _markPaymentRequestPaid(params: { id: string; password: string; p
       entityId: preq.id,
       meaning: "PAID",
       reason: params.paymentRef.trim(),
+      imageData: params.imageData ?? null,
       record: { number: preq.paymentRequestNumber, amount: preq.amount, payee: preq.payeeName, ref: params.paymentRef.trim() },
     });
   } catch (e) {

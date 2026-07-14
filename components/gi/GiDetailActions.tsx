@@ -113,6 +113,7 @@ export function GiDetailActions({
               act(await executeGoodsIssue({
                 payload: { issueId: id, lines: execLines.map((l) => ({ lineId: l.lineId, qtyIssued: qty[l.lineId] || "0" })) },
                 password: p.password,
+                imageData: p.imageData,
               }));
               setSignOpen(false);
               toast(tc("done"));

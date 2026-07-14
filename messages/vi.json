@@ -967,7 +967,11 @@
     "errReason": "Cần nhập lý do.",
     "errFailed": "Ký không thành công.",
     "signing": "Bạn đang ký",
-    "bankRef": "Số tham chiếu ngân hàng / thanh toán"
+    "bankRef": "Số tham chiếu ngân hàng / thanh toán",
+    "drawSignature": "Ký tên của bạn",
+    "signHere": "Ký tại đây",
+    "clear": "Xoá",
+    "errDrawSignature": "Vui lòng ký tên để hoàn tất."
   },
   "grn": {
     "lot": "Lô",

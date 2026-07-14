@@ -50,6 +50,7 @@ export function ApprovalsQueue({ rows, highlightStepId }: { rows: QueueRow[]; hi
       decision: target.decision,
       password: payload.password,
       comment: payload.reason,
+      imageData: payload.imageData,
     }));
     setTarget(null);
     setNotice(t("decided", { ref: target.row.ref }));

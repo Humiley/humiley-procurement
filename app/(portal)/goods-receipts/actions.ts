@@ -69,7 +69,7 @@ async function _createGrn(input: GrnCreatePayload) {
  * lines; rejected quantities (reason required) leave the PO line open for a redelivery.
  * PO status auto-updates: RECEIVED when every line is fully received, else PARTIALLY_RECEIVED.
  */
-async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string }) {
+async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string; imageData?: string | null }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = grnAcceptSchema.parse(params.payload);
 
@@ -102,6 +102,7 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string 
     sig = await signRecord({
       userId: user.id,
       password: params.password,
+      imageData: params.imageData ?? null,
       entityType: "GoodsReceipt",
       entityId: grn.id,
       meaning: "RECEIVED",

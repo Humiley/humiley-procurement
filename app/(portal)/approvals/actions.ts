@@ -20,6 +20,7 @@ async function _decidePr(params: {
   decision: Decision;
   password: string;
   comment?: string;
+  imageData?: string | null;
 }) {
   const user = await requireUser();
   const pr = await db.purchaseRequisition.findUnique({
@@ -56,6 +57,7 @@ let sig;
       meaning,
       reason: params.comment,
       record: snapshot,
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);
@@ -122,24 +124,25 @@ async function _decideEntity(params: {
   decision: Decision;
   password: string;
   comment?: string;
+  imageData?: string | null;
 }) {
   if (params.entityType === "PR") {
-    return _decidePr({ prId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+    return _decidePr({ prId: params.entityId, decision: params.decision, password: params.password, comment: params.comment, imageData: params.imageData });
   }
   if (params.entityType === "PO") {
     const { decidePo } = await import("@/app/(portal)/purchase-orders/actions");
-    return decidePo({ poId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+    return decidePo({ poId: params.entityId, decision: params.decision, password: params.password, comment: params.comment, imageData: params.imageData });
   }
   if (params.entityType === "PAYMENT_REQUEST") {
     const { decidePaymentRequest } = await import("@/app/(portal)/payment-requests/actions");
-    return decidePaymentRequest({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+    return decidePaymentRequest({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment, imageData: params.imageData });
   }
   if (params.entityType === "GOODS_ISSUE") {
     const { decideGoodsIssue } = await import("@/app/(portal)/inventory/issues/actions");
-    return decideGoodsIssue({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+    return decideGoodsIssue({ id: params.entityId, decision: params.decision, password: params.password, comment: params.comment, imageData: params.imageData });
   }
   const { decideVendor } = await import("@/app/(portal)/vendors/actions");
-  return decideVendor({ vendorId: params.entityId, decision: params.decision, password: params.password, comment: params.comment });
+  return decideVendor({ vendorId: params.entityId, decision: params.decision, password: params.password, comment: params.comment, imageData: params.imageData });
 }
 
 /* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */

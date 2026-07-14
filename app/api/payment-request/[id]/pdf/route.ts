@@ -45,7 +45,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     dueDate: q.dueDate ? formatVnDate(q.dueDate) : null,
     lines: q.lines.map((l, i) => ({ no: i + 1, description: l.description, amount: money(l.amount) })),
     total: money(q.amount),
-    signatures: sigs.map((g) => ({ name: g.fullNamePrinted, meaning: g.meaning, signedAt: formatVnDateTime(g.signedAt), reason: g.reason })),
+    signatures: sigs.map((g) => ({ name: g.fullNamePrinted, meaning: g.meaning, signedAt: formatVnDateTime(g.signedAt), reason: g.reason, imageData: g.imageData })),
   };
   const buf = await renderToBuffer(React.createElement(PayReqPdf, { d }) as never);
   return new NextResponse(new Uint8Array(buf), {

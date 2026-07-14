@@ -112,7 +112,7 @@ export function CountSheet({
         meaningLabel={() => t("meaningCounted")}
         submitLabel={t("post")}
         onConfirm={async (p) => {
-          act(await postCount({ id, password: p.password, reason: p.reason }));
+          act(await postCount({ id, password: p.password, reason: p.reason, imageData: p.imageData }));
           toast(tcm("done"));
           setSignOpen(false);
           router.refresh();

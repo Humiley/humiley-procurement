@@ -149,7 +149,7 @@ async function _submitPo(id: string) {
 }
 
 /** §6 + §19: sign-then-decide the active PO approval step. */
-async function _decidePo(params: { poId: string; decision: Decision; password: string; comment?: string }) {
+async function _decidePo(params: { poId: string; decision: Decision; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireUser();
   const po = await db.purchaseOrder.findUnique({
     where: { id: params.poId },
@@ -183,6 +183,7 @@ let sig;
       meaning,
       reason: params.comment,
       record: snapshot,
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);

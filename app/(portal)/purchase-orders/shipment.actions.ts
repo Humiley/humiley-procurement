@@ -65,7 +65,7 @@ async function _receiveShipmentDoc(input: ShipDocReceivePayload) {
 }
 
 /** VERIFIED is a §19 act — the purchaser signs that the paper matches the shipment. */
-async function _verifyShipmentDoc(params: { docId: string; password: string }) {
+async function _verifyShipmentDoc(params: { docId: string; password: string; imageData?: string | null }) {
   const user = await requireRoles("PURCHASER", "ADMIN");
   const doc = await db.shipmentDoc.findUnique({ where: { id: params.docId }, include: { po: { select: { poNumber: true } } } });
   if (!doc) throw new Error("Document not found.");
@@ -80,6 +80,7 @@ async function _verifyShipmentDoc(params: { docId: string; password: string }) {
       entityId: doc.id,
       meaning: "VERIFIED",
       record: { po: doc.po.poNumber, type: doc.type, docNumber: doc.docNumber },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);

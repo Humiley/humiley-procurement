@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/alt-text */
 import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { registerPdfFonts } from "./fonts";
 
 /**
@@ -72,7 +72,7 @@ export type PoPdfData = {
   };
   lines: { no: number; description: string; uom: string; qty: string; unitPrice: string; amount: string }[];
   totals: { subtotal: string; vatPct: string; vatAmount: string; total: string; totalInWords?: string };
-  signatures: { name: string; meaning: string; signedAt: string; reason?: string | null }[];
+  signatures: { name: string; meaning: string; signedAt: string; reason?: string | null; imageData?: string | null }[];
 };
 
 function Bi({ en, vn }: { en: string; vn: string }) {
@@ -173,11 +173,14 @@ export function PoPdf({ d }: { d: PoPdfData }) {
           <Text style={{ fontSize: 8, color: GREY }}>No signatures yet · Chưa có chữ ký</Text>
         ) : (
           d.signatures.map((g, i) => (
-            <View style={s.sigRow} key={i} wrap={false}>
-              <Text style={{ fontSize: 8.5, fontWeight: 700, width: 150 }}>{g.name}</Text>
-              <Text style={{ fontSize: 8, color: NAVY, fontWeight: 700, width: 80 }}>{g.meaning}</Text>
-              <Text style={{ fontSize: 8, color: GREY, width: 120 }}>{g.signedAt}</Text>
-              <Text style={{ fontSize: 8, color: GREY, flex: 1 }}>{g.reason || ""}</Text>
+            <View key={i} wrap={false}>
+              <View style={s.sigRow}>
+                <Text style={{ fontSize: 8.5, fontWeight: 700, width: 150 }}>{g.name}</Text>
+                <Text style={{ fontSize: 8, color: NAVY, fontWeight: 700, width: 80 }}>{g.meaning}</Text>
+                <Text style={{ fontSize: 8, color: GREY, width: 120 }}>{g.signedAt}</Text>
+                <Text style={{ fontSize: 8, color: GREY, flex: 1 }}>{g.reason || ""}</Text>
+              </View>
+              {g.imageData ? <Image src={g.imageData} style={{ width: 96, height: 32, objectFit: "contain", marginLeft: 150, marginBottom: 2 }} /> : null}
             </View>
           ))
         )}

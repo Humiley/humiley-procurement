@@ -129,7 +129,7 @@ export function ShipmentDocsPanel({ poId, docs, cooForms, canAct }: { poId: stri
         meaningLabel={() => t("meaningVerified")}
         submitLabel={t("verify")}
         onConfirm={async (p) => {
-          act(await verifyShipmentDoc({ docId: verifyId!, password: p.password }));
+          act(await verifyShipmentDoc({ docId: verifyId!, password: p.password, imageData: p.imageData }));
           setVerifyId(null);
           router.refresh();
         }}

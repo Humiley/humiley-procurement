@@ -108,6 +108,8 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
                 <span className="mx-1.5 rounded bg-navy/10 px-1.5 py-0.5 font-bold text-navy">{s.meaning}</span>
                 <span className="text-grey">{formatVnDateTime(s.signedAt)}</span>
                 {s.reason ? <span className="ml-1.5 text-grey">— {s.reason}</span> : null}
+                {/* eslint-disable-next-line @next/next/no-img-element -- data-URI signature; next/image cannot optimize a data URI */}
+                {s.imageData ? <img src={s.imageData} alt="" className="mt-1 block h-9 max-w-[170px] object-contain" /> : null}
               </li>
             ))}
           </ul>

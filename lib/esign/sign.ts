@@ -94,6 +94,7 @@ export async function signRecord(params: {
   meaning: SignatureMeaning;
   reason?: string | null;
   record: unknown; // the document's canonical content at the moment of signing
+  imageData?: string | null; // optional hand-drawn signature PNG (visual mark; not in the hash)
 }) {
   const user = await db.user.findUnique({ where: { id: params.userId } });
   if (!user || !user.isActive) throw new SignatureError("Account is not active.");
@@ -167,11 +168,20 @@ export async function signRecord(params: {
       recordSnapshotHash,
       prevSignatureHash,
     };
+    // Bound the optional drawn signature so a record can't be bloated; auth/integrity are
+    // unaffected if it is missing or oversized (it is a visual mark, not part of the hash).
+    const imageData =
+      typeof params.imageData === "string" &&
+      params.imageData.startsWith("data:image/png;base64,") &&
+      params.imageData.length <= 260000
+        ? params.imageData
+        : null;
     return tx.electronicSignature.create({
       data: {
         ...row,
         reason: params.reason || null,
         selfHash: signatureHash(row),
+        imageData,
       },
     });
   });

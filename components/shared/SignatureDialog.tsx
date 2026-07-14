@@ -8,6 +8,8 @@ export type SignaturePayload = {
   password: string;
   meaning: string;
   reason: string;
+  /** Hand-drawn signature (visual mark) as a small PNG data-URI; the password re-auth above is the §19 identity component. */
+  imageData?: string;
 };
 
 /**
@@ -58,6 +60,74 @@ export function SignatureDialog({
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
   busyRef.current = busy;
+  // Hand-drawn signature pad (visual mark, like a paper registration form).
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sigEmptyRef = useRef(true);
+  const [sigEmpty, setSigEmpty] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+    const c = sigCanvasRef.current;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = c.getBoundingClientRect();
+    const cssW = Math.round(rect.width) || 460;
+    c.width = Math.round(cssW * dpr);
+    c.height = Math.round(150 * dpr);
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#163866";
+    sigEmptyRef.current = true;
+    setSigEmpty(true);
+    let drawing = false;
+    let last = { x: 0, y: 0 };
+    const pt = (e: PointerEvent) => {
+      const r = c.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const down = (e: PointerEvent) => {
+      e.preventDefault();
+      drawing = true;
+      last = pt(e);
+    };
+    const move = (e: PointerEvent) => {
+      if (!drawing) return;
+      e.preventDefault();
+      const p = pt(e);
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      last = p;
+      if (sigEmptyRef.current) {
+        sigEmptyRef.current = false;
+        setSigEmpty(false);
+      }
+    };
+    const up = () => {
+      drawing = false;
+    };
+    c.addEventListener("pointerdown", down);
+    c.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      c.removeEventListener("pointerdown", down);
+      c.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [open]);
+
+  function clearSignature() {
+    const c = sigCanvasRef.current;
+    if (!c) return;
+    c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+    sigEmptyRef.current = true;
+    setSigEmpty(true);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -97,13 +167,28 @@ export function SignatureDialog({
 
   async function submit() {
     setError(null);
+    if (sigEmptyRef.current) return setError(t("errDrawSignature"));
     if (!password) return setError(t("errPassword"));
     if (requireReason && !reason.trim()) return setError(t("errReason"));
+    let imageData: string | undefined;
+    const c = sigCanvasRef.current;
+    if (c) {
+      try {
+        const tc = document.createElement("canvas");
+        tc.width = 440;
+        tc.height = 150;
+        tc.getContext("2d")?.drawImage(c, 0, 0, 440, 150);
+        imageData = tc.toDataURL("image/png");
+      } catch {
+        imageData = c.toDataURL("image/png");
+      }
+    }
     setBusy(true);
     try {
-      await onConfirm({ password, meaning, reason: reason.trim() });
+      await onConfirm({ password, meaning, reason: reason.trim(), imageData });
       setPassword("");
       setReason("");
+      clearSignature();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("errFailed"));
     } finally {
@@ -168,6 +253,20 @@ export function SignatureDialog({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
+          </div>
+          <div>
+            <label className="label">{t("drawSignature")}</label>
+            <div className="relative rounded-lg border border-line bg-white">
+              <canvas ref={sigCanvasRef} className="block h-[150px] w-full touch-none [cursor:crosshair]" />
+              {sigEmpty && (
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-grey">
+                  {t("signHere")}
+                </span>
+              )}
+            </div>
+            <button type="button" onClick={clearSignature} className="mt-1 text-xs font-semibold text-navy hover:underline">
+              {t("clear")}
+            </button>
           </div>
           <div>
             <label className="label" htmlFor={`${uid}-password`}>{t("password")}</label>

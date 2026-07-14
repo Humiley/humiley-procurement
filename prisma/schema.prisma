@@ -1256,6 +1256,10 @@ model ElectronicSignature {
   recordSnapshotHash String
   prevSignatureHash  String?
   selfHash           String?
+  // Optional hand-drawn signature (visual mark) captured in the sign dialog — a small PNG
+  // data-URI. NOT part of the integrity hash chain (signatureHash); the cryptographic proof
+  // remains the signer identity + meaning + document snapshot.
+  imageData          String?
 
   user User @relation(fields: [userId], references: [id])
 

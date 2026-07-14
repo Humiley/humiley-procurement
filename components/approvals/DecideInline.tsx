@@ -28,7 +28,7 @@ export function DecideInline({
 
   async function onSign(payload: SignaturePayload) {
     if (!decision) return;
-    act(await decideEntity({ entityType, entityId, decision, password: payload.password, comment: payload.reason }));
+    act(await decideEntity({ entityType, entityId, decision, password: payload.password, comment: payload.reason, imageData: payload.imageData }));
     setDecision(null);
     toast(tc("done"));
     startTransition(() => router.refresh());

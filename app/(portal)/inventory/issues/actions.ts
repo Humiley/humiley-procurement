@@ -84,7 +84,7 @@ async function _submitGoodsIssue(id: string) {
   return { id };
 }
 
-async function _decideGoodsIssue(params: { id: string; decision: Decision; password: string; comment?: string }) {
+async function _decideGoodsIssue(params: { id: string; decision: Decision; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireUser();
   const gi = await db.goodsIssue.findUnique({ where: { id: params.id }, include: { lines: true } });
   if (!gi) throw new Error("Goods issue not found.");
@@ -106,6 +106,7 @@ let sig;
       meaning,
       reason: params.comment,
       record: { issueNumber: gi.issueNumber, purpose: gi.purpose, lines: gi.lines.map((l) => ({ i: l.itemId, q: l.qtyRequested })) },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);
@@ -140,7 +141,7 @@ let sig;
 }
 
 /** WAREHOUSE executes: ISSUED signature; qtyIssued ≤ onHand enforced by the stock writer; OUT at avgCost. */
-async function _executeGoodsIssue(params: { payload: GiExecutePayload; password: string }) {
+async function _executeGoodsIssue(params: { payload: GiExecutePayload; password: string; imageData?: string | null }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const values = giExecuteSchema.parse(params.payload);
 
@@ -215,6 +216,7 @@ async function _executeGoodsIssue(params: { payload: GiExecutePayload; password:
       entityId: gi.id,
       meaning: "ISSUED",
       record: { issueNumber: gi.issueNumber, lines: issuing.map((l) => ({ id: l.lineId, q: l.qtyIssued })) },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);

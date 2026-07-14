@@ -32,9 +32,9 @@ export function InvoiceDetailActions({
   async function onSign(payload: SignaturePayload) {
     // errors propagate to SignatureDialog (shown inline, typed password kept) — was closing + discarding
     if (dialog === "verify") {
-      act(await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason }));
+      act(await verifyInvoice({ invoiceId, password: payload.password, overrideComment: payload.reason, imageData: payload.imageData }));
     } else {
-      act(await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial" }));
+      act(await markInvoicePaid({ invoiceId, password: payload.password, partial: dialog === "partial", imageData: payload.imageData }));
     }
     setDialog(null);
     toast(tc("done"));

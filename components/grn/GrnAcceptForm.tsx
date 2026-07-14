@@ -52,6 +52,7 @@ export function GrnAcceptForm({ grnId, grnNumber, lines }: { grnId: string; grnN
         })),
       },
       password: payload.password,
+      imageData: payload.imageData,
     }));
     setSignOpen(false);
     start(() => router.refresh());

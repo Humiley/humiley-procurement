@@ -967,7 +967,11 @@
     "errReason": "A reason is required.",
     "errFailed": "Signing failed.",
     "signing": "You are signing",
-    "bankRef": "Bank / payment reference"
+    "bankRef": "Bank / payment reference",
+    "drawSignature": "Draw your signature",
+    "signHere": "Sign here",
+    "clear": "Clear",
+    "errDrawSignature": "Please draw your signature to sign."
   },
   "grn": {
     "lot": "Lot",

@@ -64,7 +64,7 @@ export function TransferDetailActions({ id, status, canAct }: { id: string; stat
         submitLabel={mode === "dispatch" ? t("dispatch") : t("receive")}
         onConfirm={async (p) => {
           const fn = mode === "dispatch" ? dispatchTransfer : receiveTransfer;
-          act(await fn({ id, password: p.password }));   // unwrap {__err} — was swallowed by a shadowed local
+          act(await fn({ id, password: p.password, imageData: p.imageData }));   // unwrap {__err} — was swallowed by a shadowed local
           setMode(null);
           toast(tc("done"));
           router.refresh();

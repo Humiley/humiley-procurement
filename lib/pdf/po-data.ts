@@ -66,6 +66,7 @@ export async function poPdfData(poId: string): Promise<PoPdfData | null> {
       meaning: g.meaning,
       signedAt: formatVnDateTime(g.signedAt),
       reason: g.reason,
+      imageData: g.imageData,
     })),
   };
 }

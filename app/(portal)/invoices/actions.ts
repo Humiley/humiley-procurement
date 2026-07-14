@@ -133,7 +133,7 @@ async function _createInvoice(input: InvoiceCreatePayload) {
  * A MISMATCH requires an override comment → Exception TOLERANCE_OVERRIDE.
  * On verify the invoiced quantities post to the PO lines and the budget moves commit → spent.
  */
-async function _verifyInvoice(params: { invoiceId: string; password: string; overrideComment?: string }) {
+async function _verifyInvoice(params: { invoiceId: string; password: string; overrideComment?: string; imageData?: string | null }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const inv = await db.invoice.findUnique({
     where: { id: params.invoiceId },
@@ -157,6 +157,7 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
       entityId: inv.id,
       meaning: "VERIFIED",
       reason: params.overrideComment,
+      imageData: params.imageData ?? null,
       record: { invoiceNumber: inv.invoiceNumber, vendorInvoiceNo: inv.vendorInvoiceNo, po: inv.po.poNumber, total: inv.total, match: match.lines },
     });
   } catch (e) {
@@ -211,7 +212,7 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
 }
 
 /** §9 + §19: payment status — PAID / PARTIALLY_PAID with a signature (meaning PAID). */
-async function _markInvoicePaid(params: { invoiceId: string; password: string; partial?: boolean }) {
+async function _markInvoicePaid(params: { invoiceId: string; password: string; partial?: boolean; imageData?: string | null }) {
   const user = await requireRoles("ACCOUNTANT", "ADMIN");
   const inv = await db.invoice.findUnique({ where: { id: params.invoiceId }, include: { po: { select: { poNumber: true } } } });
   if (!inv) throw new Error("Invoice not found.");
@@ -227,6 +228,7 @@ async function _markInvoicePaid(params: { invoiceId: string; password: string; p
       entityType: "Invoice",
       entityId: inv.id,
       meaning: "PAID",
+      imageData: params.imageData ?? null,
       record: { invoiceNumber: inv.invoiceNumber, po: inv.po.poNumber, total: inv.total, partial: !!params.partial },
     });
   } catch (e) {

@@ -53,8 +53,8 @@ export function PayReqDetailActions({
   async function onSign(payload: SignaturePayload) {
     // errors propagate to the SignatureDialog, which shows them inline and keeps
     // the typed password/reference — closing here used to throw the input away
-    if (dialog === "verify") act(await verifyPaymentRequest({ id, password: payload.password, comment: payload.reason }));
-    else act(await markPaymentRequestPaid({ id, password: payload.password, paymentRef: payload.reason || "" }));
+    if (dialog === "verify") act(await verifyPaymentRequest({ id, password: payload.password, comment: payload.reason, imageData: payload.imageData }));
+    else act(await markPaymentRequestPaid({ id, password: payload.password, paymentRef: payload.reason || "", imageData: payload.imageData }));
     setDialog(null);
     toast(tc("done"));
     start(() => router.refresh());

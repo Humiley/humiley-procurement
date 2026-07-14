@@ -183,6 +183,8 @@ export default async function RequisitionDetailPage({ params }: { params: { id: 
                   <span className="mt-0.5 block truncate font-mono text-[10px] text-grey/70" title={s.recordSnapshotHash}>
                     #{s.recordSnapshotHash.slice(0, 16)}… {s.prevSignatureHash ? "⛓" : ""}
                   </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- data-URI signature; next/image cannot optimize a data URI */}
+                  {s.imageData ? <img src={s.imageData} alt="" className="mt-1 block h-9 max-w-[170px] object-contain" /> : null}
                 </li>
               ))}
             </ul>

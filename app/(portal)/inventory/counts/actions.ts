@@ -77,7 +77,7 @@ async function _saveCounts(input: CountEnterPayload) {
 }
 
 /** DIRECTOR posts the count: COUNTED signature; variances become ADJUST_IN/OUT at current avg cost. */
-async function _postCount(params: { id: string; password: string; reason?: string }) {
+async function _postCount(params: { id: string; password: string; reason?: string; imageData?: string | null }) {
   const user = await requireRoles("DIRECTOR", "ADMIN");
   const count = await db.stockCount.findUnique({
     where: { id: params.id },
@@ -95,6 +95,7 @@ async function _postCount(params: { id: string; password: string; reason?: strin
       entityId: count.id,
       meaning: "COUNTED",
       reason: params.reason,
+      imageData: params.imageData ?? null,
       record: { countNumber: count.countNumber, lines: count.lines.map((l) => ({ i: l.itemId, sys: l.systemQty, cnt: l.countedQty })) },
     });
   } catch (e) {

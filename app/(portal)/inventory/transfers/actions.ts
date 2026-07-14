@@ -41,7 +41,7 @@ async function _createTransfer(input: TransferCreatePayload) {
 }
 
 /** Dispatch: ISSUED signature; every line posts TRANSFER_OUT at the source's avg cost. */
-async function _dispatchTransfer(params: { id: string; password: string }) {
+async function _dispatchTransfer(params: { id: string; password: string; imageData?: string | null }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const trf = await db.stockTransfer.findUnique({
     where: { id: params.id },
@@ -99,6 +99,7 @@ async function _dispatchTransfer(params: { id: string; password: string }) {
       entityId: trf.id,
       meaning: "ISSUED",
       record: { transferNumber: trf.transferNumber, lines: trf.lines.map((l) => ({ i: l.itemId, q: l.qty })) },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);
@@ -142,7 +143,7 @@ async function _dispatchTransfer(params: { id: string; password: string }) {
 }
 
 /** Receive: RECEIVED signature; TRANSFER_IN into the destination at the dispatch cost. */
-async function _receiveTransfer(params: { id: string; password: string }) {
+async function _receiveTransfer(params: { id: string; password: string; imageData?: string | null }) {
   const user = await requireRoles("WAREHOUSE", "ADMIN");
   const trf = await db.stockTransfer.findUnique({ where: { id: params.id }, include: { lines: true } });
   if (!trf) throw new Error("Transfer not found.");
@@ -167,6 +168,7 @@ async function _receiveTransfer(params: { id: string; password: string }) {
       entityId: trf.id,
       meaning: "RECEIVED",
       record: { transferNumber: trf.transferNumber, lines: trf.lines.map((l) => ({ i: l.itemId, q: l.qty })) },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);

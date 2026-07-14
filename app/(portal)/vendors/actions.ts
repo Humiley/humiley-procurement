@@ -112,7 +112,7 @@ async function _updateVendor(id: string, values: FormValues) {
 }
 
 /** §15: a DIRECTOR signs off the bank change (call-back done) — or rejects, reverting the details. */
-async function _confirmVendorBank(params: { vendorId: string; approve: boolean; password: string; comment?: string }) {
+async function _confirmVendorBank(params: { vendorId: string; approve: boolean; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireRoles("DIRECTOR", "ADMIN");
   const vendor = await db.vendor.findUnique({ where: { id: params.vendorId } });
   if (!vendor) throw new Error("Vendor not found.");
@@ -128,6 +128,7 @@ async function _confirmVendorBank(params: { vendorId: string; approve: boolean; 
       meaning: params.approve ? "APPROVED" : "REJECTED",
       reason: params.comment,
       record: { code: vendor.code, bankName: vendor.bankName, bankAccount: vendor.bankAccount },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);
@@ -197,7 +198,7 @@ async function _submitVendorForApproval(id: string) {
   return { id };
 }
 
-async function _decideVendor(params: { vendorId: string; decision: Decision; password: string; comment?: string }) {
+async function _decideVendor(params: { vendorId: string; decision: Decision; password: string; comment?: string; imageData?: string | null }) {
   const user = await requireUser();
   const v = await db.vendor.findUnique({ where: { id: params.vendorId } });
   if (!v) throw new Error("Vendor not found.");
@@ -220,6 +221,7 @@ async function _decideVendor(params: { vendorId: string; decision: Decision; pas
       meaning,
       reason: params.comment,
       record: { code: v.code, nameEn: v.nameEn, taxCode: v.taxCode, bankAccount: v.bankAccount, status: v.status },
+      imageData: params.imageData ?? null,
     });
   } catch (e) {
     if (e instanceof SignatureError) throw new Error(e.message);
