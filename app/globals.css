@@ -224,3 +224,9 @@ html[data-embed="1"] .app-scrim {
 html[data-embed="1"] #main {
   padding-top: 0.75rem;
 }
+/* Safari does NOT paint a background-attachment:fixed gradient inside an iframe — it drops to the
+   iframe's background — so embedded Procurement looked flat white next to the portal's soft gradient.
+   Use scroll attachment when framed so the SAME airy gradient renders, matching the portal exactly. */
+html[data-embed="1"] body {
+  background-attachment: scroll;
+}
