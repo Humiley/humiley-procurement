@@ -52,19 +52,12 @@ export const authConfig = {
         login.searchParams.set("callbackUrl", nurl.href);
         return Response.redirect(login);
       }
-      // Force a user who still holds a system-issued password to set their own before anything
-      // that needs it. Two populations carry mustChangePw:
-      //   • admin-created / reset accounts (a temp password they were handed), and
-      //   • SSO/JIT accounts (an unknown random password minted only so §19 e-sign has a hash).
-      // e-sign re-auth (lib/esign/sign.ts) checks THIS password, so anyone who signs must own it.
-      // A pure REQUESTER never signs (submit is unsigned) — don't wall them, so a portal SSO
-      // requester stays seamless ("assign in the portal and they're in", like HR/CRM). The moment
-      // an admin elevates them to a signing role, their next request is walled here to set one.
-      const u = auth?.user as { mustChangePw?: boolean; roles?: string[] } | undefined;
-      const willSign = (u?.roles ?? []).some((r) => r !== "REQUESTER");
-      if (u?.mustChangePw && willSign && pathname !== "/change-password") {
-        return Response.redirect(at("/change-password"));
-      }
+      // NOTE: deliberately NO change-password wall. In this deployment every user signs in through
+      // the Humiley Portal (Microsoft 365 SSO) and has no procurement password to reuse — forcing a
+      // password-set here is a dead end ("cannot set password / I use the portal login"), and it also
+      // walls a stale JWT that still carries mustChangePw=true. §19 e-sign still re-authenticates with
+      // a password at SIGN time (lib/esign/sign.ts); a signer who needs one can set it on the still-
+      // reachable /change-password page (it skips the current-password check while mustChangePw is true).
       return true;
     },
     jwt({ token, user }) {
