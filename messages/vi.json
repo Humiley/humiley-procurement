@@ -78,7 +78,7 @@
     "reference": "Tra cứu",
     "incoterms": "Incoterms 2020",
     "hsCodes": "Mã HS",
-    "estimator": "Ước tính chi phí nhập khẩu",
+    "estimator": "Ước tính chi phí hàng về kho",
     "budgets": "Ngân sách",
     "reports": "Báo cáo",
     "notifications": "Thông báo",
@@ -341,7 +341,13 @@
     "reviewDecide": "Xem & quyết định",
     "noSteps": "Chưa có bước phê duyệt.",
     "slaOverdue": "Quá hạn SLA",
-    "dueBy": "Hạn {date}"
+    "dueBy": "Hạn {date}",
+    "levels": {
+      "departmentManager": "Trưởng phòng",
+      "director": "Giám đốc",
+      "managingDirector": "Tổng giám đốc"
+    },
+    "due": "Hạn {date}"
   },
   "notifications": {
     "title": "Thông báo",
@@ -810,7 +816,7 @@
     "cappedRows": "Đang hiển thị {shown} trong {total} mã — hãy tìm hoặc lọc để thu hẹp."
   },
   "estimator": {
-    "title": "Ước tính chi phí hạ cánh",
+    "title": "Ước tính chi phí hàng về kho",
     "subtitle": "Nhập vật tư hoặc mã HS, điền điều kiện thương mại — so sánh mọi tuyến thuế trong vài giây.",
     "searchPh": "Tên vật tư, mã vật tư hoặc mã HS…",
     "unitPrice": "Đơn giá",
@@ -825,10 +831,10 @@
     "duty": "Thuế",
     "dutyAmt": "Tiền thuế",
     "importVat": "VAT nhập khẩu",
-    "landedUnit": "Giá hạ cánh/đv",
+    "landedUnit": "Chi phí hàng về/đv",
     "cheapest": "Rẻ nhất",
     "note": "Lưu ý",
-    "vatFootnote": "VAT nhập khẩu hiển thị để hoạch định dòng tiền nhưng không tính vào giá hạ cánh (VAT đầu vào được khấu trừ). Dòng mờ: xuất xứ không phù hợp mẫu C/O."
+    "vatFootnote": "VAT nhập khẩu hiển thị để hoạch định dòng tiền nhưng không tính vào chi phí hàng về (VAT đầu vào được khấu trừ). Dòng mờ: xuất xứ không phù hợp mẫu C/O."
   },
   "shipdocs": {
     "title": "Chứng từ nhập khẩu (§20)",
@@ -1201,5 +1207,8 @@
     "how": "Cách hoạt động",
     "roles": "Ai làm gì",
     "tips": "Nên biết"
+  },
+  "docDetail": {
+    "back": "Quay lại"
   }
 }
