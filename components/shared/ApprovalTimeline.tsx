@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Check, X, Clock, RotateCcw, PenLine } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatVnDateTime } from "@/lib/dates";
@@ -24,8 +25,9 @@ const ICON = {
  * Approval + signature timeline (spec §22.3 <ApprovalTimeline>) — used by every module.
  */
 export function ApprovalTimeline({ steps }: { steps: TimelineStep[] }) {
+  const t = useTranslations("approvals");
   if (steps.length === 0) {
-    return <p className="text-sm text-grey">No approval steps yet.</p>;
+    return <p className="text-sm text-grey">{t("noSteps")}</p>;
   }
   return (
     <ol className="relative space-y-6 border-l-2 border-line pl-6">
@@ -54,9 +56,9 @@ export function ApprovalTimeline({ steps }: { steps: TimelineStep[] }) {
                   <PenLine className="h-3 w-3" /> {s.signatureMeaning}
                 </span>
               )}
-              {overdue && <span className="font-medium text-danger">SLA overdue</span>}
+              {overdue && <span className="font-medium text-danger">{t("slaOverdue")}</span>}
               {!s.actedAt && s.slaDueAt && !overdue && (
-                <span>Due {formatVnDateTime(s.slaDueAt)}</span>
+                <span>{t("dueBy", { date: formatVnDateTime(s.slaDueAt) })}</span>
               )}
             </div>
             {s.comment && <p className="mt-1 text-sm text-body/80">“{s.comment}”</p>}

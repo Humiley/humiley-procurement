@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { PenLine, X, Loader2 } from "lucide-react";
 
@@ -280,6 +281,13 @@ export function SignatureDialog({
               onChange={(e) => setPassword(e.target.value)}
             />
             <p className="mt-1 text-xs text-grey">{t("note")}</p>
+            {/* Portal-SSO users sign in via Microsoft 365 and have no signing password until they set
+                one — make that path discoverable here instead of leaving them stuck at this field. */}
+            <p className="mt-1 text-xs">
+              <Link href="/change-password" className="font-medium text-navy underline hover:no-underline">
+                {t("setPassword")}
+              </Link>
+            </p>
           </div>
           {error && (
             <p role="alert" className="text-sm font-medium text-danger">

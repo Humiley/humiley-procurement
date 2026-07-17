@@ -338,7 +338,10 @@
       "PAYMENT_REQUEST": "Thanh toán",
       "GOODS_ISSUE": "Xuất kho"
     },
-    "reviewDecide": "Xem & quyết định"
+    "reviewDecide": "Xem & quyết định",
+    "noSteps": "Chưa có bước phê duyệt.",
+    "slaOverdue": "Quá hạn SLA",
+    "dueBy": "Hạn {date}"
   },
   "notifications": {
     "title": "Thông báo",
@@ -971,7 +974,8 @@
     "drawSignature": "Ký tên của bạn",
     "signHere": "Ký tại đây",
     "clear": "Xoá",
-    "errDrawSignature": "Vui lòng ký tên để hoàn tất."
+    "errDrawSignature": "Vui lòng ký tên để hoàn tất.",
+    "setPassword": "Chưa đặt mật khẩu ký? Đặt ngay"
   },
   "grn": {
     "lot": "Lô",

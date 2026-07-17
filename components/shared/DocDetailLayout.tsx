@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -19,7 +20,7 @@ export type DetailTab = {
  */
 export function DocDetailLayout({
   backHref,
-  backLabel = "Back",
+  backLabel,
   title,
   subtitle,
   statusSlot,
@@ -38,11 +39,13 @@ export function DocDetailLayout({
 }) {
   const [active, setActive] = useState(tabs[0]?.key);
   const current = tabs.find((t) => t.key === active) ?? tabs[0];
+  const tc = useTranslations("common");
+  const backText = backLabel ?? tc("back");   // default the Back label to the translated common.back
 
   return (
     <div className="space-y-[22px]">
       <Link href={backHref} className="btn-ghost -ml-3 w-fit">
-        <ArrowLeft className="h-4 w-4" /> {backLabel}
+        <ArrowLeft className="h-4 w-4" /> {backText}
       </Link>
 
       <div className="card p-6">

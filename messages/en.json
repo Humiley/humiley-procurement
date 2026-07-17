@@ -338,7 +338,10 @@
       "PAYMENT_REQUEST": "Payment",
       "GOODS_ISSUE": "Goods issue"
     },
-    "reviewDecide": "Review & decide"
+    "reviewDecide": "Review & decide",
+    "noSteps": "No approval steps yet.",
+    "slaOverdue": "SLA overdue",
+    "dueBy": "Due {date}"
   },
   "notifications": {
     "title": "Notifications",
@@ -971,7 +974,8 @@
     "drawSignature": "Draw your signature",
     "signHere": "Sign here",
     "clear": "Clear",
-    "errDrawSignature": "Please draw your signature to sign."
+    "errDrawSignature": "Please draw your signature to sign.",
+    "setPassword": "Haven’t set a signing password yet? Set one now"
   },
   "grn": {
     "lot": "Lot",
