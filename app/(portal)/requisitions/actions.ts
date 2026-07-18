@@ -177,6 +177,18 @@ async function _recallPr(id: string) {
     throw new Error("This requisition can no longer be recalled — a review has already started.");
   }
   if (!(await transition(db.purchaseRequisition, id, "SUBMITTED", "DRAFT"))) throw staleError();
+  // TOCTOU guard: an approver may have ACTED in the window between the count above and this transition
+  // (recall reads decided=0, approve commits step=APPROVED while the PR is still SUBMITTED, recall then
+  // flips it to DRAFT). Re-check after the transition: if a step is now decided, UNDO the recall (back
+  // to SUBMITTED) and fail — an acted-upon requisition must not silently drop to DRAFT leaving an
+  // orphaned approval behind.
+  const decidedNow = await db.approvalStep.count({
+    where: { entityType: "PR", entityId: id, status: { not: "PENDING" } },
+  });
+  if (decidedNow > 0) {
+    await transition(db.purchaseRequisition, id, "DRAFT", "SUBMITTED");
+    throw new Error("This requisition can no longer be recalled — a review has just started.");
+  }
   // A racing approval loses: its step row was deleted, decideStep will find nothing pending.
   await db.approvalStep.deleteMany({ where: { entityType: "PR", entityId: id, status: "PENDING" } });
   await db.purchaseRequisition.update({ where: { id }, data: { currentApprovalLevel: 0 } });
@@ -201,6 +213,9 @@ async function _cancelPr(id: string) {
     throw new Error("Only a draft or submitted requisition can be cancelled.");
   }
   if (!(await transition(db.purchaseRequisition, id, ["DRAFT", "SUBMITTED"], "CANCELLED"))) throw staleError();
+  // Clear any PENDING approval steps so a cancelled requisition stops surfacing in approvers' queues
+  // (pendingStepsFor would otherwise keep returning it as actionable).
+  await db.approvalStep.deleteMany({ where: { entityType: "PR", entityId: id, status: "PENDING" } });
   await audit({
     userId: user.id,
     action: "PR_CANCEL",
