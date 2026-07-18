@@ -46,7 +46,9 @@ export function ApprovalTimeline({ steps }: { steps: TimelineStep[] }) {
               <Icon className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="text-sm font-semibold text-body">{s.roleLabel}</span>
+              <span className="text-sm font-semibold text-body">
+                {s.level >= 1 && s.level <= 3 ? t(`level${s.level}`) : s.roleLabel}
+              </span>
               {s.approverName && <span className="text-sm text-grey">· {s.approverName}</span>}
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-grey">

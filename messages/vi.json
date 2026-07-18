@@ -347,7 +347,10 @@
       "director": "Giám đốc",
       "managingDirector": "Tổng giám đốc"
     },
-    "due": "Hạn {date}"
+    "due": "Hạn {date}",
+    "level1": "Trưởng phòng",
+    "level2": "Giám đốc",
+    "level3": "Tổng giám đốc"
   },
   "notifications": {
     "title": "Thông báo",

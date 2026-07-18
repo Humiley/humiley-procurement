@@ -341,7 +341,10 @@
     "reviewDecide": "Review & decide",
     "noSteps": "No approval steps yet.",
     "slaOverdue": "SLA overdue",
-    "dueBy": "Due {date}"
+    "dueBy": "Due {date}",
+    "level1": "Department Manager",
+    "level2": "Director",
+    "level3": "Managing Director"
   },
   "notifications": {
     "title": "Notifications",
