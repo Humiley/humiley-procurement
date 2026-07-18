@@ -229,6 +229,12 @@ export async function applyDecision(params: {
   if (active.approverId !== params.approverId) {
     throw new Error("This document is waiting for a different approver at the current level.");
   }
+  // Runtime enum guard: TS types are erased at the server-action boundary, so a caller could pass an
+  // out-of-band string that would otherwise be cast straight into ApprovalStepStatus and corrupt the
+  // workflow. Only these three decisions are ever valid.
+  if (params.decision !== "APPROVED" && params.decision !== "REJECTED" && params.decision !== "RETURNED") {
+    throw new Error("Invalid decision.");
+  }
   if (params.decision !== "APPROVED" && !(params.comment || "").trim()) {
     throw new Error("A comment is required to reject or return a document.");
   }

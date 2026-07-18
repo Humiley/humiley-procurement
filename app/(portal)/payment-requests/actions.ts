@@ -296,7 +296,9 @@ async function _markPaymentRequestPaid(params: { id: string; password: string; p
   // §10a cascade: every linked invoice becomes PAID
   const invoiceIds = preq.lines.map((l) => l.invoiceId).filter((v): v is string => !!v);
   if (invoiceIds.length) {
-    await db.invoice.updateMany({ where: { id: { in: invoiceIds } }, data: { paymentStatus: "PAID", paidDate: new Date() } });
+    // Only flip invoices that aren't already PAID — a stale/duplicate request can't re-pay an invoice
+    // another channel already settled.
+    await db.invoice.updateMany({ where: { id: { in: invoiceIds }, paymentStatus: { not: "PAID" } }, data: { paymentStatus: "PAID", paidDate: new Date() } });
   }
 
   const { fireWebhook } = await import("@/lib/webhooks");

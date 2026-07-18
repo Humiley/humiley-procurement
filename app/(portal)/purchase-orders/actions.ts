@@ -41,10 +41,6 @@ async function _createPo(input: PoFormPayload) {
     for (const l of values.lines) {
       if (l.prLineId && !prLineIds.has(l.prLineId)) throw new Error("A line references a different requisition.");
     }
-    // Consume the PR FIRST (guarded) — two concurrent conversions must not both create POs.
-    if (!(await transition(db.purchaseRequisition, pr.id, "APPROVED", "CONVERTED"))) {
-      throw new Error("This requisition was just converted by someone else.");
-    }
   } else {
     for (const l of values.lines) if (l.prLineId) throw new Error("A line references a requisition but none was given.");
   }
@@ -64,6 +60,11 @@ async function _createPo(input: PoFormPayload) {
 
   const po = await db.$transaction(async (tx) => {
     const poNumber = await nextDocNumber("PO", tx, { prefix: "PO" });
+    // Consume the source PR (guarded) INSIDE the same transaction as the PO create, so a failed create
+    // never strands the PR at CONVERTED with a leaked budget commitment — both commit or neither does.
+    if (pr && !(await transition(tx.purchaseRequisition, pr.id, "APPROVED", "CONVERTED"))) {
+      throw new Error("This requisition was just converted by someone else.");
+    }
     const created = await tx.purchaseOrder.create({
       data: {
         poNumber,
@@ -102,7 +103,6 @@ async function _createPo(input: PoFormPayload) {
     return created;
   });
 
-  // (the PR was consumed — guarded — before the PO was created)
 
   await audit({
     userId: user.id,
@@ -272,6 +272,21 @@ async function _cancelPo(id: string) {
   if (po._count.goodsReceipts > 0) throw new Error("Cannot cancel — goods have already been received against this PO.");
   if (!["DRAFT", "APPROVED", "SENT"].includes(po.status)) throw new Error("This PO can no longer be cancelled.");
   if (!(await transition(db.purchaseOrder, id, po.status, "CANCELLED"))) throw staleError();
+  // Release the budget commitment placed while this PO was live — otherwise it is stranded forever and
+  // blocks future requisitions against that budget line. APPROVED/SENT: the commitment is in PO form
+  // (release ordered − invoiced, = full when no goods received, which cancel requires). Still-DRAFT
+  // PR-sourced: moveCommitmentPrToPo never ran, so reverse the source PR's estimate commitment.
+  try {
+    if (po.status === "APPROVED" || po.status === "SENT") {
+      const { releaseOnPoClose } = await import("@/lib/budget");
+      await releaseOnPoClose(id);
+    } else if (po.status === "DRAFT" && po.prId) {
+      const { commitPr } = await import("@/lib/budget");
+      await commitPr(po.prId, -1);
+    }
+  } catch (e) {
+    console.warn("budget release on cancel failed:", e);
+  }
   await audit({ userId: user.id, action: "PO_CANCEL", entityType: "PurchaseOrder", entityId: id, before: { status: po.status }, after: { status: "CANCELLED" } });
   revalidatePath(`/purchase-orders/${id}`);
   revalidatePath("/purchase-orders");

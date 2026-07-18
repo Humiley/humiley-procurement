@@ -223,6 +223,12 @@ async function _markInvoicePaid(params: { invoiceId: string; password: string; p
   if (inv.paymentStatus === "PAID") throw new Error("This invoice is already paid.");
   const verified = await db.electronicSignature.findFirst({ where: { entityType: "Invoice", entityId: inv.id, meaning: "VERIFIED" } });
   if (!verified) throw new Error("Verify the 3-way match before recording a payment.");
+  // An invoice carried by a vendor payment request must be paid THROUGH that request, not directly —
+  // otherwise the same invoice can be disbursed twice via two uncoordinated channels.
+  const onPaymentRequest = await db.paymentRequestLine.findFirst({
+    where: { invoiceId: inv.id, paymentRequest: { status: { in: ["DRAFT", "SUBMITTED", "APPROVED", "PAID"] } } },
+  });
+  if (onPaymentRequest) throw new Error("This invoice is on a vendor payment request — record its payment there.");
 
   let sig;
   try {

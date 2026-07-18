@@ -33,6 +33,18 @@ export const poCreateSchema = z.object({
   warrantyTerms: z.string().trim().optional().nullable(),
   vatPct: z.enum(VAT_RATES).default("10"),
   lines: z.array(poLineSchema).min(1, "Add at least one line"),
+}).superRefine((data, ctx) => {
+  const fx = Number(data.fxRate);
+  // A VND purchase order MUST have fxRate 1. The approval band is picked from total × fxRate, so a
+  // fabricated tiny rate (e.g. 0.0001) shrinks the VND-equivalent and routes a high-value PO to a
+  // junior approver — defeating the spending-authority matrix. VND is the dominant currency here.
+  if (data.currency.toUpperCase() === "VND" && fx !== 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fxRate"], message: "For a VND purchase order the FX rate must be 1." });
+  }
+  // Typo guard for any currency (no real rate to VND exceeds this).
+  if (fx > 1_000_000_000) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fxRate"], message: "FX rate is unrealistically large." });
+  }
 });
 
 export type PoCreateInput = z.infer<typeof poCreateSchema>;

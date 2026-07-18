@@ -110,7 +110,16 @@ async function _postCount(params: { id: string; password: string; reason?: strin
   try {
     await db.$transaction(async (tx) => {
       for (const l of count.lines) {
-        const bal = await tx.stockBalance.findFirst({ where: { warehouseId: count.warehouseId, itemId: l.itemId, lotId: l.lotId } });
+        // Read the balance under a row lock (FOR UPDATE) inside this same transaction, mirroring
+        // post-movement.ts. postMovement re-reads the same row under the (re-entrant) lock, so
+        // `current` here equals the on-hand it will apply the delta to — the adjustment resolves
+        // to exactly countedQty even if another movement is contending for the row.
+        const balRows = await tx.$queryRaw<Array<{ qtyOnHand: Prisma.Decimal; avgCostVnd: Prisma.Decimal }>>`
+          SELECT "qtyOnHand", "avgCostVnd" FROM "StockBalance"
+          WHERE "warehouseId" = ${count.warehouseId} AND "itemId" = ${l.itemId}
+            AND "lotId" IS NOT DISTINCT FROM ${l.lotId ?? null}
+          FOR UPDATE`;
+        const bal = balRows[0];
         const current = new D(bal?.qtyOnHand ?? 0);
         const delta = new D(l.countedQty).minus(current);
         if (delta.isZero()) continue;
