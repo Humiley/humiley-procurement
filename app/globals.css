@@ -222,7 +222,16 @@ html[data-embed="1"] .app-scrim {
   display: none !important;
 }
 html[data-embed="1"] #main {
+  /* The portal shell already provides the page gutter (its #content has ~28px padding) around this
+     iframe, so procurement's OWN horizontal padding was doubling it up (content inset ~2x vs native
+     portal pages). Zero it when framed and drop the centered max-width cap so the embedded content
+     fills the width exactly like a portal page. */
   padding-top: 0.75rem;
+  padding-left: 0;
+  padding-right: 0;
+}
+html[data-embed="1"] #main > div {
+  max-width: none;
 }
 /* Safari does NOT paint a background-attachment:fixed gradient inside an iframe — it drops to the
    iframe's background — so embedded Procurement looked flat white next to the portal's soft gradient.
