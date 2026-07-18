@@ -13,7 +13,10 @@ import { guard } from "@/lib/safe-action";
  * MISA/Bravo import. Rows are stamped with the batch id so a second run cannot double-export.
  */
 const csvCell = (v: unknown) => {
-  const s = String(v ?? "");
+  let s = String(v ?? "");
+  // Neutralise spreadsheet formula injection: a cell starting with = + - @ (or tab/CR) is executed
+  // as a formula by Excel/Sheets on open. Prefix an apostrophe so it's treated as literal text.
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 const toCsv = (header: string[], rows: (string | number)[][]) =>

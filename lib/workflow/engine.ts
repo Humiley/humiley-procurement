@@ -41,7 +41,7 @@ async function resolveApprover(row: {
   approverUserId: string | null;
   approverRole: Role | null;
   level: number;
-}, ctx: { departmentId: string; requesterId: string; entityType: ApprovalEntityType; entityId: string }) {
+}, ctx: { departmentId: string; requesterId: string; entityType: ApprovalEntityType; entityId: string; excludeIds: Set<string> }) {
   const eligible: { id: string; name: string }[] = [];
 
   if (row.approverUserId) {
@@ -89,7 +89,9 @@ async function resolveApprover(row: {
   }
 
   const firstChoice = eligible[0];
-  const pick = eligible.find((u) => u.id !== ctx.requesterId);   // hard rule: never the requester
+  // Hard rules: never the requester (no self-approval), and never someone already assigned to a lower
+  // level of THIS document (so one person can't satisfy multiple required approval levels — SoD).
+  const pick = eligible.find((u) => u.id !== ctx.requesterId && !ctx.excludeIds.has(u.id));
   if (firstChoice && pick && firstChoice.id !== pick.id) {
     await audit({
       userId: null,
@@ -145,12 +147,14 @@ export async function createSteps(params: {
   // resolve every approver first, then create ALL steps in one transaction — a mid-chain
   // resolution failure must not strand a partial PENDING chain on the document
   const resolved: { level: number; approverId: string }[] = [];
+  const assigned = new Set<string>();   // approvers already used at a lower level — never reuse (SoD)
   for (const [level, row] of Array.from(byLevel.entries()).sort((a, b) => a[0] - b[0])) {
     const approver = await resolveApprover(
       { approverUserId: row.approverUserId, approverRole: row.approverRole, level },
-      { departmentId: params.departmentId, requesterId: params.requesterId, entityType: params.entityType, entityId: params.entityId },
+      { departmentId: params.departmentId, requesterId: params.requesterId, entityType: params.entityType, entityId: params.entityId, excludeIds: assigned },
     );
     if (!approver) throw new Error(`No eligible approver found for level ${level} (${LEVEL_LABELS[level] || "level " + level}).`);
+    assigned.add(approver.id);
     resolved.push({ level, approverId: approver.id });
   }
   const steps = await db.$transaction(

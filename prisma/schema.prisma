@@ -742,6 +742,7 @@ model Invoice {
   total           Decimal       @default(0) @db.Decimal(18, 2)
   matchStatus     MatchStatus   @default(UNMATCHED)
   paymentStatus   PaymentStatus @default(UNPAID)
+  verifiedAt      DateTime?     // set once, atomically, when the 3-way match is e-signed (verify guard)
   paidDate        DateTime?
   attachmentId    String?
   xmlPath         String?

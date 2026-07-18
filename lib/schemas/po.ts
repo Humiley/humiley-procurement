@@ -24,7 +24,7 @@ export const poCreateSchema = z.object({
   prId: z.string().optional().nullable(),
   quoteId: z.string().optional().nullable(),
   currency: z.string().trim().min(3).max(3).default("VND"),
-  fxRate: decStr.default("1"),
+  fxRate: decStr.refine((v) => Number(v) > 0, "FX rate must be greater than 0").default("1"),
   paymentTerms: z.string().trim().optional().nullable(),
   incoterm: z.enum(INCOTERMS_2020).optional().nullable(),
   incotermPlace: z.string().trim().optional().nullable(),

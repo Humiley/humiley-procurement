@@ -140,7 +140,7 @@ export function DocListPage<T extends Record<string, unknown>>({
   }
 
   function exportCsv() {
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
     const head = columns.map((c) => esc(c.header)).join(",");
     const body = filtered
       .map((row) => columns.map((c) => esc(rawValue(c, row))).join(","))

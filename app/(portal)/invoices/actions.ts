@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { staleError } from "@/lib/workflow/transition";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
@@ -140,13 +139,22 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
     include: { lines: { include: { poLine: true } }, po: { select: { poNumber: true } } },
   });
   if (!inv) throw new Error("Invoice not found.");
-  const already = await db.electronicSignature.findFirst({ where: { entityType: "Invoice", entityId: inv.id, meaning: "VERIFIED" } });
-  if (already) throw new Error("This invoice is already verified.");
-
   const match = await _computeMatch(inv.id);
   if (!match.matched && !(params.overrideComment || "").trim()) {
     throw new Error("The 3-way match has mismatches — an override comment is required to verify anyway.");
   }
+
+  // Atomic verify guard: only one verify can flip verifiedAt from null. A concurrent second verify (or
+  // a re-verify) finds count 0 and aborts BEFORE signing — no orphan signature, no double invoicedQty
+  // post, no double budget spend. (The previous guard keyed off matchStatus="UNMATCHED", which
+  // _createInvoice already overwrites to MATCHED/MISMATCH at creation — so it NEVER matched and every
+  // verify threw AFTER signing, leaving an orphan VERIFIED signature that let mark-paid succeed on an
+  // un-matched invoice and corrupted the budget ledger.)
+  const claimed = await db.invoice.updateMany({
+    where: { id: inv.id, verifiedAt: null },
+    data: { verifiedAt: new Date(), matchStatus: match.matched ? "MATCHED" : "MISMATCH" },
+  });
+  if (claimed.count === 0) throw new Error("This invoice is already verified.");
 
   let sig;
   try {
@@ -161,6 +169,8 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
       record: { invoiceNumber: inv.invoiceNumber, vendorInvoiceNo: inv.vendorInvoiceNo, po: inv.po.poNumber, total: inv.total, match: match.lines },
     });
   } catch (e) {
+    // Signing failed (e.g. wrong password) — release the claim so the accountant can retry.
+    await db.invoice.updateMany({ where: { id: inv.id }, data: { verifiedAt: null } });
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -177,15 +187,9 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
     });
   }
 
+  // Post invoiced quantities to the PO lines. The verifiedAt claim above already guarantees this
+  // runs exactly once per invoice.
   await db.$transaction(async (tx) => {
-    // Atomic claim BEFORE any ledger mutation: only one verify can move the invoice off
-    // UNMATCHED. A concurrent second verify (both passed the pre-check, both signed, both
-    // reach here) finds count 0 and aborts — no double invoicedQty post, no double spend.
-    const claimed = await tx.invoice.updateMany({
-      where: { id: inv.id, matchStatus: "UNMATCHED" },
-      data: { matchStatus: match.matched ? "MATCHED" : "MISMATCH" },
-    });
-    if (claimed.count === 0) throw staleError();
     for (const l of inv.lines) {
       await tx.poLine.update({
         where: { id: l.poLineId },
