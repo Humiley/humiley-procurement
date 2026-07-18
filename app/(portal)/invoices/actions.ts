@@ -246,6 +246,15 @@ async function _markInvoicePaid(params: { invoiceId: string; password: string; p
   });
   if (onPaymentRequest) throw new Error("This invoice is on a vendor payment request — record its payment there.");
 
+  // Atomically CLAIM the payment BEFORE signing: flip the status only from a not-already-PAID state.
+  // This closes the cross-channel double-disbursement race — a concurrent direct pay or a payment
+  // request settling the same invoice will find it already PAID and abort. Released if signing fails.
+  const claim = await db.invoice.updateMany({
+    where: { id: inv.id, paymentStatus: { not: "PAID" } },
+    data: params.partial ? { paymentStatus: "PARTIALLY_PAID" } : { paymentStatus: "PAID", paidDate: new Date() },
+  });
+  if (!claim.count) throw new Error("This invoice was just paid through another channel.");
+
   let sig;
   try {
     sig = await signRecord({
@@ -258,14 +267,11 @@ async function _markInvoicePaid(params: { invoiceId: string; password: string; p
       record: { invoiceNumber: inv.invoiceNumber, po: inv.po.poNumber, total: inv.total, partial: !!params.partial },
     });
   } catch (e) {
+    // Signing failed (e.g. wrong password) — release the claim so the accountant can retry.
+    await db.invoice.update({ where: { id: inv.id }, data: { paymentStatus: inv.paymentStatus, paidDate: inv.paidDate } });
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
-
-  await db.invoice.update({
-    where: { id: inv.id },
-    data: params.partial ? { paymentStatus: "PARTIALLY_PAID" } : { paymentStatus: "PAID", paidDate: new Date() },
-  });
 
   await audit({ userId: user.id, action: params.partial ? "INVOICE_PART_PAID" : "INVOICE_PAID", entityType: "Invoice", entityId: inv.id, after: { signatureId: sig.id } });
   revalidatePath(`/invoices/${inv.id}`);

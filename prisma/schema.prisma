@@ -1257,6 +1257,9 @@ model ElectronicSignature {
   recordSnapshotHash String
   prevSignatureHash  String?
   selfHash           String?
+  // Hash-scheme version: 1 = legacy unkeyed SHA-256; 2 = keyed HMAC-SHA256 that also binds `reason`.
+  // Lets a v2 chain re-verify while grandfathering any v1 rows written before the key was introduced.
+  sigVersion         Int              @default(1)
   // Optional hand-drawn signature (visual mark) captured in the sign dialog — a small PNG
   // data-URI. NOT part of the integrity hash chain (signatureHash); the cryptographic proof
   // remains the signer identity + meaning + document snapshot.

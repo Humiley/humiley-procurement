@@ -105,9 +105,17 @@ export async function spendOnInvoice(invoiceId: string) {
       const src = l.poLine.prLine ?? { budgetId: null, itemId: l.poLine.itemId };
       const budgetId = await budgetIdForPrLine(tx, src, inv.po.pr.costCenterId, fy);
       if (!budgetId) continue;
-      const amount = new D(l.amount).times(inv.fxRate).toDecimalPlaces(2);   // VND ledger
-      await addToBudget(tx, budgetId, "spentVnd", amount);
-      await addToBudget(tx, budgetId, "committedVnd", amount.negated());
+      // Spend the ACTUAL invoiced money (invoice price × invoice fx).
+      const spend = new D(l.amount).times(inv.fxRate).toDecimalPlaces(2);
+      await addToBudget(tx, budgetId, "spentVnd", spend);
+      // But RELEASE the commitment for these units at the price they were COMMITTED at (PO price × PO
+      // fx), not the invoice price. moveCommitmentPrToPo committed qty×PO-price×PO-fx and
+      // releaseOnPoClose frees the remainder at the same basis — so drawing committed down at the
+      // invoice price left a residue (a within-tolerance price gap) stranded on committedVnd forever,
+      // or, if invoice>PO, over-drew and ate other commitments. Matching the basis makes a fully
+      // invoiced line's commitment net to exactly zero.
+      const releaseCommit = new D(l.qty).times(l.poLine.unitPrice).times(inv.po.fxRate).toDecimalPlaces(2);
+      await addToBudget(tx, budgetId, "committedVnd", releaseCommit.negated());
     }
   });
 }

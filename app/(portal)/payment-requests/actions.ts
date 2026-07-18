@@ -270,18 +270,30 @@ async function _markPaymentRequestPaid(params: { id: string; password: string; p
   if (!preq) throw new Error("Payment request not found.");
   if (preq.status !== "APPROVED") throw new Error("Only an approved payment request can be paid.");
 
-  // Guard the cross-channel double-disbursement race: an invoice on this request could have been paid
-  // directly (invoices → mark paid) in the window between this request's creation and now. The cascade
-  // below would then skip the already-PAID flag flip, but the money still goes out here. Refuse to
-  // disburse if any linked invoice was already settled elsewhere — checked BEFORE signing so no orphan
-  // PAID signature is left behind. (Pairs with the direct-pay guard in invoices/actions.ts. A narrow
-  // check-then-act window remains; a unique constraint on active PaymentRequestLine.invoiceId would
-  // close it structurally — noted as a follow-up.)
+  // Cross-channel double-disbursement race: an invoice on this request could be settled directly
+  // (invoices → mark paid) concurrently. Atomically CLAIM every linked invoice as PAID BEFORE signing,
+  // all-or-none: the transaction throws (and rolls back) if even one was already settled elsewhere, so
+  // we abort before signing with no orphan PAID signature. A concurrent direct pay then finds the
+  // invoice already PAID and aborts too, and a second concurrent pay of THIS request finds its invoices
+  // already claimed — so the disbursement happens exactly once. Prior states are captured so the claim
+  // is released if signing or the request transition then fails.
   const linkedInvoiceIds = preq.lines.map((l) => l.invoiceId).filter((v): v is string => !!v);
+  const priorInv = linkedInvoiceIds.length
+    ? await db.invoice.findMany({ where: { id: { in: linkedInvoiceIds } }, select: { id: true, paymentStatus: true, paidDate: true } })
+    : [];
   if (linkedInvoiceIds.length) {
-    const already = await db.invoice.findFirst({ where: { id: { in: linkedInvoiceIds }, paymentStatus: "PAID" }, select: { invoiceNumber: true } });
-    if (already) throw new Error(`Invoice ${already.invoiceNumber} on this request was already paid through another channel — cancel and rebuild this request before disbursing.`);
+    await db.$transaction(async (tx) => {
+      const claimed = await tx.invoice.updateMany({
+        where: { id: { in: linkedInvoiceIds }, paymentStatus: { not: "PAID" } },
+        data: { paymentStatus: "PAID", paidDate: new Date() },
+      });
+      if (claimed.count !== linkedInvoiceIds.length) {
+        throw new Error("An invoice on this request was already paid through another channel — cancel and rebuild this request before disbursing.");
+      }
+    });
   }
+  const releaseInvoiceClaim = () =>
+    Promise.all(priorInv.map((p) => db.invoice.update({ where: { id: p.id }, data: { paymentStatus: p.paymentStatus, paidDate: p.paidDate } })));
 
   let sig;
   try {
@@ -296,32 +308,29 @@ async function _markPaymentRequestPaid(params: { id: string; password: string; p
       record: { number: preq.paymentRequestNumber, amount: preq.amount, payee: preq.payeeName, ref: params.paymentRef.trim() },
     });
   } catch (e) {
+    await releaseInvoiceClaim();   // signing failed — undo the invoice claim
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
 
-  if (!(await transition(db.paymentRequest, preq.id, "APPROVED", "PAID"))) throw staleError();
+  if (!(await transition(db.paymentRequest, preq.id, "APPROVED", "PAID"))) {
+    await releaseInvoiceClaim();
+    throw staleError();
+  }
   await db.paymentRequest.update({
     where: { id: preq.id },
     data: { paidDate: new Date(), paidById: user.id, paymentRef: params.paymentRef.trim() },
   });
 
-  // §10a cascade: every linked invoice becomes PAID
-  const invoiceIds = preq.lines.map((l) => l.invoiceId).filter((v): v is string => !!v);
-  if (invoiceIds.length) {
-    // Only flip invoices that aren't already PAID — a stale/duplicate request can't re-pay an invoice
-    // another channel already settled.
-    await db.invoice.updateMany({ where: { id: { in: invoiceIds }, paymentStatus: { not: "PAID" } }, data: { paymentStatus: "PAID", paidDate: new Date() } });
-  }
-
+  // (the linked invoices were already claimed PAID above — no separate cascade needed)
   const { fireWebhook } = await import("@/lib/webhooks");
   await fireWebhook("payment.paid", { paymentRequestId: preq.id, number: preq.paymentRequestNumber, amount: String(preq.amount), paymentRef: params.paymentRef.trim() });
 
-  await audit({ userId: user.id, action: "PAYREQ_PAID", entityType: "PaymentRequest", entityId: preq.id, after: { ref: params.paymentRef.trim(), cascadedInvoices: invoiceIds.length, signatureId: sig.id } });
+  await audit({ userId: user.id, action: "PAYREQ_PAID", entityType: "PaymentRequest", entityId: preq.id, after: { ref: params.paymentRef.trim(), cascadedInvoices: linkedInvoiceIds.length, signatureId: sig.id } });
   revalidatePath(`/payment-requests/${preq.id}`);
   revalidatePath("/payment-requests");
   revalidatePath("/invoices");
-  return { cascaded: invoiceIds.length };
+  return { cascaded: linkedInvoiceIds.length };
 }
 
 async function _cancelPaymentRequest(id: string) {

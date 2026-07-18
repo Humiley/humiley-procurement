@@ -1,9 +1,24 @@
 import "server-only";
-import { createHash } from "crypto";
+import { createHash, createHmac } from "crypto";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { notifyRole } from "@/lib/notify";
 import type { SignatureMeaning } from "@prisma/client";
+
+// Keyed-MAC signing key, derived from a secret held OUTSIDE the signatures' database (env, never a
+// column). A plain SHA-256 chain is only tamper-EVIDENT against an edit-and-forget: anyone who can
+// write rows (SQLi sink, a malicious/compromised DBA, an edited backup) could recompute a fully
+// self-consistent chain and forge an APPROVED/VERIFIED signature. HMAC makes the chain un-forgeable
+// without the key. We prefer a dedicated ESIGN_SIGNING_SECRET but fall back to AUTH_SECRET (always
+// present in production) so the protection is active immediately; a distinct sub-key is derived so the
+// two secrets never share raw material. When neither is set (local dev/test) we fall back to the legacy
+// unkeyed hash so nothing breaks — signatures made then are marked v1.
+const ESIGN_RAW_SECRET = process.env.ESIGN_SIGNING_SECRET || process.env.AUTH_SECRET || "";
+const ESIGN_KEY = ESIGN_RAW_SECRET
+  ? createHmac("sha256", ESIGN_RAW_SECRET).update("humiley-esign-chain-v2").digest("hex")
+  : "";
+/** Signature hash-scheme version: 2 = keyed HMAC-SHA256 (binds `reason`); 1 = legacy unkeyed SHA-256. */
+const SIG_VERSION = ESIGN_KEY ? 2 : 1;
 
 /**
  * §19 e-signature core — 21 CFR Part 11-aligned.
@@ -48,6 +63,10 @@ export function sha256Hex(s: string): string {
   return createHash("sha256").update(s, "utf8").digest("hex");
 }
 
+function hmacHex(s: string): string {
+  return createHmac("sha256", ESIGN_KEY).update(s, "utf8").digest("hex");
+}
+
 type SigRow = {
   userId: string;
   entityType: string;
@@ -57,22 +76,36 @@ type SigRow = {
   fullNamePrinted: string;
   recordSnapshotHash: string;
   prevSignatureHash: string | null;
+  reason?: string | null;
+  sigVersion?: number | null;
 };
 
-/** The hash OF a signature row — what the next link in the chain stores as prevSignatureHash. */
+/**
+ * The hash OF a signature row — what the next link in the chain stores as prevSignatureHash, and what
+ * selfHash pins. The scheme is chosen per-row by its `sigVersion`, so a v2 (HMAC) chain and any legacy
+ * v1 (SHA-256) rows below it both re-verify correctly:
+ *  - v2: keyed HMAC-SHA256 that ALSO binds `reason` (the override/justification), which v1 never hashed;
+ *  - v1: the original unkeyed SHA-256 over the same fields WITHOUT reason (kept byte-compatible).
+ */
 export function signatureHash(row: SigRow): string {
-  return sha256Hex(
-    canonicalJson([
-      row.userId,
-      row.entityType,
-      row.entityId,
-      row.meaning,
-      row.signedAt.toISOString(),
-      row.fullNamePrinted,
-      row.recordSnapshotHash,
-      row.prevSignatureHash ?? "",
-    ]),
-  );
+  const fields: unknown[] = [
+    row.userId,
+    row.entityType,
+    row.entityId,
+    row.meaning,
+    row.signedAt.toISOString(),
+    row.fullNamePrinted,
+    row.recordSnapshotHash,
+    row.prevSignatureHash ?? "",
+  ];
+  if ((row.sigVersion ?? 1) >= 2) {
+    // v2 binds the reason into the keyed MAC so a single-column UPDATE of `reason` no longer goes
+    // undetected. Requires the key — a missing key at verify time is a config error, not a silent pass.
+    fields.push(row.reason ?? "");
+    if (!ESIGN_KEY) throw new SignatureError("E-signature key (ESIGN_SIGNING_SECRET / AUTH_SECRET) is not configured.");
+    return hmacHex(canonicalJson(fields));
+  }
+  return sha256Hex(canonicalJson(fields));
 }
 
 export class SignatureError extends Error {
@@ -141,6 +174,7 @@ export async function signRecord(params: {
       where: { entityType: params.entityType, entityId: params.entityId },
       orderBy: { signedAt: "desc" },
     });
+    // Hash the previous link using ITS OWN scheme (a v2 chain may sit above legacy v1 rows).
     const prevSignatureHash = prev
       ? signatureHash({
           userId: prev.userId,
@@ -151,6 +185,8 @@ export async function signRecord(params: {
           fullNamePrinted: prev.fullNamePrinted,
           recordSnapshotHash: prev.recordSnapshotHash,
           prevSignatureHash: prev.prevSignatureHash,
+          reason: prev.reason,
+          sigVersion: prev.sigVersion,
         })
       : null;
 
@@ -167,6 +203,8 @@ export async function signRecord(params: {
       fullNamePrinted: user.name,
       recordSnapshotHash,
       prevSignatureHash,
+      reason: params.reason || null,
+      sigVersion: SIG_VERSION,
     };
     // Bound the optional drawn signature so a record can't be bloated; auth/integrity are
     // unaffected if it is missing or oversized (it is a visual mark, not part of the hash).
@@ -178,8 +216,16 @@ export async function signRecord(params: {
         : null;
     return tx.electronicSignature.create({
       data: {
-        ...row,
-        reason: params.reason || null,
+        userId: row.userId,
+        entityType: row.entityType,
+        entityId: row.entityId,
+        meaning: row.meaning,
+        signedAt: row.signedAt,
+        fullNamePrinted: row.fullNamePrinted,
+        recordSnapshotHash: row.recordSnapshotHash,
+        prevSignatureHash: row.prevSignatureHash,
+        reason: row.reason,
+        sigVersion: SIG_VERSION,
         selfHash: signatureHash(row),
         imageData,
       },
@@ -198,16 +244,24 @@ export async function verifyChain(entityType: string, entityId: string) {
     if ((s.prevSignatureHash ?? null) !== expectedPrev) {
       return { ok: false as const, brokenAt: s.id };
     }
-    const recomputed = signatureHash({
-      userId: s.userId,
-      entityType: s.entityType,
-      entityId: s.entityId,
-      meaning: s.meaning,
-      signedAt: s.signedAt,
-      fullNamePrinted: s.fullNamePrinted,
-      recordSnapshotHash: s.recordSnapshotHash,
-      prevSignatureHash: s.prevSignatureHash,
-    });
+    let recomputed: string;
+    try {
+      recomputed = signatureHash({
+        userId: s.userId,
+        entityType: s.entityType,
+        entityId: s.entityId,
+        meaning: s.meaning,
+        signedAt: s.signedAt,
+        fullNamePrinted: s.fullNamePrinted,
+        recordSnapshotHash: s.recordSnapshotHash,
+        prevSignatureHash: s.prevSignatureHash,
+        reason: s.reason,
+        sigVersion: s.sigVersion,
+      });
+    } catch {
+      // A v2 (HMAC) row can't be re-verified without the key — a deployment/config problem, not a pass.
+      return { ok: false as const, brokenAt: s.id, unverifiable: true as const };
+    }
     // selfHash catches tail tampering (rows not yet referenced by a next link);
     // legacy rows without selfHash rely on the prev-hash chain alone.
     if (s.selfHash && s.selfHash !== recomputed) {
