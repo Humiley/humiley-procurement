@@ -67,19 +67,25 @@ export async function moveCommitmentPrToPo(poId: string) {
   await db.$transaction(async (tx) => {
     const po = await tx.purchaseOrder.findUnique({
       where: { id: poId },
-      include: { lines: { include: { prLine: true } }, pr: { select: { costCenterId: true, createdAt: true } } },
+      include: { lines: { include: { prLine: true } }, pr: { include: { lines: true } } },
     });
     if (!po?.pr) return;
     const fy = fiscalYearOf(po.pr.createdAt);
+    // Release the ENTIRE source-PR estimate — every PR line, not just the ones carried onto the PO.
+    // A partial conversion (PO drops some PR lines) leaves the PR at the terminal CONVERTED state, which
+    // can never spawn a second PO nor be cancelled, so a dropped line's commitment would otherwise be
+    // stranded forever and permanently understate the budget's available balance. commitPr placed the
+    // full estimate, so we reverse the full estimate here, then commit the PO's actual amounts.
+    for (const prl of po.pr.lines) {
+      const budgetId = await budgetIdForPrLine(tx, prl, po.pr.costCenterId, fy);
+      if (!budgetId) continue;
+      const est = new D(prl.qty).times(prl.estUnitPriceVnd).toDecimalPlaces(2);
+      await addToBudget(tx, budgetId, "committedVnd", est.negated());
+    }
     for (const l of po.lines) {
       const src = l.prLine ?? { budgetId: null, itemId: l.itemId };
       const budgetId = await budgetIdForPrLine(tx, src, po.pr.costCenterId, fy);
       if (!budgetId) continue;
-      // release the PR estimate, commit the PO amount
-      if (l.prLine) {
-        const est = new D(l.prLine.qty).times(l.prLine.estUnitPriceVnd).toDecimalPlaces(2);
-        await addToBudget(tx, budgetId, "committedVnd", est.negated());
-      }
       // §20: budgets are VND — convert foreign-currency PO amounts at the PO's captured rate
       await addToBudget(tx, budgetId, "committedVnd", new D(l.amount).times(po.fxRate).toDecimalPlaces(2));
     }

@@ -30,6 +30,11 @@ export type MatchLine = {
 
 /** Compare invoice lines against PO price and GRN-accepted quantities. */
 async function _computeMatch(invoiceId: string): Promise<{ lines: MatchLine[]; matched: boolean }> {
+  // Exposed as the `computeMatch` server action (bottom of file) and reachable by any authenticated
+  // user — the edge middleware only checks isLoggedIn, and the role gate lives on the detail PAGE, not
+  // here. Without this, a non-finance user could enumerate invoiceIds and read PO/vendor unit prices,
+  // quantities and variance %. Gate to the same audience the invoice detail page allows.
+  await requireRoles("ACCOUNTANT", "ADMIN", "PURCHASER", "DIRECTOR", "DEPT_MANAGER");
   const inv = await db.invoice.findUnique({
     where: { id: invoiceId },
     include: { lines: { include: { poLine: true } } },
@@ -142,6 +147,17 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
   const match = await _computeMatch(inv.id);
   if (!match.matched && !(params.overrideComment || "").trim()) {
     throw new Error("The 3-way match has mismatches — an override comment is required to verify anyway.");
+  }
+
+  // Quantity is a hard 0% limit even under a price-tolerance override: an override may waive a price
+  // variance, but an invoice must never bring a PO line's cumulative invoiced quantity past the ordered
+  // quantity. Checked BEFORE the verifiedAt claim / signature so a rejection never strands an orphan
+  // VERIFIED signature. (The single-invoice duplicate-poLineId route into this is also blocked upstream
+  // by invoiceCreateSchema's per-line uniqueness refine.)
+  for (const l of inv.lines) {
+    if (new D(l.poLine.invoicedQty).plus(new D(l.qty)).greaterThan(new D(l.poLine.qty))) {
+      throw new Error(`Over-invoice: this would bring PO line "${l.poLine.description}" past its ordered quantity.`);
+    }
   }
 
   // Atomic verify guard: only one verify can flip verifiedAt from null. A concurrent second verify (or

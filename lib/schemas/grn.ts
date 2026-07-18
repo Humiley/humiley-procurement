@@ -5,6 +5,10 @@ const decStr = z
   .trim()
   .regex(/^\d+(\.\d{1,4})?$/, "Enter a valid number");
 
+// A payload that lists the same PO line / receipt line twice defeats the 0%-quantity 3-way match /
+// over-receipt guard: each duplicate line independently sees the full outstanding quantity as
+// matchable, so the pair silently double-bills or double-receives. Each list below rejects duplicates.
+
 export const grnCreateSchema = z.object({
   poId: z.string().min(1, "Purchase order is required"),
   warehouseId: z.string().min(1, "Warehouse is required"),
@@ -12,23 +16,26 @@ export const grnCreateSchema = z.object({
   lines: z
     .array(z.object({ poLineId: z.string().min(1), qtyReceived: decStr }))
     .min(1)
-    .refine((ls) => ls.some((l) => Number(l.qtyReceived) > 0), "Receive at least one unit"),
+    .refine((ls) => ls.some((l) => Number(l.qtyReceived) > 0), "Receive at least one unit")
+    .refine((ls) => new Set(ls.map((l) => l.poLineId)).size === ls.length, "Each PO line may appear only once on a receipt — combine duplicates into one line."),
 });
 export type GrnCreatePayload = z.input<typeof grnCreateSchema>;
 
 export const grnAcceptSchema = z.object({
   grnId: z.string().min(1),
-  lines: z.array(
-    z.object({
-      grnLineId: z.string().min(1),
-      qtyAccepted: decStr,
-      qtyRejected: decStr,
-      rejectReason: z.string().trim().optional().nullable(),
-      // §21: lot-tracked items capture a lot at acceptance (blank lotNumber ⇒ auto LOT-YYMMDD-####)
-      lotNumber: z.string().trim().optional().nullable(),
-      expiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable().or(z.literal("")),
-    }),
-  ),
+  lines: z
+    .array(
+      z.object({
+        grnLineId: z.string().min(1),
+        qtyAccepted: decStr,
+        qtyRejected: decStr,
+        rejectReason: z.string().trim().optional().nullable(),
+        // §21: lot-tracked items capture a lot at acceptance (blank lotNumber ⇒ auto LOT-YYMMDD-####)
+        lotNumber: z.string().trim().optional().nullable(),
+        expiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable().or(z.literal("")),
+      }),
+    )
+    .refine((ls) => new Set(ls.map((l) => l.grnLineId)).size === ls.length, "Each receipt line may appear only once."),
 });
 export type GrnAcceptPayload = z.input<typeof grnAcceptSchema>;
 
@@ -39,6 +46,7 @@ export const invoiceCreateSchema = z.object({
   lines: z
     .array(z.object({ poLineId: z.string().min(1), qty: decStr, unitPrice: decStr }))
     .min(1)
-    .refine((ls) => ls.some((l) => Number(l.qty) > 0), "Invoice at least one unit"),
+    .refine((ls) => ls.some((l) => Number(l.qty) > 0), "Invoice at least one unit")
+    .refine((ls) => new Set(ls.map((l) => l.poLineId)).size === ls.length, "Each PO line may appear only once on an invoice — combine duplicates into one line."),
 });
 export type InvoiceCreatePayload = z.input<typeof invoiceCreateSchema>;

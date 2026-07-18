@@ -270,6 +270,19 @@ async function _markPaymentRequestPaid(params: { id: string; password: string; p
   if (!preq) throw new Error("Payment request not found.");
   if (preq.status !== "APPROVED") throw new Error("Only an approved payment request can be paid.");
 
+  // Guard the cross-channel double-disbursement race: an invoice on this request could have been paid
+  // directly (invoices → mark paid) in the window between this request's creation and now. The cascade
+  // below would then skip the already-PAID flag flip, but the money still goes out here. Refuse to
+  // disburse if any linked invoice was already settled elsewhere — checked BEFORE signing so no orphan
+  // PAID signature is left behind. (Pairs with the direct-pay guard in invoices/actions.ts. A narrow
+  // check-then-act window remains; a unique constraint on active PaymentRequestLine.invoiceId would
+  // close it structurally — noted as a follow-up.)
+  const linkedInvoiceIds = preq.lines.map((l) => l.invoiceId).filter((v): v is string => !!v);
+  if (linkedInvoiceIds.length) {
+    const already = await db.invoice.findFirst({ where: { id: { in: linkedInvoiceIds }, paymentStatus: "PAID" }, select: { invoiceNumber: true } });
+    if (already) throw new Error(`Invoice ${already.invoiceNumber} on this request was already paid through another channel — cancel and rebuild this request before disbursing.`);
+  }
+
   let sig;
   try {
     sig = await signRecord({
