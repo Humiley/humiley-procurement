@@ -169,10 +169,12 @@ export async function signRecord(params: {
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${params.entityType + ":" + params.entityId}))`;
 
-    // Tamper-evident chain: link to the hash of the entity's latest signature.
+    // Tamper-evident chain: link to the hash of the entity's latest signature. The id tiebreak keeps
+    // "latest" deterministic if two rows ever share a millisecond signedAt (the advisory lock above
+    // already serializes appends, so ids are in creation order).
     const prev = await tx.electronicSignature.findFirst({
       where: { entityType: params.entityType, entityId: params.entityId },
-      orderBy: { signedAt: "desc" },
+      orderBy: [{ signedAt: "desc" }, { id: "desc" }],
     });
     // Hash the previous link using ITS OWN scheme (a v2 chain may sit above legacy v1 rows).
     const prevSignatureHash = prev
@@ -233,20 +235,28 @@ export async function signRecord(params: {
   });
 }
 
-/** Re-verify the whole signature chain of one entity. Returns the first broken link, if any. */
+/**
+ * Re-verify the whole signature chain of one entity. Returns the first broken link, if any.
+ *
+ * The chain is walked by FOLLOWING the prev-hash POINTERS from the root, not by sorting on signedAt —
+ * two signatures that happen to share a millisecond timestamp (millisecond-resolution `new Date()`)
+ * would otherwise sort non-deterministically and could false-flag an honest chain as tampered. The
+ * pointer walk is order-independent and additionally catches a missing/duplicate root, a fork (two
+ * rows claiming the same predecessor), a cycle, and orphaned rows.
+ */
 export async function verifyChain(entityType: string, entityId: string) {
-  const sigs = await db.electronicSignature.findMany({
-    where: { entityType, entityId },
-    orderBy: { signedAt: "asc" },
-  });
-  let expectedPrev: string | null = null;
+  const sigs = await db.electronicSignature.findMany({ where: { entityType, entityId } });
+  if (sigs.length === 0) return { ok: true as const, count: 0 };
+  type Row = (typeof sigs)[number];
+
+  // 1) Recompute each row's hash (the value its successor stores as prevSignatureHash) and pin its
+  //    selfHash. Index rows by the prevSignatureHash they declare, so the chain can be walked forward.
+  const hashOf = new Map<string, string>(); // row.id -> recomputed hash
+  const byPrev = new Map<string | null, Row[]>(); // declared prevSignatureHash -> rows that declare it
   for (const s of sigs) {
-    if ((s.prevSignatureHash ?? null) !== expectedPrev) {
-      return { ok: false as const, brokenAt: s.id };
-    }
-    let recomputed: string;
+    let h: string;
     try {
-      recomputed = signatureHash({
+      h = signatureHash({
         userId: s.userId,
         entityType: s.entityType,
         entityId: s.entityId,
@@ -262,12 +272,36 @@ export async function verifyChain(entityType: string, entityId: string) {
       // A v2 (HMAC) row can't be re-verified without the key — a deployment/config problem, not a pass.
       return { ok: false as const, brokenAt: s.id, unverifiable: true as const };
     }
-    // selfHash catches tail tampering (rows not yet referenced by a next link);
-    // legacy rows without selfHash rely on the prev-hash chain alone.
-    if (s.selfHash && s.selfHash !== recomputed) {
-      return { ok: false as const, brokenAt: s.id };
-    }
-    expectedPrev = recomputed;
+    // selfHash pins the row's own content (catches tampering of a tail row nothing references yet);
+    // legacy rows without selfHash rely on the prev-hash pointer walk alone.
+    if (s.selfHash && s.selfHash !== h) return { ok: false as const, brokenAt: s.id };
+    hashOf.set(s.id, h);
+    const key = s.prevSignatureHash ?? null;
+    const arr = byPrev.get(key);
+    if (arr) arr.push(s);
+    else byPrev.set(key, [s]);
+  }
+
+  // 2) Exactly one root (prevSignatureHash == null).
+  const roots = byPrev.get(null) ?? [];
+  if (roots.length !== 1) return { ok: false as const, brokenAt: (roots[1] ?? sigs[0]).id };
+
+  // 3) Follow the pointers: a link's successor is the row whose prevSignatureHash equals this row's
+  //    recomputed hash. Any fork (>1 successor) or cycle breaks the chain.
+  const seen = new Set<string>();
+  let current: Row | undefined = roots[0];
+  while (current) {
+    if (seen.has(current.id)) return { ok: false as const, brokenAt: current.id }; // cycle
+    seen.add(current.id);
+    const nexts: Row[] = byPrev.get(hashOf.get(current.id)!) ?? [];
+    if (nexts.length > 1) return { ok: false as const, brokenAt: nexts[1].id }; // fork
+    current = nexts[0];
+  }
+
+  // 4) Every row must be reachable from the root (no orphan dangling off a tampered parent).
+  if (seen.size !== sigs.length) {
+    const orphan = sigs.find((s) => !seen.has(s.id));
+    return { ok: false as const, brokenAt: (orphan ?? sigs[0]).id };
   }
   return { ok: true as const, count: sigs.length };
 }
