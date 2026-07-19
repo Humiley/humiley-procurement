@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { v1List } from "../lib";
 
-export const GET = v1List(({ take, skip }) =>
+export const GET = v1List("purchase-orders", ({ take, skip }) =>
   db.purchaseOrder
     .findMany({ take, skip, orderBy: { createdAt: "desc" }, include: { vendor: { select: { code: true } }, lines: true } })
     .then((rows) =>

@@ -1208,6 +1208,9 @@ model ApiKey {
   prefix      String
   keyHash     String    @unique
   isActive    Boolean   @default(true)
+  // Allowed read scopes (v1 resources) for this key. EMPTY = full access — this keeps keys created
+  // before scoping was introduced working. New keys always store explicit scopes. See lib/api-auth.ts.
+  scopes      String[]  @default([])
   createdById String
   createdAt   DateTime  @default(now())
   lastUsedAt  DateTime?

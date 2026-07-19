@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { KeyRound, Plus, Power, Webhook, Trash2, Radio } from "lucide-react";
 import { createApiKey, deactivateApiKey, createWebhook, deleteWebhook, testWebhook } from "@/app/(portal)/admin/integration.actions";
+import { V1_SCOPES } from "@/lib/api-scopes";
 import { act } from "@/lib/act";
 
-export type ApiKeyRow = { id: string; name: string; prefix: string; isActive: boolean; lastUsedAt: string | null };
+export type ApiKeyRow = { id: string; name: string; prefix: string; isActive: boolean; scopes: string[]; lastUsedAt: string | null };
 export type WebhookRow = { id: string; url: string; events: string[]; hasSecret: boolean };
 
 const EVENTS = ["po.approved", "invoice.matched", "payment.paid", "stock.belowMin"];
@@ -20,6 +21,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
   const fmtErr = useActionError();
   const router = useRouter();
   const [keyName, setKeyName] = useState("");
+  const [keyScopes, setKeyScopes] = useState<string[]>([...V1_SCOPES]);
   const [minted, setMinted] = useState<string | null>(null);
   const [url, setUrl] = useState("");
   const [secret, setSecret] = useState("");
@@ -50,22 +52,38 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
           <KeyRound className="h-4 w-4" /> {t("keysTitle")}
         </h3>
         <p className="mb-3 text-xs text-grey">{t("keysHint")}</p>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
           <input className="field w-64" placeholder={t("keyNamePh")} value={keyName} onChange={(e) => setKeyName(e.target.value)} />
           <button
             type="button"
             disabled={busy || !keyName.trim()}
             onClick={() =>
               run(async () => {
-                const res = act(await createApiKey(keyName));
+                const res = act(await createApiKey(keyName, keyScopes));
                 setMinted(res.token);
                 setKeyName("");
+                setKeyScopes([...V1_SCOPES]);
               })
             }
             className="btn-primary"
           >
             <Plus className="h-4 w-4" /> {t("mint")}
           </button>
+        </div>
+        <div className="mb-3">
+          <p className="mb-1 text-xs font-semibold text-grey">{t("scopesLabel")}</p>
+          <div className="flex flex-wrap gap-2">
+            {V1_SCOPES.map((s) => (
+              <label key={s} className="flex items-center gap-1 text-xs">
+                <input
+                  type="checkbox"
+                  checked={keyScopes.includes(s)}
+                  onChange={(e) => setKeyScopes(e.target.checked ? [...keyScopes, s] : keyScopes.filter((x) => x !== s))}
+                />
+                <span className="font-mono">{s}</span>
+              </label>
+            ))}
+          </div>
         </div>
         {minted ? (
           <p className="mb-3 rounded-lg bg-emerald/10 px-3 py-2 font-mono text-xs">
@@ -84,6 +102,7 @@ export function IntegrationPanels({ keys, hooks }: { keys: ApiKeyRow[]; hooks: W
                   {k.isActive ? t("active") : t("inactive")}
                 </span>
                 <span className="text-xs text-grey">{k.lastUsedAt ? t("lastUsed", { when: k.lastUsedAt }) : t("neverUsed")}</span>
+                <span className="font-mono text-[11px] text-grey">{k.scopes.length ? k.scopes.join(", ") : t("allScopes")}</span>
                 <span className="flex-1" />
                 {k.isActive ? (
                   <button type="button" disabled={busy} onClick={() => { if (!window.confirm(tcm("confirmIrreversible"))) return; run(() => deactivateApiKey(k.id)); }} className="btn-danger btn-sm">

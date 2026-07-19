@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { v1List } from "../lib";
 
-export const GET = v1List(({ take, skip }) =>
+export const GET = v1List("stock-balances", ({ take, skip }) =>
   db.stockBalance
     .findMany({ take, skip, where: { qtyOnHand: { gt: 0 } }, orderBy: [{ warehouseId: "asc" }, { itemId: "asc" }], include: { warehouse: { select: { code: true } }, item: { select: { code: true, nameEn: true } }, lot: { select: { lotNumber: true, expiryDate: true } } } })
     .then((rows) =>

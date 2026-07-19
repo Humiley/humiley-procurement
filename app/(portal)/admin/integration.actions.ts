@@ -5,19 +5,23 @@ import { revalidatePath } from "next/cache";
 import { requireRoles } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { mintApiToken } from "@/lib/api-auth";
+import { mintApiToken, V1_SCOPES, type V1Scope } from "@/lib/api-auth";
 import { fireWebhook, type WebhookEvent } from "@/lib/webhooks";
 import { guard } from "@/lib/safe-action";
 
 /* ── §17 API keys ── */
 
-async function _createApiKey(name: string) {
+async function _createApiKey(name: string, scopes?: string[]) {
   const admin = await requireRoles("ADMIN");
   const clean = name.trim();
   if (!clean) throw new Error("Name the key (e.g. 'MISA accounting').");
+  // Store an explicit scope list. Keep only known scopes; default to full access (all scopes) when the
+  // caller sends none, so a new key never lands in the legacy empty-means-all state by accident.
+  const requested = (scopes ?? []).filter((s): s is V1Scope => (V1_SCOPES as readonly string[]).includes(s));
+  const scopeList: string[] = requested.length ? Array.from(new Set(requested)) : [...V1_SCOPES];
   const { token, prefix, keyHash } = mintApiToken();
-  const row = await db.apiKey.create({ data: { name: clean, prefix, keyHash, createdById: admin.id } });
-  await audit({ userId: admin.id, action: "APIKEY_CREATE", entityType: "ApiKey", entityId: row.id, after: { name: clean, prefix } });
+  const row = await db.apiKey.create({ data: { name: clean, prefix, keyHash, scopes: scopeList, createdById: admin.id } });
+  await audit({ userId: admin.id, action: "APIKEY_CREATE", entityType: "ApiKey", entityId: row.id, after: { name: clean, prefix, scopes: scopeList } });
   revalidatePath("/admin/settings");
   return { id: row.id, token }; // plaintext shown exactly once
 }

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { v1List } from "../lib";
 
-export const GET = v1List(({ take, skip }) =>
+export const GET = v1List("vendors", ({ take, skip }) =>
   db.vendor
     .findMany({ take, skip, orderBy: { code: "asc" } })
     .then((rows) =>

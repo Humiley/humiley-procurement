@@ -22,7 +22,7 @@ export default async function SettingsPage() {
     db.webhookSubscription.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
   const keyRows: ApiKeyRow[] = apiKeys.map((k) => ({
-    id: k.id, name: k.name, prefix: k.prefix, isActive: k.isActive,
+    id: k.id, name: k.name, prefix: k.prefix, isActive: k.isActive, scopes: k.scopes,
     lastUsedAt: k.lastUsedAt ? ymdHmVn(k.lastUsedAt) : null,
   }));
   const hookRows: WebhookRow[] = webhooks.map((w) => ({ id: w.id, url: w.url, events: w.events, hasSecret: !!w.secret }));

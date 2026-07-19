@@ -935,6 +935,8 @@
     "keysTitle": "Khóa API (§17)",
     "keysHint": "REST API chỉ-đọc tại /api/v1 — xác thực bằng `Authorization: Bearer hml_…`. Token chỉ hiển thị MỘT lần khi tạo; hệ thống chỉ lưu mã băm.",
     "keyNamePh": "VD: Kế toán MISA",
+    "scopesLabel": "Phạm vi truy cập (giữ nguyên tất cả để đọc toàn bộ; bỏ chọn để giới hạn khóa này):",
+    "allScopes": "tất cả tài nguyên",
     "mint": "Tạo khóa",
     "copyOnce": "Sao chép ngay — chỉ hiện một lần:",
     "noKeys": "Chưa có khóa API.",

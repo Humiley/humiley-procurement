@@ -929,6 +929,8 @@
     "keysTitle": "API keys (§17)",
     "keysHint": "Read-only REST API under /api/v1 — authenticate with `Authorization: Bearer hml_…`. The token is shown ONCE at creation; only its hash is stored.",
     "keyNamePh": "e.g. MISA accounting",
+    "scopesLabel": "Access scopes (leave all ticked for full read access; untick to restrict this key):",
+    "allScopes": "all resources",
     "mint": "Create key",
     "copyOnce": "Copy now — shown once:",
     "noKeys": "No API keys yet.",
