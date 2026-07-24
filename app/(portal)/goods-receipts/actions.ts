@@ -97,6 +97,35 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string;
   const totalAccepted = values.lines.reduce((s, l) => s.plus(l.qtyAccepted), new D(0));
   const totalRejected = values.lines.reduce((s, l) => s.plus(l.qtyRejected), new D(0));
 
+  const newStatus = totalAccepted.isZero() ? "REJECTED" : totalRejected.isZero() ? "ACCEPTED" : "PARTIALLY_REJECTED";
+
+  // Pre-flight over-receipt check BEFORE signing: if another GRN already consumed this PO line's
+  // outstanding quantity, fail now rather than strand a committed RECEIVED signature on a GRN whose
+  // stock posting would later roll back. (The guarded increment inside the transaction below stays as
+  // the final race-safe enforcement for the razor-thin simultaneous-commit window.)
+  for (const l of values.lines) {
+    if (Number(l.qtyAccepted) <= 0) continue;
+    const gl = lineById.get(l.grnLineId)!;
+    const pl = await db.poLine.findUnique({ where: { id: gl.poLineId }, select: { receivedQty: true, qty: true } });
+    if (pl && new D(pl.receivedQty).plus(l.qtyAccepted).greaterThan(pl.qty)) {
+      throw new Error(`Over-receipt: accepting ${l.qtyAccepted} for "${gl.poLine.description}" would exceed the ordered quantity (another receipt was accepted first).`);
+    }
+  }
+
+  // Claim-before-sign (mirrors invoices' _verifyInvoice): atomically take the GRN out of QC_PENDING
+  // BEFORE creating the RECEIVED e-signature, and release it back to QC_PENDING if signing or the
+  // stock posting fails — so a concurrent acceptance can never strand an orphan RECEIVED signature on
+  // a GRN whose acceptance was rolled back.
+  const claim = await db.goodsReceipt.updateMany({
+    where: { id: grn.id, status: "QC_PENDING" },
+    data: { status: newStatus },
+  });
+  if (claim.count === 0) throw staleError(); // another keeper accepted this GRN first
+  const releaseClaim = () =>
+    db.goodsReceipt
+      .updateMany({ where: { id: grn.id, status: newStatus }, data: { status: "QC_PENDING" } })
+      .catch(() => {});
+
   let sig;
   try {
     sig = await signRecord({
@@ -113,11 +142,10 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string;
       },
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
-
-  const newStatus = totalAccepted.isZero() ? "REJECTED" : totalRejected.isZero() ? "ACCEPTED" : "PARTIALLY_REJECTED";
 
   await db.$transaction(async (tx) => {
     for (const l of values.lines) {
@@ -180,11 +208,10 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string;
         }
       }
     }
-    const flipped = await tx.goodsReceipt.updateMany({
-      where: { id: grn.id, status: "QC_PENDING" },
-      data: { status: newStatus },
-    });
-    if (flipped.count === 0) throw staleError();   // concurrent acceptance — roll everything back
+    // GRN status was already claimed above (QC_PENDING -> newStatus); no in-transaction flip needed.
+  }).catch(async (e) => {
+    await releaseClaim();   // stock posting rolled back (e.g. over-receipt race) — release the claim
+    throw e;
   });
 
   // PO status from cumulative receipts (rejected quantities keep the line open — §9)
