@@ -1,17 +1,15 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireUser, hasAnyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { HowItWorks } from "@/components/shared/HowItWorks";
 import { decToString } from "@/lib/money";
 import { formatVnDate, daysBetween } from "@/lib/dates";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { InvoiceList, type InvoiceRow } from "@/components/invoice/InvoiceList";
 
 /** §9 invoice register with the aging buckets (0–30 / 31–60 / 61–90 / 90+) for unpaid invoices. */
 export default async function InvoicesPage() {
   const user = await requireUser();
   const t = await getTranslations("invoice");
-  const st = await getTranslations("status");
   const canCreate = hasAnyRole(user, ["ACCOUNTANT", "ADMIN"]);
 
   const invoices = await db.invoice.findMany({
@@ -35,17 +33,21 @@ export default async function InvoicesPage() {
     if (b && b !== t("agingCurrent")) agingTotals.set(b, (agingTotals.get(b) ?? 0) + Number(i.total));
   }
 
+  const rows: InvoiceRow[] = invoices.map((i) => ({
+    id: i.id,
+    invoiceNumber: i.invoiceNumber,
+    vendorInvoiceNo: i.vendorInvoiceNo,
+    vendorCode: i.vendor.code,
+    poNumber: i.po.poNumber,
+    dueDate: formatVnDate(i.dueDate),
+    total: decToString(i.total, 0) ?? "0",
+    matchStatus: i.matchStatus,
+    paymentStatus: i.paymentStatus,
+    aging: bucket(i.dueDate, i.paymentStatus) ?? "—",
+  }));
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">{t("listTitle")}</h1>
-        {canCreate ? (
-          <Link href="/invoices/new" className="btn-primary">
-            {t("newButton")}
-          </Link>
-        ) : null}
-      </div>
-
       <HowItWorks guide="invoices" />
 
       {agingTotals.size > 0 ? (
@@ -60,45 +62,7 @@ export default async function InvoicesPage() {
         </div>
       ) : null}
 
-      {invoices.length === 0 ? (
-        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
-      ) : (
-        <div className="overflow-x-auto card">
-          <table className="w-full min-w-[880px] text-sm">
-            <thead>
-              <tr className="th">
-                <th className="px-3 py-2.5">{t("colNo")}</th>
-                <th className="px-3 py-2.5">{t("vendorInvoiceNo")}</th>
-                <th className="px-3 py-2.5">{t("po")}</th>
-                <th className="px-3 py-2.5">{t("colDue")}</th>
-                <th className="px-3 py-2.5 text-right">{t("colTotal")}</th>
-                <th className="px-3 py-2.5">{t("colMatch")}</th>
-                <th className="px-3 py-2.5">{t("colPayment")}</th>
-                <th className="px-3 py-2.5">{t("colAging")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map((i) => {
-                const b = bucket(i.dueDate, i.paymentStatus);
-                return (
-                  <tr key={i.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                    <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
-                      <Link href={`/invoices/${i.id}`} className="hover:underline">{i.invoiceNumber}</Link>
-                    </td>
-                    <td className="px-3 py-2.5 text-xs">{i.vendorInvoiceNo} <span className="text-grey">· {i.vendor.code}</span></td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums">{i.po.poNumber}</td>
-                    <td className="px-3 py-2.5">{formatVnDate(i.dueDate)}</td>
-                    <td className="px-3 py-2.5 text-right font-semibold text-navy tabular-nums">{Number(decToString(i.total, 0)).toLocaleString("en-US")} ₫</td>
-                    <td className="px-3 py-2.5"><StatusBadge status={i.matchStatus} label={st.has(i.matchStatus) ? st(i.matchStatus) : i.matchStatus} /></td>
-                    <td className="px-3 py-2.5"><StatusBadge status={i.paymentStatus} label={st.has(i.paymentStatus) ? st(i.paymentStatus) : i.paymentStatus} /></td>
-                    <td className="px-3 py-2.5 text-xs">{b ?? "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <InvoiceList rows={rows} canCreate={canCreate} />
     </div>
   );
 }

@@ -6,13 +6,12 @@ import { db } from "@/lib/db";
 import { HowItWorks } from "@/components/shared/HowItWorks";
 import { decToString } from "@/lib/money";
 import { formatVnDate } from "@/lib/dates";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { PayReqList, type PayReqRow } from "@/components/payreq/PayReqList";
 
 /** §10a register + the accountant's daily payment run (approved-not-paid, by due date). */
 export default async function PaymentRequestsPage() {
   const user = await requireUser();
   const t = await getTranslations("payreq");
-  const st = await getTranslations("status");
   const seeAll = hasAnyRole(user, ["ACCOUNTANT", "ADMIN", "DIRECTOR", "PURCHASER"]);
   // Visibility: staff see their own; a dept manager sees their department (+ own); Finance/PO/Director/Admin see all.
   const where: Prisma.PaymentRequestWhereInput = seeAll
@@ -30,15 +29,20 @@ export default async function PaymentRequestsPage() {
     .filter((q) => q.status === "APPROVED")
     .sort((a, b) => (a.dueDate?.getTime() ?? Infinity) - (b.dueDate?.getTime() ?? Infinity));
 
+  const rows: PayReqRow[] = preqs.map((q) => ({
+    id: q.id,
+    paymentRequestNumber: q.paymentRequestNumber,
+    type: q.type,
+    payeeName: q.payeeName,
+    vendorCode: q.vendor?.code ?? "",
+    requesterName: q.requester.name,
+    dueDate: q.dueDate ? formatVnDate(q.dueDate) : "—",
+    amount: decToString(q.amount, 0) ?? "0",
+    status: q.status,
+  }));
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">{t("listTitle")}</h1>
-        <Link href="/payment-requests/new" className="btn-primary">
-          {t("newButton")}
-        </Link>
-      </div>
-
       <HowItWorks guide="payment-requests" />
 
       {seeAll && toPay.length > 0 ? (
@@ -50,47 +54,14 @@ export default async function PaymentRequestsPage() {
                 <Link href={`/payment-requests/${q.id}`} className="text-sm font-semibold text-navy tabular-nums whitespace-nowrap hover:underline">{q.paymentRequestNumber}</Link>
                 <span className="min-w-0 flex-1 truncate">{q.payeeName}</span>
                 <span className="text-xs text-grey">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</span>
-                <b className="text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</b>
+                <b className="text-navy tabular-nums">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</b>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      {preqs.length === 0 ? (
-        <p className="card p-6 text-sm text-grey">{t("empty")}</p>
-      ) : (
-        <div className="overflow-x-auto card">
-          <table className="w-full min-w-[860px] text-sm">
-            <thead>
-              <tr className="th">
-                <th className="px-3 py-2.5">{t("colNo")}</th>
-                <th className="px-3 py-2.5">{t("colType")}</th>
-                <th className="px-3 py-2.5">{t("colPayee")}</th>
-                <th className="px-3 py-2.5">{t("colRequester")}</th>
-                <th className="px-3 py-2.5">{t("dueDate")}</th>
-                <th className="px-3 py-2.5 text-right">{t("amount")}</th>
-                <th className="px-3 py-2.5">{t("colStatus")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {preqs.map((q) => (
-                <tr key={q.id} className="border-b border-line last:border-0 hover:bg-grey/5">
-                  <td className="px-3 py-2.5 text-sm font-semibold text-navy tabular-nums whitespace-nowrap">
-                    <Link href={`/payment-requests/${q.id}`} className="hover:underline">{q.paymentRequestNumber}</Link>
-                  </td>
-                  <td className="px-3 py-2.5">{t(`type.${q.type}`)}</td>
-                  <td className="max-w-[200px] truncate px-3 py-2.5">{q.payeeName}{q.vendor ? <span className="text-xs text-grey"> · {q.vendor.code}</span> : null}</td>
-                  <td className="px-3 py-2.5">{q.requester.name}</td>
-                  <td className="px-3 py-2.5">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</td>
-                  <td className="px-3 py-2.5 text-right font-semibold text-navy tabular-nums">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</td>
-                  <td className="px-3 py-2.5"><StatusBadge status={q.status} label={st.has(q.status) ? st(q.status) : q.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <PayReqList rows={rows} />
     </div>
   );
 }
