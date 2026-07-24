@@ -725,6 +725,76 @@ async function seedDemoPr() {
       console.log(`Seeded ${po3Number} (SENT, 6 pcs lot-tracked HVAC-HEPA-14 @ 2,800,000) — drives the §21 demo.`);
     }
   }
+
+  // e2e (10-inventory-esign): a FOREIGN-CURRENCY (USD) SENT PO so the §20 GRN valuation fix is
+  // assertable — accepted stock must post at unitPrice × fxRate in VND (100 × 25,000 = 2,500,000),
+  // NOT the raw foreign unitPrice (100). ELEC-SOCK-32 carries no seed stock, so avgCostVnd == the
+  // converted cost exactly.
+  const po4Number = `HML-PO-${YEAR}-0004`;
+  if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po4Number } }))) {
+    const socket = await db.item.findFirst({ where: { code: "ELEC-SOCK-32" } });
+    const vendorFx = await db.vendor.findFirst({ where: { code: "V-ELEC01" } });
+    const purchaserFx = await db.user.findUnique({ where: { email: "purchaser@humiley.com" } });
+    if (socket && vendorFx && purchaserFx) {
+      await db.purchaseOrder.create({
+        data: {
+          poNumber: po4Number,
+          vendorId: vendorFx.id,
+          currency: "USD",
+          fxRate: 25_000,
+          paymentTerms: "T/T 30 days",
+          incoterm: "FOB",
+          incotermPlace: "Shenzhen",
+          expectedDate: new Date(Date.now() + 8 * 24 * 3600 * 1000),
+          status: "SENT",
+          subtotal: 500,
+          vatPct: 0,
+          vatAmount: 0,
+          total: 500,
+          createdById: purchaserFx.id,
+          lines: {
+            create: [{ itemId: socket.id, description: `${socket.code} · ${socket.nameEn}`, uomId: socket.uomId, qty: 5, unitPrice: 100, amount: 500 }],
+          },
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: YEAR } }, update: { lastValue: 4 }, create: { key: "PO", year: YEAR, lastValue: 4 } });
+      console.log(`Seeded ${po4Number} (SENT, USD @ fx 25,000 · 5 pcs ELEC-SOCK-32 @ $100) — drives the GRN FX-valuation e2e.`);
+    }
+  }
+
+  // e2e (10-inventory-esign): a fully-RECEIVED, still un-invoiced PO so the §9 over-invoice guard
+  // (hard 0% quantity tolerance) is assertable — an invoice for MORE than the ordered qty, even
+  // with a mismatch override, must be refused at verify.
+  const po5Number = `HML-PO-${YEAR}-0005`;
+  if (!(await db.purchaseOrder.findUnique({ where: { poNumber: po5Number } }))) {
+    const contactor = await db.item.findFirst({ where: { code: "ELEC-CONT-40" } });
+    const vendorInv = await db.vendor.findFirst({ where: { code: "V-ELEC01" } });
+    const purchaserInv = await db.user.findUnique({ where: { email: "purchaser@humiley.com" } });
+    if (contactor && vendorInv && purchaserInv) {
+      await db.purchaseOrder.create({
+        data: {
+          poNumber: po5Number,
+          vendorId: vendorInv.id,
+          currency: "VND",
+          paymentTerms: "30 days after delivery",
+          incoterm: "DAP",
+          incotermPlace: "Nhà máy Long Thành, Đồng Nai",
+          expectedDate: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+          status: "RECEIVED",
+          subtotal: 11_500_000,
+          vatPct: 10,
+          vatAmount: 1_150_000,
+          total: 12_650_000,
+          createdById: purchaserInv.id,
+          lines: {
+            create: [{ itemId: contactor.id, description: `${contactor.code} · ${contactor.nameEn}`, uomId: contactor.uomId, qty: 10, unitPrice: 1_150_000, amount: 11_500_000, receivedQty: 10, invoicedQty: 0 }],
+          },
+        },
+      });
+      await db.sequence.upsert({ where: { key_year: { key: "PO", year: YEAR } }, update: { lastValue: 5 }, create: { key: "PO", year: YEAR, lastValue: 5 } });
+      console.log(`Seeded ${po5Number} (RECEIVED, 10 pcs ELEC-CONT-40 @ 1,150,000, un-invoiced) — drives the over-invoice-guard e2e.`);
+    }
+  }
 }
 
 main()

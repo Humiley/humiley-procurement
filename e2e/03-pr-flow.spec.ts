@@ -24,7 +24,15 @@ test("PR: create → submit → signed manager approval", async ({ page }) => {
   await page.goto("/approvals");
   const row = page.locator("tbody tr", { hasText: "E2E — office consumables" }).first();
   await expect(row).toBeVisible();
-  await row.getByRole("button", { name: /^approve$/i }).click();
+  // Documents are now decided on their detail page (only VENDOR rows keep inline buttons):
+  // follow "Review & decide →" and approve from the DecideInline bar there.
+  await row.getByRole("link", { name: /review & decide/i }).click();
+  await page.waitForURL(/requisitions\/(?!new)[a-z0-9]+/, { timeout: 20_000 });
+  // The decision bar lives on the "Approvals & Signatures" tab of the detail page.
+  await page.getByRole("button", { name: /approvals & signatures/i }).click();
+  await page.getByRole("button", { name: /^approve$/i }).click();
   await sign(page, /sign & submit decision/i);
-  await expect(row).toBeHidden({ timeout: 15_000 });
+  // After the signed L1 approval the PR is APPROVED and the decision bar disappears.
+  await expect(page.getByText(/this document is waiting for your decision/i)).toBeHidden({ timeout: 15_000 });
+  await expect(page.getByText(/^Approved$/).first()).toBeVisible({ timeout: 15_000 });
 });

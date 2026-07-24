@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, logout, sign } from "./helpers";
+import { login, logout, sign, drawSignature } from "./helpers";
 
 test("payment request refuses the final approval before accounting verifies", async ({ page }) => {
   // purchaser combines both matched invoices (33M → L1 manager + L2 chief accountant)
@@ -17,20 +17,28 @@ test("payment request refuses the final approval before accounting verifies", as
   await expect(page.getByText(/submitted/i).first()).toBeVisible({ timeout: 15_000 });
   await logout(page);
 
-  // L1 manager approves
+  // L1 manager approves — documents are decided on their detail page now (only VENDOR rows keep
+  // inline queue buttons); follow "Review & decide →" and approve from the DecideInline bar there.
   await login(page, "mgr.eng@humiley.com");
   await page.goto("/approvals");
-  const row = page.locator("tbody tr", { hasText: "HML-PAY-" }).first();
-  await row.getByRole("button", { name: /^approve$/i }).click();
+  await page.locator("tbody tr", { hasText: "HML-PAY-" }).first()
+    .getByRole("link", { name: /review & decide/i }).click();
+  await page.waitForURL(/payment-requests\/[a-z0-9]+/, { timeout: 20_000 });
+  await page.getByRole("button", { name: /^approve$/i }).click();
   await sign(page, /sign & submit decision/i);
   await logout(page);
 
-  // chief accountant: final APPROVE before VERIFY must be refused
+  // chief accountant: the final APPROVE before VERIFY must be refused (§10a). The decision is
+  // signed on the detail page, and the gate error surfaces inside the still-open signature dialog.
   await login(page, "accountant@humiley.com");
   await page.goto("/approvals");
-  const row2 = page.locator("tbody tr", { hasText: "HML-PAY-" }).first();
-  await row2.getByRole("button", { name: /^approve$/i }).click();
+  await page.locator("tbody tr", { hasText: "HML-PAY-" }).first()
+    .getByRole("link", { name: /review & decide/i }).click();
+  await page.waitForURL(/payment-requests\/[a-z0-9]+/, { timeout: 20_000 });
+  await page.getByRole("button", { name: /^approve$/i }).click();
   const dialog = page.locator("div.fixed.inset-0.z-50");
+  await expect(dialog).toBeVisible();
+  await drawSignature(page, dialog);
   await dialog.locator('input[type="password"]').fill("Humiley@2026");
   await dialog.getByRole("button", { name: /sign & submit decision/i }).click();
   await expect(page.getByText(/accounting must verify/i)).toBeVisible({ timeout: 15_000 });
