@@ -197,7 +197,11 @@ async function _acceptGrn(params: { payload: GrnAcceptPayload; password: string;
               itemId: gl.poLine.itemId,
               lotId,
               qty: l.qtyAccepted,
-              unitCostVnd: gl.poLine.unitPrice,
+              // §20: stock valuation (avgCostVnd) is in VND, and the PO-line price is in the PO's
+              // ORIGINAL currency — convert at the PO's captured fxRate, exactly as the budget ledger
+              // does (moveCommitmentPrToPo / spendOnInvoice). Without this, an imported (non-VND) PO's
+              // stock is valued and later charged to from-stock budget ~fxRate× too low.
+              unitCostVnd: new D(gl.poLine.unitPrice).times(grn.po.fxRate).toDecimalPlaces(2),
               refEntityType: "GoodsReceipt",
               refEntityId: grn.id,
               note: grn.grnNumber,
