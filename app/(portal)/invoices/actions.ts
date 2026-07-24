@@ -149,17 +149,6 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
     throw new Error("The 3-way match has mismatches — an override comment is required to verify anyway.");
   }
 
-  // Quantity is a hard 0% limit even under a price-tolerance override: an override may waive a price
-  // variance, but an invoice must never bring a PO line's cumulative invoiced quantity past the ordered
-  // quantity. Checked BEFORE the verifiedAt claim / signature so a rejection never strands an orphan
-  // VERIFIED signature. (The single-invoice duplicate-poLineId route into this is also blocked upstream
-  // by invoiceCreateSchema's per-line uniqueness refine.)
-  for (const l of inv.lines) {
-    if (new D(l.poLine.invoicedQty).plus(new D(l.qty)).greaterThan(new D(l.poLine.qty))) {
-      throw new Error(`Over-invoice: this would bring PO line "${l.poLine.description}" past its ordered quantity.`);
-    }
-  }
-
   // Atomic verify guard: only one verify can flip verifiedAt from null. A concurrent second verify (or
   // a re-verify) finds count 0 and aborts BEFORE signing — no orphan signature, no double invoicedQty
   // post, no double budget spend. (The previous guard keyed off matchStatus="UNMATCHED", which
@@ -171,6 +160,31 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
     data: { verifiedAt: new Date(), matchStatus: match.matched ? "MATCHED" : "MISMATCH" },
   });
   if (claimed.count === 0) throw new Error("This invoice is already verified.");
+  const releaseVerify = () => db.invoice.updateMany({ where: { id: inv.id }, data: { verifiedAt: null } }).catch(() => {});
+
+  // Quantity is a hard 0% limit. The verifiedAt claim only serializes THIS invoice — two DIFFERENT
+  // invoices on the same PO line could each pass a stale snapshot check and both increment, double-
+  // billing the PO line. Enforce the limit RACE-SAFELY at the write with a guarded conditional
+  // increment (mirrors GRN accept): only bump when the result stays <= ordered qty, abort on count 0.
+  // Posted BEFORE signing so an over-invoice rejection never strands a VERIFIED signature; rolled back
+  // if signing then fails.
+  try {
+    await db.$transaction(async (tx) => {
+      for (const l of inv.lines) {
+        const maxPrev = new D(l.poLine.qty).minus(new D(l.qty));
+        const bumped = await tx.poLine.updateMany({
+          where: { id: l.poLineId, invoicedQty: { lte: maxPrev.toString() } },
+          data: { invoicedQty: { increment: new D(l.qty) } },
+        });
+        if (bumped.count === 0) {
+          throw new Error(`Over-invoice: this would bring PO line "${l.poLine.description}" past its ordered quantity.`);
+        }
+      }
+    });
+  } catch (e) {
+    await releaseVerify();
+    throw e;
+  }
 
   let sig;
   try {
@@ -185,8 +199,16 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
       record: { invoiceNumber: inv.invoiceNumber, vendorInvoiceNo: inv.vendorInvoiceNo, po: inv.po.poNumber, total: inv.total, match: match.lines },
     });
   } catch (e) {
-    // Signing failed (e.g. wrong password) — release the claim so the accountant can retry.
-    await db.invoice.updateMany({ where: { id: inv.id }, data: { verifiedAt: null } });
+    // Signing failed (e.g. wrong password) — roll back the posted quantities and release the verify
+    // claim so the accountant can retry cleanly.
+    await db
+      .$transaction(async (tx) => {
+        for (const l of inv.lines) {
+          await tx.poLine.update({ where: { id: l.poLineId }, data: { invoicedQty: { decrement: new D(l.qty) } } });
+        }
+      })
+      .catch(() => {});
+    await releaseVerify();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -202,17 +224,6 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
       },
     });
   }
-
-  // Post invoiced quantities to the PO lines. The verifiedAt claim above already guarantees this
-  // runs exactly once per invoice.
-  await db.$transaction(async (tx) => {
-    for (const l of inv.lines) {
-      await tx.poLine.update({
-        where: { id: l.poLineId },
-        data: { invoicedQty: { increment: new D(l.qty) } },
-      });
-    }
-  });
 
   if (match.matched) {
     const { fireWebhook } = await import("@/lib/webhooks");

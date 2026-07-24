@@ -90,6 +90,14 @@ async function _dispatchTransfer(params: { id: string; password: string; imageDa
     }
   }
 
+  // Claim-before-sign (mirrors GRN accept): flip DRAFT -> IN_TRANSIT BEFORE signing so a rolled-back
+  // movement (StockError, or a concurrent dispatch winning the flip) can't strand an orphan ISSUED
+  // signature. Release back to DRAFT if signing or posting fails.
+  const claim = await db.stockTransfer.updateMany({ where: { id: trf.id, status: "DRAFT" }, data: { status: "IN_TRANSIT" } });
+  if (!claim.count) throw staleError();
+  const releaseClaim = () =>
+    db.stockTransfer.updateMany({ where: { id: trf.id, status: "IN_TRANSIT" }, data: { status: "DRAFT" } }).catch(() => {});
+
   let sig;
   try {
     sig = await signRecord({
@@ -102,6 +110,7 @@ async function _dispatchTransfer(params: { id: string; password: string; imageDa
       imageData: params.imageData ?? null,
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -126,10 +135,10 @@ async function _dispatchTransfer(params: { id: string; password: string; imageDa
           );
         }
       }
-      const ok = await tx.stockTransfer.updateMany({ where: { id: trf.id, status: "DRAFT" }, data: { status: "IN_TRANSIT" } });
-      if (!ok.count) throw staleError();
+      // status already claimed above (DRAFT -> IN_TRANSIT); no in-transaction flip needed.
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof StockError) throw new Error(e.message);
     throw e;
   }
@@ -159,6 +168,17 @@ async function _receiveTransfer(params: { id: string; password: string; imageDat
   });
   if (!outs.length) throw new Error("No dispatch movements found for this transfer.");
 
+  // Claim-before-sign: flip IN_TRANSIT -> RECEIVED BEFORE signing; release on any failure.
+  const claim = await db.stockTransfer.updateMany({
+    where: { id: trf.id, status: "IN_TRANSIT" },
+    data: { status: "RECEIVED", receivedById: user.id },
+  });
+  if (!claim.count) throw staleError();
+  const releaseClaim = () =>
+    db.stockTransfer
+      .updateMany({ where: { id: trf.id, status: "RECEIVED" }, data: { status: "IN_TRANSIT", receivedById: null } })
+      .catch(() => {});
+
   let sig;
   try {
     sig = await signRecord({
@@ -171,6 +191,7 @@ async function _receiveTransfer(params: { id: string; password: string; imageDat
       imageData: params.imageData ?? null,
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -194,13 +215,10 @@ async function _receiveTransfer(params: { id: string; password: string; imageDat
           tx,
         );
       }
-      const ok = await tx.stockTransfer.updateMany({
-        where: { id: trf.id, status: "IN_TRANSIT" },
-        data: { status: "RECEIVED", receivedById: user.id },
-      });
-      if (!ok.count) throw staleError();
+      // status already claimed above (IN_TRANSIT -> RECEIVED); no in-transaction flip needed.
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof StockError) throw new Error(e.message);
     throw e;
   }

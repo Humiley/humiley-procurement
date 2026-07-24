@@ -207,6 +207,20 @@ async function _executeGoodsIssue(params: { payload: GiExecutePayload; password:
     }
   }
 
+  // Claim-before-sign (mirrors GRN accept): atomically flip APPROVED -> ISSUED BEFORE signing so a
+  // rolled-back stock posting (a StockError from postMovement's authoritative FOR-UPDATE re-check, or a
+  // concurrent execute losing the flip) can never strand an orphan ISSUED signature. Release the claim
+  // back to APPROVED if signing or the posting transaction fails.
+  const claim = await db.goodsIssue.updateMany({
+    where: { id: gi.id, status: "APPROVED" },
+    data: { status: "ISSUED", issuedById: user.id, issuedAt: new Date() },
+  });
+  if (claim.count === 0) throw staleError(); // another execution won the APPROVED -> ISSUED flip
+  const releaseClaim = () =>
+    db.goodsIssue
+      .updateMany({ where: { id: gi.id, status: "ISSUED" }, data: { status: "APPROVED", issuedById: null, issuedAt: null } })
+      .catch(() => {});
+
   let sig;
   try {
     sig = await signRecord({
@@ -219,6 +233,7 @@ async function _executeGoodsIssue(params: { payload: GiExecutePayload; password:
       imageData: params.imageData ?? null,
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -246,13 +261,10 @@ async function _executeGoodsIssue(params: { payload: GiExecutePayload; password:
         const single = fefoPlan.get(l.lineId)!.length === 1 ? fefoPlan.get(l.lineId)![0].lotId : null;
         await tx.goodsIssueLine.update({ where: { id: l.lineId }, data: { qtyIssued: new D(l.qtyIssued), lotId: single } });
       }
-      const flipped = await tx.goodsIssue.updateMany({
-        where: { id: gi.id, status: "APPROVED" },
-        data: { status: "ISSUED", issuedById: user.id, issuedAt: new Date() },
-      });
-      if (flipped.count === 0) throw staleError();   // concurrent execution — roll the movements back
+      // status already claimed above (APPROVED -> ISSUED); no in-transaction flip needed.
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof StockError) throw new Error(e.message);
     throw e;
   }

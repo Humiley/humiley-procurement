@@ -86,6 +86,14 @@ async function _postCount(params: { id: string; password: string; reason?: strin
   if (!count) throw new Error("Stock count not found.");
   if (count.status !== "COUNTING") throw new Error("Only an open count can be posted.");
 
+  // Claim-before-sign (mirrors GRN accept): flip COUNTING -> POSTED BEFORE signing so a rolled-back
+  // adjustment (StockError, or a concurrent post winning the flip) can't strand an orphan COUNTED
+  // signature on a count still COUNTING. Release back to COUNTING if signing or posting fails.
+  const claim = await db.stockCount.updateMany({ where: { id: count.id, status: "COUNTING" }, data: { status: "POSTED" } });
+  if (!claim.count) throw staleError();
+  const releaseClaim = () =>
+    db.stockCount.updateMany({ where: { id: count.id, status: "POSTED" }, data: { status: "COUNTING" } }).catch(() => {});
+
   let sig;
   try {
     sig = await signRecord({
@@ -99,6 +107,7 @@ async function _postCount(params: { id: string; password: string; reason?: strin
       record: { countNumber: count.countNumber, lines: count.lines.map((l) => ({ i: l.itemId, sys: l.systemQty, cnt: l.countedQty })) },
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof SignatureError) throw new Error(e.message);
     throw e;
   }
@@ -141,10 +150,10 @@ async function _postCount(params: { id: string; password: string; reason?: strin
           tx,
         );
       }
-      const ok = await tx.stockCount.updateMany({ where: { id: count.id, status: "COUNTING" }, data: { status: "POSTED" } });
-      if (!ok.count) throw staleError();
+      // status already claimed above (COUNTING -> POSTED); no in-transaction flip needed.
     });
   } catch (e) {
+    await releaseClaim();
     if (e instanceof StockError) throw new Error(e.message);
     throw e;
   }
