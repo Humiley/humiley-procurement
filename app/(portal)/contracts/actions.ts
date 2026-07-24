@@ -78,12 +78,17 @@ async function _checkContractRenewals() {
     where: { status: "ACTIVE" },
     include: { vendor: { select: { code: true, nameEn: true } } },
   });
-  for (const c of active) {
+  const expiring = active.filter((c) => Math.ceil((c.endDate.getTime() - now.getTime()) / DAY) <= c.renewalAlertDays);
+  if (expiring.length === 0) return;
+  // One query for all already-open renewal notifications instead of findFirst per contract (N+1).
+  const links = expiring.map((c) => `/contracts/${c.id}`);
+  const openLinks = new Set(
+    (await db.notification.findMany({ where: { link: { in: links }, isRead: false }, select: { link: true } })).map((n) => n.link),
+  );
+  for (const c of expiring) {
     const daysLeft = Math.ceil((c.endDate.getTime() - now.getTime()) / DAY);
-    if (daysLeft > c.renewalAlertDays) continue;
     const link = `/contracts/${c.id}`;
-    const dup = await db.notification.findFirst({ where: { link, isRead: false } });
-    if (dup) continue;
+    if (openLinks.has(link)) continue;
     const payload = {
       titleEn: `Contract ${c.contractNumber} (${c.vendor.code}) expires in ${daysLeft} day(s)`,
       titleVn: `Hợp đồng ${c.contractNumber} (${c.vendor.code}) hết hạn sau ${daysLeft} ngày`,

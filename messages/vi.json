@@ -342,12 +342,6 @@
     "noSteps": "Chưa có bước phê duyệt.",
     "slaOverdue": "Quá hạn SLA",
     "dueBy": "Hạn {date}",
-    "levels": {
-      "departmentManager": "Trưởng phòng",
-      "director": "Giám đốc",
-      "managingDirector": "Tổng giám đốc"
-    },
-    "due": "Hạn {date}",
     "level1": "Trưởng phòng",
     "level2": "Giám đốc",
     "level3": "Tổng giám đốc"
@@ -1212,8 +1206,5 @@
     "how": "Cách hoạt động",
     "roles": "Ai làm gì",
     "tips": "Nên biết"
-  },
-  "docDetail": {
-    "back": "Quay lại"
   }
 }

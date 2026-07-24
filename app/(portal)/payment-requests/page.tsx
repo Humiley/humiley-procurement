@@ -83,7 +83,7 @@ export default async function PaymentRequestsPage() {
                   <td className="max-w-[200px] truncate px-3 py-2.5">{q.payeeName}{q.vendor ? <span className="text-xs text-grey"> · {q.vendor.code}</span> : null}</td>
                   <td className="px-3 py-2.5">{q.requester.name}</td>
                   <td className="px-3 py-2.5">{q.dueDate ? formatVnDate(q.dueDate) : "—"}</td>
-                  <td className="px-3 py-2.5 text-right font-semibold text-navy">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</td>
+                  <td className="px-3 py-2.5 text-right font-semibold text-navy tabular-nums">{Number(decToString(q.amount, 0)).toLocaleString("en-US")} ₫</td>
                   <td className="px-3 py-2.5"><StatusBadge status={q.status} label={st.has(q.status) ? st(q.status) : q.status} /></td>
                 </tr>
               ))}

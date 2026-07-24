@@ -20,7 +20,7 @@ export default async function ContractsPage() {
 
   const contracts = await db.contract.findMany({
     orderBy: { endDate: "asc" },
-    include: { vendor: { select: { code: true, nameEn: true } }, purchaseOrders: { select: { id: true } } },
+    include: { vendor: { select: { code: true, nameEn: true } }, _count: { select: { purchaseOrders: true } } },
   });
   const now = Date.now();
 
@@ -66,7 +66,7 @@ export default async function ContractsPage() {
                       {expiring ? <span className="ml-2 rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-warning">{t("expiresIn", { days: daysLeft })}</span> : null}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{Number(decToString(c.valueVnd, 0)).toLocaleString("en-US")} ₫</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{c.purchaseOrders.length}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{c._count.purchaseOrders}</td>
                     <td className="px-3 py-2.5"><StatusBadge status={c.status} label={st.has(c.status) ? st(c.status) : c.status} /></td>
                   </tr>
                 );

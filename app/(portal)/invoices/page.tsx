@@ -88,7 +88,7 @@ export default async function InvoicesPage() {
                     <td className="px-3 py-2.5 text-xs">{i.vendorInvoiceNo} <span className="text-grey">· {i.vendor.code}</span></td>
                     <td className="px-3 py-2.5 text-xs tabular-nums">{i.po.poNumber}</td>
                     <td className="px-3 py-2.5">{formatVnDate(i.dueDate)}</td>
-                    <td className="px-3 py-2.5 text-right font-semibold text-navy">{Number(decToString(i.total, 0)).toLocaleString("en-US")} ₫</td>
+                    <td className="px-3 py-2.5 text-right font-semibold text-navy tabular-nums">{Number(decToString(i.total, 0)).toLocaleString("en-US")} ₫</td>
                     <td className="px-3 py-2.5"><StatusBadge status={i.matchStatus} label={st.has(i.matchStatus) ? st(i.matchStatus) : i.matchStatus} /></td>
                     <td className="px-3 py-2.5"><StatusBadge status={i.paymentStatus} label={st.has(i.paymentStatus) ? st(i.paymentStatus) : i.paymentStatus} /></td>
                     <td className="px-3 py-2.5 text-xs">{b ?? "—"}</td>
