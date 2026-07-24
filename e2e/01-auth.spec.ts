@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, logout, PASSWORD } from "./helpers";
+import { login, logout } from "./helpers";
 
 test("rejects a wrong password", async ({ page }) => {
   await page.goto("/login");
