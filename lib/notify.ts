@@ -1,4 +1,6 @@
 import "server-only";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import nodemailer from "nodemailer";
 import { db } from "@/lib/db";
 import type { Role } from "@prisma/client";
@@ -34,10 +36,7 @@ let _logoBuf: Buffer | null | undefined;
 function logoBuffer(): Buffer | null {
   if (_logoBuf !== undefined) return _logoBuf;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const fs = require("node:fs") as typeof import("node:fs");
-    const path = require("node:path") as typeof import("node:path");
-    _logoBuf = fs.readFileSync(path.join(process.cwd(), "public", "brand", "Humiley_Logo_White.png"));
+    _logoBuf = readFileSync(join(process.cwd(), "public", "brand", "Humiley_Logo_White.png"));
   } catch {
     _logoBuf = null;   // missing asset degrades to the styled alt text, never a broken-image box
   }

@@ -3,16 +3,15 @@ import { db } from "@/lib/db";
 import { decToString } from "@/lib/money";
 import { formatVnDate } from "@/lib/dates";
 import { ContractList, type ContractRow } from "@/components/contract/ContractList";
-import { checkContractRenewals } from "./actions";
 
 const DAY = 24 * 3600 * 1000;
 
-/** §9 contract register — renewal alerts run on load; expiring rows are badged. */
+/** §9 contract register — expiring rows are badged. Renewal ALERTS run on a timer
+ *  (lib/sweeps.ts), not on this render: a GET should not email people. */
 export default async function ContractsPage() {
   const user = await requireUser();
   const canCreate = hasAnyRole(user, ["PURCHASER", "ADMIN"]);
 
-  await checkContractRenewals();
 
   const contracts = await db.contract.findMany({
     orderBy: { endDate: "asc" },

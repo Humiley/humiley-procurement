@@ -3,17 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { requireRoles } from "@/lib/rbac";
-import { ymdVn } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { notifyRoles } from "@/lib/notify";
 import { contractCreateSchema, type ContractCreatePayload } from "@/lib/schemas/contract";
 import { guard } from "@/lib/safe-action";
 
 const D = Prisma.Decimal;
-const DAY = 24 * 3600 * 1000;
 
 /** §9 framework agreement: vendor + validity + value + optional item price list. */
 async function _createContract(input: ContractCreatePayload) {
@@ -66,39 +63,13 @@ async function _terminateContract(id: string) {
 }
 
 /**
- * §9 renewal alerts — ACTIVE contracts within renewalAlertDays of endDate notify PURCHASER +
- * DIRECTOR (deduped on an unread notification). Also expires past-end contracts. Runs on
- * register load (a nightly job would add nothing until the API phase owns scheduling).
+ * §9 renewal alerts. The implementation lives in lib/sweeps.ts, where the TIMER runs it — this
+ * stays only as a manual trigger (and so the register can force a check on demand). Two copies of
+ * this logic would drift, and the copy nobody runs is the one that rots.
  */
 async function _checkContractRenewals() {
-  const now = new Date();
-  await db.contract.updateMany({ where: { status: "ACTIVE", endDate: { lt: now } }, data: { status: "EXPIRED" } });
-
-  const active = await db.contract.findMany({
-    where: { status: "ACTIVE" },
-    include: { vendor: { select: { code: true, nameEn: true } } },
-  });
-  const expiring = active.filter((c) => Math.ceil((c.endDate.getTime() - now.getTime()) / DAY) <= c.renewalAlertDays);
-  if (expiring.length === 0) return;
-  // One query for all already-open renewal notifications instead of findFirst per contract (N+1).
-  const links = expiring.map((c) => `/contracts/${c.id}`);
-  const openLinks = new Set(
-    (await db.notification.findMany({ where: { link: { in: links }, isRead: false }, select: { link: true } })).map((n) => n.link),
-  );
-  for (const c of expiring) {
-    const daysLeft = Math.ceil((c.endDate.getTime() - now.getTime()) / DAY);
-    const link = `/contracts/${c.id}`;
-    if (openLinks.has(link)) continue;
-    const payload = {
-      titleEn: `Contract ${c.contractNumber} (${c.vendor.code}) expires in ${daysLeft} day(s)`,
-      titleVn: `Hợp đồng ${c.contractNumber} (${c.vendor.code}) hết hạn sau ${daysLeft} ngày`,
-      bodyEn: `${c.title} — valid to ${ymdVn(c.endDate)}. Review for renewal.`,
-      bodyVn: `${c.title} — hiệu lực đến ${ymdVn(c.endDate)}. Xem xét gia hạn.`,
-      link,
-    };
-    // One alert, one email each — a Director who also purchases holds both roles.
-    await notifyRoles(["PURCHASER", "DIRECTOR"], payload);
-  }
+  const { runRenewalSweep } = await import("@/lib/sweeps");
+  await runRenewalSweep();
 }
 
 /* guarded exports — expected failures travel as data so production keeps real messages (lib/safe-action.ts) */

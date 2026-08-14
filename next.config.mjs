@@ -20,6 +20,9 @@ const nextConfig = {
   experimental: {
     // Server Actions used for all mutations (spec CLAUDE.md hard rule).
     serverActions: { bodySizeLimit: "10mb" },
+    // Runs instrumentation.ts once when the server boots — where the background sweeps start.
+    // Next 14 keeps this behind a flag; it is stable from 15.
+    instrumentationHook: true,
   },
 };
 
