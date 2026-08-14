@@ -4,9 +4,20 @@ Spec: HUMILEY-PROCUREMENT-SPEC.md — the single source of truth. Never contradi
 ## Commands
 - npm run dev            # dev server
 - npm run check          # tsc --noEmit && eslint . (run after EVERY task, must pass)
+- npm run build          # what the Dockerfile runs — run before ANY push (see below)
 - npx prisma migrate dev # after any schema change
 - npm run seed           # reset + reseed demo data
 - npm run test:e2e       # playwright
+
+## ⚠️ This repo's build gates the PORTAL's deploy
+`update.sh` on the VPS builds both images from one docker-compose, and this Dockerfile runs
+`npx prisma generate && npm run build`. `next build` fails the whole image on an **ESLint** error, so
+a single `let` that should be `const` blocked the production release of *both* apps for days while
+the portal's own CI stayed green — it does not build this repo. Auto-deploy retried every 2 minutes
+until its five-try give-up guard fired and went silent, which from outside looks like "auto-deploy
+isn't running". CI (`.github/workflows/ci.yml`) now runs the same two commands on every push, but do
+not lean on it: run `npm run check` **and** `npm run build` before pushing, because a red main here
+means nothing ships anywhere.
 
 ## Hard rules
 - Money: Prisma Decimal end-to-end; convert with lib/money.ts serializers at the server boundary
