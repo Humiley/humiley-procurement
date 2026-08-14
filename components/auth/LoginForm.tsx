@@ -16,12 +16,21 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm({ prefillEmail = "" }: { prefillEmail?: string }) {
+export function LoginForm({
+  prefillEmail = "",
+  callbackUrl = null,
+}: {
+  prefillEmail?: string;
+  /** Already validated on the server; carried so sign-in can return the user where they were
+   *  headed. Re-checked in loginAction, because a hidden field is user input. */
+  callbackUrl?: string | null;
+}) {
   const t = useTranslations("auth");
   const [state, action] = useFormState(loginAction, null);
 
   return (
     <form action={action} className="space-y-4">
+      {callbackUrl ? <input type="hidden" name="callbackUrl" value={callbackUrl} /> : null}
       <div>
         <label className="label" htmlFor="email">
           {t("email")}

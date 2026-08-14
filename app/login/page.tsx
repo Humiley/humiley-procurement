@@ -3,11 +3,22 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/shared/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { safeCallback } from "@/lib/safe-callback";
 import { LoginBackdrop } from "@/components/auth/LoginBackdrop";
 
-export default async function LoginPage({ searchParams }: { searchParams: { email?: string | string[] } }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: { email?: string | string[]; callbackUrl?: string | string[] };
+}) {
   const session = await auth();
-  if (session?.user) redirect("/dashboard");
+  // Where the middleware said this person was heading before we interrupted them. Anything it does
+  // not vouch for becomes the dashboard — a login page that forwards to an arbitrary URL is a
+  // phishing tool wearing our logo.
+  const rawCb = Array.isArray(searchParams.callbackUrl) ? searchParams.callbackUrl[0] : searchParams.callbackUrl;
+  const callbackUrl = safeCallback(rawCb, process.env.NEXT_PUBLIC_BASE_PATH || "");
+  // Already signed in? Send them straight on rather than making them look at a login form.
+  if (session?.user) redirect(callbackUrl ?? "/dashboard");
   const t = await getTranslations("auth");
   // Humiley Portal handoff: the sidebar launcher appends ?email=<signed-in user> so the
   // procurement login opens with the account prefilled (see docs/PORTAL-INTEGRATION.md).
@@ -34,7 +45,7 @@ export default async function LoginPage({ searchParams }: { searchParams: { emai
           {t("subtitle")}
         </p>
         <div className="text-left">
-          <LoginForm prefillEmail={prefillEmail} />
+          <LoginForm callbackUrl={callbackUrl} prefillEmail={prefillEmail} />
         </div>
         <p className="mt-5 text-xs text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.3)]">
           Humiley Procurement Portal
