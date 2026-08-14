@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
-import { notifyRole } from "@/lib/notify";
+import { notifyRoles } from "@/lib/notify";
 import { contractCreateSchema, type ContractCreatePayload } from "@/lib/schemas/contract";
 import { guard } from "@/lib/safe-action";
 
@@ -96,8 +96,8 @@ async function _checkContractRenewals() {
       bodyVn: `${c.title} — hiệu lực đến ${ymdVn(c.endDate)}. Xem xét gia hạn.`,
       link,
     };
-    await notifyRole("PURCHASER", payload);
-    await notifyRole("DIRECTOR", payload);
+    // One alert, one email each — a Director who also purchases holds both roles.
+    await notifyRoles(["PURCHASER", "DIRECTOR"], payload);
   }
 }
 

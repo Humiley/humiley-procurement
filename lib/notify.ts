@@ -114,8 +114,17 @@ export async function notifyUser(userId: string, p: NotifyPayload) {
 
 /** Notify every active user holding a role (e.g. ADMIN alerts). */
 export async function notifyRole(role: Role, p: NotifyPayload) {
+  await notifyRoles([role], p);
+}
+
+/** Notify everyone holding ANY of these roles — each person ONCE.
+ *
+ *  `roles` is an array on User, so calling notifyRole twice for the same alert sends a Director who
+ *  also purchases the identical email twice, and puts two rows in their bell. Passing the roles
+ *  together dedups on the user, which is the only place the duplicate can be seen. */
+export async function notifyRoles(roles: Role[], p: NotifyPayload) {
   const users = await db.user.findMany({
-    where: { isActive: true, roles: { has: role } },
+    where: { isActive: true, roles: { hasSome: roles } },
     select: { id: true },
   });
   await Promise.all(users.map((u) => notifyUser(u.id, p)));

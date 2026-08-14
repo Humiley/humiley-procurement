@@ -60,3 +60,14 @@ test("the white mark asset really is white", () => {
   const png = readFileSync("public/brand/Humiley_Logo_White.png");
   expect(png.length).toBeGreaterThan(1000);
 });
+
+test("a person holding two alerted roles is emailed once, not twice", async () => {
+  // `roles` is an array on User, so a Director who also purchases holds both. Calling notifyRole
+  // once per role sent that person the identical contract-renewal alert TWICE and put two rows in
+  // their bell. Guarded at the source: the contracts sweep must pass the roles together.
+  const src = await import("node:fs").then((fs) =>
+    fs.readFileSync("app/(portal)/contracts/actions.ts", "utf8"),
+  );
+  expect(src).toContain('notifyRoles(["PURCHASER", "DIRECTOR"]');
+  expect(src).not.toMatch(/notifyRole\("PURCHASER"[\s\S]{0,80}notifyRole\("DIRECTOR"/);
+});
