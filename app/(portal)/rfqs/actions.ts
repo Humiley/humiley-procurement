@@ -9,6 +9,7 @@ import { audit } from "@/lib/audit";
 import { nextDocNumber } from "@/lib/docnum";
 import { transition, staleError } from "@/lib/workflow/transition";
 import { sendMailRaw } from "@/lib/notify";
+import { bilingualEmail, bilingualText } from "@/lib/email-shell";
 import { rfqCreateSchema, quoteEntrySchema, type RfqFormPayload, type QuoteEntryPayload } from "@/lib/schemas/rfq";
 import { guard } from "@/lib/safe-action";
 import { act } from "@/lib/act";
@@ -101,15 +102,26 @@ async function _sendRfq(id: string, justification?: string) {
       const data = await rfqPdfData(rfq.id, rv.vendorId);
       if (!data) continue;
       const buf = await renderToBuffer(React.createElement(RfqPdf, { d: data }) as never);
+      const who = rv.vendor.contactName || rv.vendor.nameEn;
+      const rfqEn =
+        `Dear ${who},\n\n` +
+        `Please find attached our request for quotation ${rfq.rfqNumber} ("${rfq.title}").\n` +
+        `Kindly return your best offer by ${ymdVn(rfq.dueDate)}.\n\n` +
+        `Best regards,\nHumiley Procurement`;
+      const rfqVn =
+        `Kính gửi ${who},\n\n` +
+        `Đính kèm là yêu cầu báo giá ${rfq.rfqNumber} ("${rfq.title}") của chúng tôi.\n` +
+        // "trước ngày X" is read as EXCLUDING X in Vietnamese commercial and legal usage, while the
+        // English "by X" includes it — a one-day gap between the two halves of the same email, on
+        // the one line of an RFQ most likely to be argued over. "chậm nhất là ngày" is inclusive.
+        `Kính đề nghị Quý công ty gửi báo giá tốt nhất, chậm nhất là ngày ${ymdVn(rfq.dueDate)}.\n\n` +
+        `Trân trọng,\nBộ phận Mua hàng Humiley`;
       await sendMailRaw({
         to: rv.vendor.contactEmail,
         cc: user.email,
-        subject: `Request for Quotation ${rfq.rfqNumber} — Humiley Engineering & Solutions`,
-        text:
-          `Dear ${rv.vendor.contactName || rv.vendor.nameEn},\n\n` +
-          `Please find attached our request for quotation ${rfq.rfqNumber} ("${rfq.title}").\n` +
-          `Kindly return your best offer by ${ymdVn(rfq.dueDate)}.\n\n` +
-          `Best regards,\nHumiley Procurement`,
+        subject: `Request for Quotation · Yêu cầu báo giá ${rfq.rfqNumber} — Humiley Engineering & Solutions`,
+        text: bilingualText(rfqEn, rfqVn),
+        html: bilingualEmail(rfqEn, rfqVn, "Request for Quotation · Yêu cầu báo giá"),
         attachments: [{ filename: `${rfq.rfqNumber}.pdf`, content: buf }],
       });
     }

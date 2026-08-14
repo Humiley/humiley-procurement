@@ -65,6 +65,40 @@ export function textEmail(text: string, strap?: string) {
   return emailShell(`<tr><td style="padding:24px 26px 10px">${paras}</td></tr>`, strap);
 }
 
+/** A letter in two languages, paired paragraph by paragraph.
+ *
+ *  English is the PRIMARY line and Vietnamese sits beneath it in the muted style — never the other
+ *  way round (HML-BG-001). Suppliers here are mostly Vietnamese companies, and a purchase order is
+ *  a commercial instruction: the person reading it should not have to translate it to know what
+ *  they are being asked to confirm.
+ *
+ *  `en` and `vn` are split on blank lines and zipped, so the two languages stay adjacent instead of
+ *  the reader meeting one full letter and then another.
+ */
+export function bilingualEmail(en: string, vn: string, strap?: string) {
+  const split = (s: string) => String(s || "").split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+  const [E, V] = [split(en), split(vn)];
+  const line = (s: string) => esc(s).replace(/\n/g, "<br>");
+  let body = "";
+  for (let i = 0; i < Math.max(E.length, V.length); i++) {
+    if (E[i]) body += `<p style="font:14px/1.7 Segoe UI,Arial,sans-serif;color:${BRAND.ink};margin:0 0 2px">${line(E[i])}</p>`;
+    if (V[i]) body += `<p style="font:13px/1.7 Segoe UI,Arial,sans-serif;color:${BRAND.mut};margin:0 0 14px">${line(V[i])}</p>`;
+  }
+  return emailShell(`<tr><td style="padding:24px 26px 10px">${body}</td></tr>`, strap);
+}
+
+/** The plain-text alternative for a bilingual letter — the same pairing, for text-only clients. */
+export function bilingualText(en: string, vn: string) {
+  const split = (s: string) => String(s || "").split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+  const [E, V] = [split(en), split(vn)];
+  const out: string[] = [];
+  for (let i = 0; i < Math.max(E.length, V.length); i++) {
+    if (E[i]) out.push(E[i]);
+    if (V[i]) out.push(V[i]);
+  }
+  return out.join("\n\n");
+}
+
 /** A bilingual notification: English heading, Vietnamese beneath, and a way back into the app. */
 export function notifyEmailHtml(p: NotifyPayload, url: string) {
   const body =

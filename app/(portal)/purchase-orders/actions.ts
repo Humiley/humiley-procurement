@@ -10,6 +10,7 @@ import { transition, staleError } from "@/lib/workflow/transition";
 import { createSteps, applyDecision, type Decision, assertCurrentApprover } from "@/lib/workflow/engine";
 import { signRecord, SignatureError } from "@/lib/esign/sign";
 import { sendMailRaw } from "@/lib/notify";
+import { bilingualEmail, bilingualText } from "@/lib/email-shell";
 import { poCreateSchema, type PoFormPayload } from "@/lib/schemas/po";
 import type { SignatureMeaning } from "@prisma/client";
 import { guard } from "@/lib/safe-action";
@@ -242,15 +243,25 @@ async function _sendPo(id: string) {
     const data = await poPdfData(id);
     if (data && po.vendor.contactEmail) {
       const buf = await renderToBuffer(React.createElement(PoPdf, { d: data }) as never);
+      const who = po.vendor.contactName || po.vendor.nameEn;
+      const poEn =
+        `Dear ${who},\n\n` +
+        `Please find attached our purchase order ${po.poNumber}.\n` +
+        `Kindly confirm receipt and the expected delivery date.\n\n` +
+        `Best regards,\nHumiley Procurement`;
+      const poVn =
+        `Kính gửi ${who},\n\n` +
+        `Đính kèm là đơn đặt hàng ${po.poNumber} của chúng tôi.\n` +
+        `Kính đề nghị Quý công ty xác nhận đã nhận được đơn đặt hàng và xác nhận ngày giao hàng dự kiến.\n\n` +
+        `Trân trọng,\nBộ phận Mua hàng Humiley`;
       await sendMailRaw({
         to: po.vendor.contactEmail,
         cc: po.createdBy?.email || user.email,
-        subject: `Purchase Order ${po.poNumber} — Humiley Engineering & Solutions`,
-        text:
-          `Dear ${po.vendor.contactName || po.vendor.nameEn},\n\n` +
-          `Please find attached our purchase order ${po.poNumber}.\n` +
-          `Kindly confirm receipt and the expected delivery date.\n\n` +
-          `Best regards,\nHumiley Procurement`,
+        subject: `Purchase Order · Đơn đặt hàng ${po.poNumber} — Humiley Engineering & Solutions`,
+        // A purchase order is a commercial instruction and most of these vendors are Vietnamese
+        // companies. English stays primary (HML-BG-001); Vietnamese sits beneath it.
+        text: bilingualText(poEn, poVn),
+        html: bilingualEmail(poEn, poVn, "Purchase Order · Đơn đặt hàng"),
         attachments: [{ filename: `${po.poNumber}.pdf`, content: buf }],
       });
     }
