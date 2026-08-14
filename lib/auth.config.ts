@@ -38,7 +38,13 @@ export const authConfig = {
       const bp = nurl.basePath || process.env.NEXT_PUBLIC_BASE_PATH || "";
       let pathname = nurl.pathname;
       if (bp && pathname.startsWith(bp)) pathname = pathname.slice(bp.length) || "/";
-      const at = (p: string) => new URL(bp + p, nurl.origin);
+      // Behind the portal's Caddy the container's own origin is its bind address (0.0.0.0:3000),
+      // and Next does not always take the forwarded host for nextUrl. Prefer what the proxy says
+      // the PUBLIC host is, so nothing we emit can point at an address no browser can reach.
+      const fwdHost = request.headers.get("x-forwarded-host");
+      const fwdProto = request.headers.get("x-forwarded-proto") || "https";
+      const origin = fwdHost ? `${fwdProto}://${fwdHost}` : nurl.origin;
+      const at = (p: string) => new URL(bp + p, origin);
 
       const isPublic =
         pathname === "/login" ||
@@ -49,7 +55,11 @@ export const authConfig = {
       if (isPublic) return true;
       if (!isLoggedIn) {
         const login = at("/login");
-        login.searchParams.set("callbackUrl", nurl.href);
+        // RELATIVE, never nurl.href. An absolute callbackUrl carries whatever origin Next thinks
+        // it has, which behind the proxy is the container's bind address — so a user who hit a
+        // protected page was shown ...?callbackUrl=https://0.0.0.0:3000/procurement/dashboard.
+        // A path cannot leak an origin, whatever the proxy is or is not forwarding.
+        login.searchParams.set("callbackUrl", bp + pathname + nurl.search);
         return Response.redirect(login);
       }
       // NOTE: deliberately NO change-password wall. In this deployment every user signs in through
