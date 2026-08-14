@@ -1,0 +1,59 @@
+name: CI
+
+# Why this exists, in one sentence: a single `let` that should have been `const` sat on main for days
+# and silently blocked the PRODUCTION deploy of BOTH apps, because nothing anywhere ran this build.
+#
+# The portal repo has had CI since day one. This repo — a separate repository, gitignored inside the
+# portal — had none. `update.sh` on the VPS builds both images from one docker-compose, and the
+# procurement Dockerfile runs `npx prisma generate && npm run build`. `next build` fails the whole
+# image on an ESLint error, so `prefer-const` in lib/safe-callback.ts produced
+# `target procurement: failed to solve … exit code 1`, the portal's release could not ship either,
+# and the poll-based auto-deploy retried until it hit its five-try give-up guard and went quiet.
+#
+# So this job runs THE SAME TWO COMMANDS THE DOCKERFILE RUNS, in that order. `npm run check`
+# (tsc + next lint) is kept as a faster, clearer first signal, but it is NOT the gate on its own:
+# the gate has to be the real build, because the real build is what the deploy performs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check, lint and BUILD
+    runs-on: ubuntu-latest
+    env:
+      # `prisma generate` reads the datasource url from env even though it never opens a connection,
+      # and an absent DATABASE_URL fails the generate step. This is a syntactically valid URL that
+      # points at nothing — no database is reached at any point in this job.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+      # Baked in at build time by the Dockerfile's ARG; keep CI on the same value the image uses, so
+      # a basePath-sensitive mistake fails here rather than in production.
+      BASE_PATH: /procurement
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20" # matches node:20-alpine in the Dockerfile
+          cache: npm
+
+      - name: Install exactly what the image installs
+        run: npm ci
+
+      - name: Generate the Prisma client
+        run: npx prisma generate
+
+      # Faster and more legible than the build when it is a type or lint error, which it usually is.
+      - name: Type-check and lint
+        run: npm run check
+
+      # THE GATE. Everything above can pass while this fails, and this is what the VPS runs.
+      - name: Production build
+        run: npm run build
