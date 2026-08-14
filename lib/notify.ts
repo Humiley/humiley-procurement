@@ -9,13 +9,7 @@ import type { Role } from "@prisma/client";
  * (dev transport) so flows stay fully testable without a mail server.
  */
 
-export type NotifyPayload = {
-  titleEn: string;
-  titleVn: string;
-  bodyEn?: string;
-  bodyVn?: string;
-  link?: string;
-};
+export type { NotifyPayload } from "@/lib/email-shell";
 
 let _transport: nodemailer.Transporter | null | undefined;
 function mailTransport() {
@@ -32,17 +26,34 @@ function mailTransport() {
   return _transport;
 }
 
-async function sendMail(to: string, subject: string, text: string) {
-  await sendMailRaw({ to, subject, text });
+import { emailShell, textEmail, notifyEmailHtml, EMAIL_LOGO_CID } from "@/lib/email-shell";
+import type { NotifyPayload } from "@/lib/email-shell";
+export { emailShell, textEmail, notifyEmailHtml, EMAIL_LOGO_CID };
+
+let _logoBuf: Buffer | null | undefined;
+function logoBuffer(): Buffer | null {
+  if (_logoBuf !== undefined) return _logoBuf;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require("node:fs") as typeof import("node:fs");
+    const path = require("node:path") as typeof import("node:path");
+    _logoBuf = fs.readFileSync(path.join(process.cwd(), "public", "brand", "Humiley_Logo_White.png"));
+  } catch {
+    _logoBuf = null;   // missing asset degrades to the styled alt text, never a broken-image box
+  }
+  return _logoBuf;
 }
 
-/** Full-control mail (attachments, CC) — e.g. the PO PDF to a vendor. Dev-logs when SMTP is unset. */
 export async function sendMailRaw(msg: {
   to: string;
   cc?: string;
   subject: string;
   text: string;
-  attachments?: { filename: string; content: Buffer }[];
+  /** Body markup. Omit and the plain text is rendered in the brand frame for you. */
+  html?: string;
+  /** Set for mail that must stay plain (machine-read, or a deliberate exception). */
+  plain?: boolean;
+  attachments?: { filename: string; content: Buffer; cid?: string }[];
 }) {
   const t = mailTransport();
   if (!t) {
@@ -53,8 +64,24 @@ export async function sendMailRaw(msg: {
     );
     return;
   }
+  const { plain, ...rest } = msg;
+  // Every email leaves in the company frame unless it explicitly opts out. `text` is kept as the
+  // plain-text alternative, so a text-only client still gets a readable message rather than markup.
+  const html = plain ? undefined : msg.html || textEmail(msg.text);
+  const attachments = [...(msg.attachments || [])];
+  // The mark rides along inline, and only when the body actually references it — an email with no
+  // logo should not arrive wearing a paperclip.
+  const logo = html && html.includes(`cid:${EMAIL_LOGO_CID}`) ? logoBuffer() : null;
+  if (logo) {
+    attachments.push({ filename: "humiley-logo.png", content: logo, cid: EMAIL_LOGO_CID });
+  }
   try {
-    await t.sendMail({ from: process.env.SMTP_FROM || "procurement@humiley.com", ...msg });
+    await t.sendMail({
+      from: process.env.SMTP_FROM || "procurement@humiley.com",
+      ...rest,
+      html,
+      attachments: attachments.length ? attachments : undefined,
+    });
   } catch (e) {
     console.warn(`[mail] send failed to ${msg.to}:`, e instanceof Error ? e.message : e);
   }
@@ -75,11 +102,14 @@ export async function notifyUser(userId: string, p: NotifyPayload) {
     },
   });
   const base = process.env.APP_URL || "";
-  await sendMail(
-    user.email,
-    p.titleEn,
-    [p.bodyEn, p.bodyVn, p.link ? `${base}${p.link}` : ""].filter(Boolean).join("\n\n"),
-  );
+  const url = p.link ? `${base}${p.link}` : "";
+  await sendMailRaw({
+    to: user.email,
+    subject: p.titleEn,
+    // the plain-text alternative keeps the shape it always had, for text-only clients
+    text: [p.titleEn, p.titleVn, p.bodyEn, p.bodyVn, url].filter(Boolean).join("\n\n"),
+    html: notifyEmailHtml(p, url),
+  });
 }
 
 /** Notify every active user holding a role (e.g. ADMIN alerts). */
