@@ -31,7 +31,7 @@ export function safeCallback(raw: unknown, basePath: string): string | null {
 
   // Browsers treat a backslash as a slash when resolving URLs, so "/\evil.example" and
   // "\\evil.example" navigate OFF-SITE. Normalise first, then judge what it really is.
-  let url = raw.replace(/\\/g, "/");
+  const url = raw.replace(/\\/g, "/");
 
   // Control characters (CR, LF, NUL, tab) can split a Location header or slip past a naive check.
   // Their presence is never legitimate here, so reject rather than strip — stripping would let a
