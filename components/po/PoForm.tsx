@@ -158,7 +158,7 @@ export function PoForm({
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("incotermPlace")}</span>
-          <input className={field} value={incotermPlace} onChange={(e) => setIncotermPlace(e.target.value)} placeholder="e.g. Cat Lai Port, HCMC" />
+          <input className={field} value={incotermPlace} onChange={(e) => setIncotermPlace(e.target.value)} placeholder={t("incotermPlacePlaceholder")} />
         </label>
         <label className="text-sm sm:col-span-2">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("deliveryAddress")}</span>

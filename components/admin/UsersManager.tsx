@@ -228,7 +228,7 @@ function UserFormModal({
           <h2 className="text-base font-semibold text-navy">
             {isEdit ? t("admin.users.edit") : t("admin.users.new")}
           </h2>
-          <button className="btn-ghost" onClick={onClose} aria-label="Close">
+          <button className="btn-ghost" onClick={onClose} aria-label={t("common.close")}>
             <X className="h-4 w-4" />
           </button>
         </div>

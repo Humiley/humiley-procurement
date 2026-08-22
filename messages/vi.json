@@ -45,7 +45,14 @@
     "confirmIrreversible": "Hành động này không thể hoàn tác. Tiếp tục?",
     "deleteAttachmentConfirm": "Xóa tệp đính kèm này?",
     "skipToContent": "Bỏ qua, đến nội dung chính",
-    "unsavedWarn": "Bạn có thay đổi chưa lưu."
+    "unsavedWarn": "Bạn có thay đổi chưa lưu.",
+    "pickCatalogItem": "Chọn hàng từ danh mục",
+    "removeLine": "Xoá dòng",
+    "description": "Mô tả",
+    "uom": "ĐVT",
+    "qty": "SL",
+    "unitPrice": "Đơn giá",
+    "lineAmount": "Thành tiền"
   },
   "auth": {
     "signIn": "Đăng nhập",
@@ -393,7 +400,8 @@
     "tabApprovals": "Phê duyệt & Chữ ký",
     "tabAudit": "Nhật ký",
     "approvalsPending": "Trình PO để bắt đầu luồng phê duyệt.",
-    "signatureBlock": "Chữ ký điện tử"
+    "signatureBlock": "Chữ ký điện tử",
+    "incotermPlacePlaceholder": "VD: Cảng Cát Lái, TP.HCM"
   },
   "rfq": {
     "listTitle": "Yêu cầu báo giá",

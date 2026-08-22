@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2, PackageSearch } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { MoneyInput } from "./MoneyInput";
 
 export type EditorLine = {
@@ -50,6 +51,7 @@ export function LineItemsEditor({
   descriptionPlaceholder?: string;
   onPickItem?: (key: string) => void;
 }) {
+  const t = useTranslations("common");
   const total = lines.reduce((s, l) => s + lineAmountNumber(l), 0);
 
   function update(key: string, patch: Partial<EditorLine>) {
@@ -66,11 +68,13 @@ export function LineItemsEditor({
           <thead>
             <tr>
               <th className="th w-8 text-center">#</th>
-              <th className="th">Description</th>
-              {showUom && <th className="th w-24">UoM</th>}
-              <th className="th w-28 text-right">Qty</th>
-              {showPrice && <th className="th w-40 text-right">Unit price</th>}
-              {showPrice && <th className="th w-40 text-right">Amount</th>}
+              <th className="th">{t("description")}</th>
+              {showUom && <th className="th w-24">{t("uom")}</th>}
+              <th className="th w-28 text-right">{t("qty")}</th>
+              {showPrice && <th className="th w-40 text-right">{t("unitPrice")}</th>}
+              {/* lineAmount, not amount: a line total after Qty x Unit price is "Thanh tien" in
+                  Vietnamese, where a register's Amount column is "So tien". Same English word. */}
+              {showPrice && <th className="th w-40 text-right">{t("lineAmount")}</th>}
               {!readOnly && <th className="th w-10" />}
             </tr>
           </thead>
@@ -99,7 +103,7 @@ export function LineItemsEditor({
                         type="button"
                         className="btn-ghost shrink-0"
                         onClick={() => onPickItem(l.key)}
-                        aria-label="Pick catalog item"
+                        aria-label={t("pickCatalogItem")}
                       >
                         <PackageSearch className="h-4 w-4" />
                       </button>
@@ -150,7 +154,7 @@ export function LineItemsEditor({
                       type="button"
                       className="btn-ghost text-danger"
                       onClick={() => remove(l.key)}
-                      aria-label="Remove line"
+                      aria-label={t("removeLine")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

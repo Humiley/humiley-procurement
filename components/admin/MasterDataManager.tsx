@@ -237,7 +237,7 @@ function FormModal({
       <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-navy">{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label="Close">
+          <button className="btn-ghost" onClick={onClose} aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>

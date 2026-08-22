@@ -45,7 +45,14 @@
     "confirmIrreversible": "This action cannot be undone. Continue?",
     "deleteAttachmentConfirm": "Delete this attachment?",
     "skipToContent": "Skip to content",
-    "unsavedWarn": "You have unsaved changes."
+    "unsavedWarn": "You have unsaved changes.",
+    "pickCatalogItem": "Pick catalog item",
+    "removeLine": "Remove line",
+    "description": "Description",
+    "uom": "UoM",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "lineAmount": "Amount"
   },
   "auth": {
     "signIn": "Sign in",
@@ -393,7 +400,8 @@
     "tabApprovals": "Approvals & Signatures",
     "tabAudit": "Audit",
     "approvalsPending": "Submit the PO to start the approval flow.",
-    "signatureBlock": "Electronic signatures"
+    "signatureBlock": "Electronic signatures",
+    "incotermPlacePlaceholder": "e.g. Cat Lai Port, HCMC"
   },
   "rfq": {
     "listTitle": "RFQs / Sourcing",
