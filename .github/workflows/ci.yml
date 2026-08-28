@@ -44,6 +44,13 @@ jobs:
           node-version: "20" # matches node:20-alpine in the Dockerfile
           cache: npm
 
+      # Cheap, needs no dependencies, and fails fast. Vietnamese has two accepted accent
+      # placements on an open oa/oe/uy cluster; both are correct, and using both in one product is
+      # the defect. Procurement renders inside the portal as a native section, so a split here
+      # shows as "Hoá đơn" in this tab and "Hóa đơn" in the chrome around it.
+      - name: Vietnamese spelling is consistent
+        run: node tools/i18n/ortho-scan.js
+
       - name: Install exactly what the image installs
         run: npm ci
 
