@@ -401,7 +401,9 @@
     "tabAudit": "Audit",
     "approvalsPending": "Submit the PO to start the approval flow.",
     "signatureBlock": "Electronic signatures",
-    "incotermPlacePlaceholder": "e.g. Cat Lai Port, HCMC"
+    "incotermPlacePlaceholder": "e.g. Cat Lai Port, HCMC",
+    "costCenter": "Cost centre",
+    "costCenterHint": "Which budget this purchase order charges. A PO created from a requisition uses that requisition's."
   },
   "rfq": {
     "listTitle": "RFQs / Sourcing",

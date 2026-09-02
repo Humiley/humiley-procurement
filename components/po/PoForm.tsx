@@ -35,10 +35,13 @@ export function PoForm({
   fromPr,
   initialLines,
   contracts = {},
+  costCenters = [],
 }: {
   vendors: PoFormOpt[];
   uoms: PoFormOpt[];
   fromPr?: { id: string; label: string } | null;
+  /** §9: offered on a STANDALONE PO only — a PR-sourced one charges its requisition's budget. */
+  costCenters?: PoFormOpt[];
   initialLines: PoFormLine[];
   contracts?: Record<string, PoVendorContract>;
 }) {
@@ -47,6 +50,7 @@ export function PoForm({
   const fmtErr = useActionError();
   const router = useRouter();
   const [vendorId, setVendorId] = useState("");
+  const [costCenterId, setCostCenterId] = useState("");
   const [currency, setCurrency] = useState("VND");
   const [fxRate, setFxRate] = useState("1");
   const [paymentTerms, setPaymentTerms] = useState("");
@@ -94,6 +98,9 @@ export function PoForm({
       const res = act(await createPo({
         vendorId,
         prId: fromPr?.id ?? null,
+        // Never sent alongside a requisition: the server refuses both, because a PO committed
+        // against one budget and released against another strands money on each.
+        costCenterId: fromPr ? null : (costCenterId || null),
         currency,
         fxRate,
         paymentTerms,
@@ -135,6 +142,18 @@ export function PoForm({
             ))}
           </select>
         </label>
+        {!fromPr && costCenters.length ? (
+          <label className="text-sm">
+            <span className="mb-1 block text-xs font-semibold text-grey">{t("costCenter")}</span>
+            <select className={field} value={costCenterId} onChange={(e) => setCostCenterId(e.target.value)}>
+              <option value="">—</option>
+              {costCenters.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-grey">{t("costCenterHint")}</span>
+          </label>
+        ) : null}
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-grey">{t("currency")}</span>
           <input className={field} value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase().slice(0, 3))} />

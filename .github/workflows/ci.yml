@@ -61,6 +61,14 @@ jobs:
       - name: Type-check and lint
         run: npm run check
 
+      # The two money-path properties that neither tsc nor the e2e suite can see: a ledger effect
+      # that silently does nothing for a whole class of document, and a failure swallowed by a
+      # console.warn. Deliberately NOT part of `npm run check` — that runs inside the Dockerfile,
+      # and this repo's build gates the portal's deploy, so a source sweep that went wrong there
+      # would stop both apps shipping. Gating the pull request is the right blast radius.
+      - name: Money paths
+        run: node scripts/check-money-paths.mjs
+
       # THE GATE. Everything above can pass while this fails, and this is what the VPS runs.
       - name: Production build
         run: npm run build

@@ -401,7 +401,9 @@
     "tabAudit": "Nhật ký",
     "approvalsPending": "Trình PO để bắt đầu luồng phê duyệt.",
     "signatureBlock": "Chữ ký điện tử",
-    "incotermPlacePlaceholder": "VD: Cảng Cát Lái, TP.HCM"
+    "incotermPlacePlaceholder": "VD: Cảng Cát Lái, TP.HCM",
+    "costCenter": "Trung tâm chi phí",
+    "costCenterHint": "Đơn hàng này tính vào ngân sách nào. Đơn hàng tạo từ phiếu đề nghị sẽ dùng trung tâm chi phí của phiếu đó."
   },
   "rfq": {
     "listTitle": "Yêu cầu báo giá",

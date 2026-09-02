@@ -229,12 +229,11 @@ async function _verifyInvoice(params: { invoiceId: string; password: string; ove
     const { fireWebhook } = await import("@/lib/webhooks");
     await fireWebhook("invoice.matched", { invoiceId: inv.id, invoiceNumber: inv.invoiceNumber, total: String(inv.total) });
   }
-  try {
-    const { spendOnInvoice } = await import("@/lib/budget");
-    await spendOnInvoice(inv.id);   // §9: matched invoice moves commitment → spent
-  } catch (e) {
-    console.warn("budget spend failed:", e);
-  }
+  // §9: a matched invoice moves commitment → spent. The verification above has already been
+  // signed, so this is not wrapped with it; what it must not do is fail silently, because an
+  // invoice that is matched and never spent understates the budget for the rest of the year.
+  const { spendOnInvoice } = await import("@/lib/budget");
+  await spendOnInvoice(inv.id);
 
   await audit({ userId: user.id, action: "INVOICE_VERIFY", entityType: "Invoice", entityId: inv.id, after: { matched: match.matched, override: !match.matched, signatureId: sig.id } });
   revalidatePath(`/invoices/${inv.id}`);
