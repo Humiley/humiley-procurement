@@ -82,8 +82,13 @@ let sig;
       data: { currentApprovalLevel: result.nextLevel },
     });
   } else if (result.outcome === "approved") {
-    if (!(await transition(db.purchaseRequisition, pr.id, "SUBMITTED", "APPROVED"))) throw staleError();
-    try { const { commitPr } = await import("@/lib/budget"); await commitPr(pr.id); } catch (e) { console.warn("budget commit failed:", e); }   // §9: approval commits the budget
+    // §9: the approval and the commitment it places are one fact. An APPROVED requisition whose
+    // commitment never landed spends budget nothing is holding.
+    const { commitPr } = await import("@/lib/budget");
+    await db.$transaction(async (tx) => {
+      if (!(await transition(tx.purchaseRequisition, pr.id, "SUBMITTED", "APPROVED"))) throw staleError();
+      await commitPr(pr.id, 1, tx);
+    });
   } else if (result.outcome === "rejected") {
     if (!(await transition(db.purchaseRequisition, pr.id, "SUBMITTED", "REJECTED"))) throw staleError();
   } else {

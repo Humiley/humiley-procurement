@@ -308,6 +308,7 @@ model CostCenter {
   department      Department            @relation(fields: [departmentId], references: [id])
   budgets         Budget[]
   requisitions    PurchaseRequisition[]
+  purchaseOrders  PurchaseOrder[]
   paymentRequests PaymentRequest[]
   goodsIssues     GoodsIssue[]
 
@@ -624,6 +625,12 @@ model PurchaseOrder {
   prId            String?
   quoteId         String?
   contractId      String?
+  // §9: which budget a STANDALONE (no-requisition) PO charges. A PR-sourced PO ignores this and
+  // uses its requisition's cost centre — one document, one attribution. Nullable because every PO
+  // written before this column existed has none, and because a PO may legitimately be raised
+  // before anybody has decided which budget carries it; the ledger reports those rather than
+  // guessing (see lib/budget/index.ts).
+  costCenterId    String?
   currency        String    @default("VND")
   fxRate          Decimal   @default(1) @db.Decimal(18, 6)
   paymentTerms    String?
@@ -652,6 +659,7 @@ model PurchaseOrder {
   pr              PurchaseRequisition? @relation(fields: [prId], references: [id])
   quote           Quote?               @relation(fields: [quoteId], references: [id])
   contract        Contract?            @relation(fields: [contractId], references: [id])
+  costCenter      CostCenter?          @relation(fields: [costCenterId], references: [id])
   cooFormType     CooFormType?         @relation(fields: [cooFormTypeId], references: [id])
   lines           PoLine[]
   goodsReceipts   GoodsReceipt[]
@@ -742,7 +750,7 @@ model Invoice {
   total           Decimal       @default(0) @db.Decimal(18, 2)
   matchStatus     MatchStatus   @default(UNMATCHED)
   paymentStatus   PaymentStatus @default(UNPAID)
-  verifiedAt      DateTime?     // set once, atomically, when the 3-way match is e-signed (verify guard)
+  verifiedAt      DateTime? // set once, atomically, when the 3-way match is e-signed (verify guard)
   paidDate        DateTime?
   attachmentId    String?
   xmlPath         String?

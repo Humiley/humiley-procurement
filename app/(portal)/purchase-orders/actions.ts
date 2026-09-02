@@ -71,6 +71,9 @@ async function _createPo(input: PoFormPayload) {
         poNumber,
         vendorId: vendor.id,
         prId: pr?.id ?? null,
+        // Only ever set on a STANDALONE PO. A PR-sourced one reads its requisition's cost centre,
+        // and storing a copy here would be a second source of truth that can disagree with it.
+        costCenterId: pr ? null : (values.costCenterId || null),
         contractId: contract?.id ?? null,
         quoteId: values.quoteId ?? null,
         currency: values.currency.toUpperCase(),
@@ -204,10 +207,18 @@ let sig;
   });
 
   if (result.outcome === "approved") {
-    if (!(await transition(db.purchaseOrder, po.id, "PENDING_APPROVAL", "APPROVED"))) throw staleError();
+    // §9: approving the PO and moving its commitment PR→PO are ONE fact. Separately, a ledger
+    // failure left an APPROVED PO whose money had not moved, and the warning went to a log nobody
+    // reads. If the ledger cannot record it, the approval does not happen and the approver is told.
+    const { moveCommitmentPrToPo } = await import("@/lib/budget");
+    await db.$transaction(async (tx) => {
+      if (!(await transition(tx.purchaseOrder, po.id, "PENDING_APPROVAL", "APPROVED"))) throw staleError();
+      await moveCommitmentPrToPo(po.id, tx);
+    });
+    // AFTER the transaction: a webhook cannot be rolled back, and firing it before the commit
+    // announced approvals that then failed.
     const { fireWebhook } = await import("@/lib/webhooks");
     await fireWebhook("po.approved", { poId: po.id, poNumber: po.poNumber, total: String(po.total), vendorId: po.vendorId });
-    try { const { moveCommitmentPrToPo } = await import("@/lib/budget"); await moveCommitmentPrToPo(po.id); } catch (e) { console.warn("budget move failed:", e); }   // §9: commitment moves PR→PO
   } else if (result.outcome === "rejected" || result.outcome === "returned") {
     // PoStatus has no REJECTED — both decisions send the PO back to DRAFT with the comment + audit trail.
     if (!(await transition(db.purchaseOrder, po.id, "PENDING_APPROVAL", "DRAFT"))) throw staleError();
@@ -282,22 +293,22 @@ async function _cancelPo(id: string) {
   if (!po) throw new Error("Purchase order not found.");
   if (po._count.goodsReceipts > 0) throw new Error("Cannot cancel — goods have already been received against this PO.");
   if (!["DRAFT", "APPROVED", "SENT"].includes(po.status)) throw new Error("This PO can no longer be cancelled.");
-  if (!(await transition(db.purchaseOrder, id, po.status, "CANCELLED"))) throw staleError();
   // Release the budget commitment placed while this PO was live — otherwise it is stranded forever and
   // blocks future requisitions against that budget line. APPROVED/SENT: the commitment is in PO form
   // (release ordered − invoiced, = full when no goods received, which cancel requires). Still-DRAFT
   // PR-sourced: moveCommitmentPrToPo never ran, so reverse the source PR's estimate commitment.
-  try {
+  // Cancelling and releasing are one operation: a cancel whose release failed strands the
+  // commitment forever and blocks every future requisition on that line, which is precisely the
+  // outcome this release exists to prevent.
+  const { releaseOnPoClose, commitPr } = await import("@/lib/budget");
+  await db.$transaction(async (tx) => {
+    if (!(await transition(tx.purchaseOrder, id, po.status, "CANCELLED"))) throw staleError();
     if (po.status === "APPROVED" || po.status === "SENT") {
-      const { releaseOnPoClose } = await import("@/lib/budget");
-      await releaseOnPoClose(id);
+      await releaseOnPoClose(id, tx);
     } else if (po.status === "DRAFT" && po.prId) {
-      const { commitPr } = await import("@/lib/budget");
-      await commitPr(po.prId, -1);
+      await commitPr(po.prId, -1, tx);
     }
-  } catch (e) {
-    console.warn("budget release on cancel failed:", e);
-  }
+  });
   await audit({ userId: user.id, action: "PO_CANCEL", entityType: "PurchaseOrder", entityId: id, before: { status: po.status }, after: { status: "CANCELLED" } });
   revalidatePath(`/purchase-orders/${id}`);
   revalidatePath("/purchase-orders");
@@ -308,8 +319,13 @@ async function _closePo(id: string) {
   const po = await db.purchaseOrder.findUnique({ where: { id } });
   if (!po) throw new Error("Purchase order not found.");
   if (!["SENT", "PARTIALLY_RECEIVED", "RECEIVED"].includes(po.status)) throw new Error("Only a sent/received PO can be closed.");
-  if (!(await transition(db.purchaseOrder, id, po.status, "CLOSED"))) throw staleError();
-  try { const { releaseOnPoClose } = await import("@/lib/budget"); await releaseOnPoClose(id); } catch (e) { console.warn("budget release failed:", e); }   // §9: closing releases remaining commitment
+  // §9: closing releases the remaining commitment, and the two are one operation — a PO closed
+  // with its commitment still standing overstates spend against that budget line for ever.
+  const { releaseOnPoClose } = await import("@/lib/budget");
+  await db.$transaction(async (tx) => {
+    if (!(await transition(tx.purchaseOrder, id, po.status, "CLOSED"))) throw staleError();
+    await releaseOnPoClose(id, tx);
+  });
   await audit({ userId: user.id, action: "PO_CLOSE", entityType: "PurchaseOrder", entityId: id, before: { status: po.status }, after: { status: "CLOSED" } });
   revalidatePath(`/purchase-orders/${id}`);
   revalidatePath("/purchase-orders");

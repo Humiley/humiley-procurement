@@ -271,13 +271,12 @@ async function _executeGoodsIssue(params: { payload: GiExecutePayload; password:
 
   await checkReorderAfterOut(gi.warehouseId, issuing.map((l) => lineById.get(l.lineId)!.itemId));
 
-  // §10b: the issued cost charges the cost center's budget under "from stock"
-  try {
-    const { spendFromStock } = await import("@/lib/budget");
-    await spendFromStock(gi.id);
-  } catch (e) {
-    console.warn("from-stock budget spend failed:", e);
-  }
+  // §10b: the issued cost charges the cost center's budget under "from stock". The stock has
+  // already left the warehouse and been signed for, so this cannot be rolled back with it — but it
+  // is not swallowed either: goods issued and never charged is budget the company has spent and
+  // cannot see.
+  const { spendFromStock } = await import("@/lib/budget");
+  await spendFromStock(gi.id);
 
   await audit({ userId: user.id, action: "GI_EXECUTE", entityType: "GoodsIssue", entityId: gi.id, after: { lines: issuing.length, signatureId: sig.id } });
   revalidatePath(`/inventory/issues/${gi.id}`);

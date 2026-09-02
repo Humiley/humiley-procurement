@@ -12,10 +12,12 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
   const tc = await getTranslations("common");
 
   const now = new Date();
-  const [vendors, uoms, activeContracts] = await Promise.all([
+  const [vendors, uoms, activeContracts, costCenters] = await Promise.all([
     db.vendor.findMany({ where: { status: "APPROVED" }, orderBy: { code: "asc" } }),
     db.uom.findMany({ orderBy: { code: "asc" } }),
     db.contract.findMany({ where: { status: "ACTIVE", startDate: { lte: now }, endDate: { gte: now } } }),
+    // §9: a standalone PO has no requisition to inherit a budget from, so it names its own.
+    db.costCenter.findMany({ orderBy: { code: "asc" } }),
   ]);
   // §22 prerequisite empty state: a PO cannot be drafted without an approved vendor.
   if (vendors.length === 0) {
@@ -63,13 +65,14 @@ export default async function NewPoPage({ searchParams }: { searchParams: { from
 
   const vendorOpts: PoFormOpt[] = vendors.map((v) => ({ id: v.id, label: `${v.code} · ${v.nameEn}` }));
   const uomOpts: PoFormOpt[] = uoms.map((u) => ({ id: u.id, label: u.code }));
+  const ccOpts: PoFormOpt[] = costCenters.map((c) => ({ id: c.id, label: `${c.code} · ${c.nameEn}` }));
 
   return (
     <div className="space-y-4">
       <Link href="/purchase-orders" className="btn-ghost -ml-3 w-fit">
         <ArrowLeft className="h-4 w-4" /> {tc("back")}
       </Link>
-      <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} contracts={contracts} />
+      <PoForm vendors={vendorOpts} uoms={uomOpts} fromPr={fromPr} initialLines={initialLines} contracts={contracts} costCenters={ccOpts} />
     </div>
   );
 }

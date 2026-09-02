@@ -12,7 +12,8 @@
     "seed:run": "tsx prisma/seed.ts",
     "db:push": "prisma db push",
     "test:e2e": "playwright test",
-    "bootstrap": "tsx prisma/bootstrap.ts"
+    "bootstrap": "tsx prisma/bootstrap.ts",
+    "check:money": "node scripts/check-money-paths.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -22,6 +22,9 @@ export const poLineSchema = z.object({
 export const poCreateSchema = z.object({
   vendorId: z.string().min(1, "Vendor is required"),
   prId: z.string().optional().nullable(),
+  // §9: which budget a STANDALONE PO charges. A PR-sourced PO takes its requisition's cost centre
+  // instead — see the superRefine below, which refuses to accept both.
+  costCenterId: z.string().optional().nullable(),
   quoteId: z.string().optional().nullable(),
   currency: z.string().trim().min(3).max(3).default("VND"),
   fxRate: decStr.refine((v) => Number(v) > 0, "FX rate must be greater than 0").default("1"),
@@ -44,6 +47,15 @@ export const poCreateSchema = z.object({
   // Typo guard for any currency (no real rate to VND exceeds this).
   if (fx > 1_000_000_000) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fxRate"], message: "FX rate is unrealistically large." });
+  }
+  // One document, one attribution. A PR-sourced PO charges the budget its requisition was approved
+  // against; accepting a second cost centre here would let a PO be committed against one budget and
+  // released against another, which strands money on both.
+  if (data.prId && data.costCenterId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom, path: ["costCenterId"],
+      message: "A PO created from a requisition charges that requisition's cost centre — leave this blank.",
+    });
   }
 });
 
