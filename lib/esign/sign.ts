@@ -151,9 +151,9 @@ export async function signRecord(params: {
       });
       await notifyRole("ADMIN", {
         titleEn: `Signature lockout: ${user.name}`,
-        titleVn: `Khoá ký điện tử: ${user.name}`,
+        titleVn: `Khóa ký điện tử: ${user.name}`,
         bodyEn: `${MAX_FAILURES} failed signature attempts on ${params.entityType} ${params.entityId}. Account locked for 15 minutes.`,
-        bodyVn: `${MAX_FAILURES} lần ký thất bại trên ${params.entityType} ${params.entityId}. Tài khoản bị khoá 15 phút.`,
+        bodyVn: `${MAX_FAILURES} lần ký thất bại trên ${params.entityType} ${params.entityId}. Tài khoản bị khóa 15 phút.`,
       });
       throw new SignatureError("Too many failed attempts — account locked for 15 minutes.");
     }
