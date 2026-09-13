@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "check": "tsc --noEmit && next lint",
+    "verify": "node tools/i18n/ortho-scan.js && prisma generate && npm run check && node scripts/check-money-paths.mjs && npm run build",
     "seed": "tsx prisma/demo-seed-guard.ts && prisma migrate reset --force --skip-generate",
     "seed:run": "tsx prisma/seed.ts",
     "db:push": "prisma db push",

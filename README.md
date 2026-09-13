@@ -25,6 +25,7 @@ Sign in with any seeded user, password `Humiley@2026` (**demo/dev only** — pro
 | Command | Purpose |
 |---|---|
 | `npm run check` | tsc + eslint (must pass after every change) |
+| `npm run verify` | every gate the production image build runs (ortho-scan, prisma generate, check, money paths, build) — run before every push; there is no GitHub CI |
 | `npm run seed` | reset + reseed demo data — refuses if any account's password is not the demo one (`prisma/demo-seed-guard.ts`; override `ALLOW_DEMO_SEED=1`) |
 | `npm run test:e2e` | Playwright journey suite (reseeds first) |
 
