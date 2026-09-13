@@ -9,7 +9,8 @@ import { formatVnDate, formatVnDateTime } from "@/lib/dates";
 const IN_TYPES = new Set(["GRN_IN", "TRANSFER_IN", "ADJUST_IN", "RETURN_IN"]);
 
 /** §21 trace — backward (lot → GRN → PO → vendor) and forward (every consumption with its cost center). */
-export default async function TracePage({ params }: { params: { lotId: string } }) {
+export default async function TracePage(props: { params: Promise<{ lotId: string }> }) {
+  const params = await props.params;
   await requireUser();
   const t = await getTranslations("trace");
   const ti = await getTranslations("inventory.type");

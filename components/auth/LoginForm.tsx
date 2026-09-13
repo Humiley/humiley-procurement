@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { loginAction } from "@/app/login/actions";
@@ -26,7 +27,7 @@ export function LoginForm({
   callbackUrl?: string | null;
 }) {
   const t = useTranslations("auth");
-  const [state, action] = useFormState(loginAction, null);
+  const [state, action] = useActionState(loginAction, null);
 
   return (
     <form action={action} className="space-y-4">
@@ -41,7 +42,9 @@ export function LoginForm({
           type="email"
           autoComplete="username"
           required
-          defaultValue={prefillEmail}
+          // React 19 resets an uncontrolled form after its action returns; a rejected sign-in
+          // hands back the typed address so the reset restores it rather than blanking the field.
+          defaultValue={state?.email ?? prefillEmail}
           className="field"
         />
       </div>

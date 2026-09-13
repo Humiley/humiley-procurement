@@ -6,10 +6,8 @@ import { canAccessAttachment } from "@/lib/attachment-authz";
 
 export const runtime = "nodejs";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 

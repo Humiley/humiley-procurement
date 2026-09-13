@@ -9,7 +9,8 @@ import { ApprovalsQueue, type QueueRow } from "@/components/approvals/ApprovalsQ
  * §6 approval queue — "Waiting for me" across every entity the engine routes
  * (PRs, POs, vendors); decisions run through the §19 signing ceremony.
  */
-export default async function ApprovalsPage({ searchParams }: { searchParams?: { overdue?: string } }) {
+export default async function ApprovalsPage(props: { searchParams?: Promise<{ overdue?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireUser();
   const steps = await pendingStepsFor(user.id);
 

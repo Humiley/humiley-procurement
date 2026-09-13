@@ -7,7 +7,8 @@ import { decToString } from "@/lib/money";
 import { RfqForm, type RfqFormLine, type RfqFormOpt } from "@/components/rfq/RfqForm";
 
 /** §8: new RFQ — standalone or prefilled from an APPROVED PR via ?fromPr=<id>. */
-export default async function NewRfqPage({ searchParams }: { searchParams: { fromPr?: string } }) {
+export default async function NewRfqPage(props: { searchParams: Promise<{ fromPr?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireRoles("PURCHASER", "ADMIN");
   const tc = await getTranslations("common");
 

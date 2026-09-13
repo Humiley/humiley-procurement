@@ -10,7 +10,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Branded PO PDF (§8/§10) — server-rendered with Vietnamese-safe fonts (§22.4). */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!(await canViewPurchaseOrder(user, params.id))) return NextResponse.json({ error: "Not found" }, { status: 404 });

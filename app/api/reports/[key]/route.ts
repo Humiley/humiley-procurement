@@ -5,7 +5,8 @@ import { currentFiscalYear } from "@/lib/dates";
 import { REPORTS } from "@/lib/kpi/reports";
 
 /** §10-G xlsx export — same registry function as the on-screen report, styled with the brand. */
-export async function GET(req: NextRequest, { params }: { params: { key: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ key: string }> }) {
+  const params = await props.params;
   const user = await currentUser();
   if (!user || !hasAnyRole(user, ["ADMIN", "DIRECTOR", "ACCOUNTANT", "PURCHASER", "DEPT_MANAGER"])) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

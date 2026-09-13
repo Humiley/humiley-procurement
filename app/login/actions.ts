@@ -4,7 +4,7 @@ import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
 import { safeCallback } from "@/lib/safe-callback";
 
-export type LoginState = { error?: "invalid" | "locked" } | null;
+export type LoginState = { error?: "invalid" | "locked"; email?: string } | null;
 
 export async function loginAction(
   _prev: LoginState,
@@ -24,7 +24,9 @@ export async function loginAction(
   } catch (error) {
     if (error instanceof AuthError) {
       // authorize() returns null for both bad-credentials and lockout; surface generic.
-      return { error: "invalid" };
+      // React 19 resets the form once this action returns, so hand back the address the user
+      // typed for LoginForm to keep in the field. Never the password.
+      return { error: "invalid", email };
     }
     // NEXT_REDIRECT (successful sign-in) must propagate.
     throw error;

@@ -8,7 +8,8 @@ import { withBase } from "@/lib/base-path";
  * Rows link here instead of directly to `link` so opening a notification clears it
  * from the unread count (previously reading one never marked it read).
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const n = await db.notification.findFirst({ where: { id: params.id, userId: user.id } });
   if (n && !n.isRead) {

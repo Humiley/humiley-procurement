@@ -27,7 +27,12 @@ test("the sweeps are started by the server, not by a request", () => {
   const inst = page("instrumentation.ts");
   expect(inst).toContain("setInterval");
   expect(inst).toContain('process.env.NEXT_RUNTIME !== "nodejs"');   // edge has no db and no timers
-  expect(page("next.config.mjs")).toContain("instrumentationHook: true");  // Next 14 flags it
+  // Next 14 only ran instrumentation.ts behind experimental.instrumentationHook. From Next 15 the
+  // hook is stable and always on, and the old key is gone — so the guard is the Next major.
+  const nextRange: string = JSON.parse(page("package.json")).dependencies.next;
+  const nextMajor = Number(nextRange.replace(/^[^0-9]*/, "").split(".")[0]);
+  expect(nextMajor, "instrumentation.ts runs without a flag only from Next 15").toBeGreaterThanOrEqual(15);
+  expect(page("next.config.mjs")).not.toContain("instrumentationHook:");
 });
 
 test("instrumentation stays free of Node-only imports", () => {

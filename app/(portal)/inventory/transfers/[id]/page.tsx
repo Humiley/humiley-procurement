@@ -8,7 +8,8 @@ import { formatVnDateTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TransferDetailActions } from "@/components/inv/TransferDetailActions";
 
-export default async function TransferDetailPage({ params }: { params: { id: string } }) {
+export default async function TransferDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("trf");
   const ti = await getTranslations("inventory.type");

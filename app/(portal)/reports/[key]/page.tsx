@@ -7,7 +7,11 @@ import { currentFiscalYear } from "@/lib/dates";
 import { REPORTS } from "@/lib/kpi/reports";
 
 /** §10-G report viewer — FY filter + xlsx export of exactly what is on screen. */
-export default async function ReportPage({ params, searchParams }: { params: { key: string }; searchParams: { fy?: string } }) {
+export default async function ReportPage(
+  props: { params: Promise<{ key: string }>; searchParams: Promise<{ fy?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   await requireRoles("ADMIN", "DIRECTOR", "ACCOUNTANT", "PURCHASER", "DEPT_MANAGER");
   const report = REPORTS[params.key];
   if (!report) notFound();

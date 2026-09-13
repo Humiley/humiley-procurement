@@ -10,7 +10,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Per-vendor RFQ PDF (§8): /api/rfq/<id>/pdf?vendor=<vendorId>. */
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canViewRfq(user)) return NextResponse.json({ error: "Not found" }, { status: 404 });

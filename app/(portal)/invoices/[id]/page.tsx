@@ -10,7 +10,8 @@ import { InvoiceDetailActions } from "@/components/invoice/InvoiceDetailActions"
 import { computeMatch } from "@/app/(portal)/invoices/actions";
 import { act } from "@/lib/act";
 
-export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
+export default async function InvoiceDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("invoice");
   const st = await getTranslations("status");

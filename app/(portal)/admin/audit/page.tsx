@@ -5,7 +5,10 @@ import { db } from "@/lib/db";
 import { formatVnDateTime } from "@/lib/dates";
 
 /** §16 immutable audit trail viewer — entity/action/user filters, newest first. ADMIN. */
-export default async function AuditPage({ searchParams }: { searchParams: { entityType?: string; action?: string; user?: string } }) {
+export default async function AuditPage(
+  props: { searchParams: Promise<{ entityType?: string; action?: string; user?: string }> }
+) {
+  const searchParams = await props.searchParams;
   await requireRoles("ADMIN");
   const t = await getTranslations("auditlog");
 

@@ -13,7 +13,8 @@ import { PayReqDetailActions } from "@/components/payreq/PayReqDetailActions";
 import { PrAttachments, type PrAttachment } from "@/components/pr/PrAttachments";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
 
-export default async function PaymentRequestDetailPage({ params }: { params: { id: string } }) {
+export default async function PaymentRequestDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("payreq");
   const st = await getTranslations("status");

@@ -6,11 +6,12 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { safeCallback } from "@/lib/safe-callback";
 import { LoginBackdrop } from "@/components/auth/LoginBackdrop";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { email?: string | string[]; callbackUrl?: string | string[] };
-}) {
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ email?: string | string[]; callbackUrl?: string | string[] }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const session = await auth();
   // Where the middleware said this person was heading before we interrupted them. Anything it does
   // not vouch for becomes the dashboard — a login page that forwards to an arbitrary URL is a

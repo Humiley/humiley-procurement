@@ -17,12 +17,12 @@ const nextConfig = {
   // Expose the prefix to client code that builds raw URLs (fetch strings, which — unlike <Link>,
   // redirect(), useRouter() — are NOT auto-prefixed by Next). Read via lib/base-path.ts.
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
+  // instrumentation.ts (where the background sweeps start, once per server boot) needs no flag:
+  // Next 15 made the hook stable and removed `experimental.instrumentationHook`.
   experimental: {
-    // Server Actions used for all mutations (spec CLAUDE.md hard rule).
+    // Server Actions used for all mutations (spec CLAUDE.md hard rule). Still under `experimental`
+    // in Next 15.
     serverActions: { bodySizeLimit: "10mb" },
-    // Runs instrumentation.ts once when the server boots — where the background sweeps start.
-    // Next 14 keeps this behind a flag; it is stable from 15.
-    instrumentationHook: true,
   },
 };
 
