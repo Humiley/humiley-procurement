@@ -26,7 +26,30 @@ COPY . .
 # pass --build-arg BASE_PATH="" to build a root-served image for a standalone subdomain deploy.
 ARG BASE_PATH=/procurement
 ENV BASE_PATH=$BASE_PATH
-RUN npx prisma generate && npm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+# ── THE GATES ─────────────────────────────────────────────────────────────────────────────────────
+# This repo has no GitHub CI. These are the checks that CI used to run, in the same order, and they
+# run HERE because this image build is the one thing every deploy is guaranteed to perform. If any of
+# them fails, the image is not produced, update.sh stops at `docker compose build` (set -e) before it
+# restarts anything, and production keeps serving the images it already has. Each gate is its own
+# RUN so the build log names the one that failed.
+#
+# The cost of that placement: this repo's image is built in the same `docker compose build` as the
+# portal's, so a failing gate here holds back a portal release too, until it is fixed. That is why
+# `npm run verify` runs this exact list locally — run it before every push.
+#
+# Vietnamese has two accepted accent placements on an open oa/oe/uy cluster; both are correct, and
+# using both in one product is the defect ("Hoá đơn" in this tab, "Hóa đơn" in the portal around it).
+RUN node tools/i18n/ortho-scan.js
+RUN npx prisma generate
+# tsc + next lint. `next build` also type-checks and lints today, but says so less clearly, and
+# Next 16 stops linting during build — this line keeps the lint gate whatever next does.
+RUN npm run check
+# The two money-path properties neither tsc nor the e2e suite can see: a ledger effect that silently
+# does nothing for a whole class of document, and a failure swallowed by a console.warn.
+RUN node scripts/check-money-paths.mjs
+# The build itself — what production runs.
+RUN npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
