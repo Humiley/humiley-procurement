@@ -1,13 +1,15 @@
 import { PrismaClient, type Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { seedTradeReference as seedTradeReferenceData } from "./seed-reference";
+import { DEMO_PASSWORD, refuseUnlessDemoDatabase } from "./demo-seed-guard";
 
 const db = new PrismaClient();
 const YEAR = new Date().getFullYear();   // demo docs follow the current year
 
 /**
  * Seed (spec §13). Grows per phase: Phase 1 seeds departments + the full set of demo login
- * accounts (all roles, password Humiley@2026, force-change on first login). Master data
+ * accounts (all roles, one shared DEMO password, no forced change — see demo-seed-guard.ts,
+ * which refuses to run this against a database holding real accounts). Master data
  * (vendors/items/warehouses), reference data (incoterms/HS/CO), and the demo PR→…→payment
  * chain are added by their owning phases.
  */
@@ -61,7 +63,8 @@ const USERS: SeedUser[] = [
 ];
 
 async function main() {
-  const passwordHash = await bcrypt.hash("Humiley@2026", 10);
+  await refuseUnlessDemoDatabase(db);
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   // Departments (no manager yet)
   const deptByCode = new Map<string, string>();
@@ -151,7 +154,7 @@ async function main() {
   console.log("Seeded §6 approval matrix (PR: <20M L1 · 20–200M L1+L2 · >200M L1+L2+L3; PO same bands; VENDOR Director).");
 
   console.log(`Seeded ${DEPARTMENTS.length} departments, ${USERS.length} users.`);
-  console.log("Login: any email above · password Humiley@2026 (force change on first login).");
+  console.log(`Login: any email above · password ${DEMO_PASSWORD} (demo only — not force-changed).`);
 }
 
 // ---- Phase 2: master data ----------------------------------------------------
