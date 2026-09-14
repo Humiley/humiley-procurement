@@ -8,7 +8,8 @@ import { decToString, formatQty } from "@/lib/money";
 import { GrnForm, type GrnPoLine, type GrnPoOpt } from "@/components/grn/GrnForm";
 
 /** §9: new GRN — pick an open PO (?po=<id>), outstanding quantities shown per line. */
-export default async function NewGrnPage({ searchParams }: { searchParams: { po?: string } }) {
+export default async function NewGrnPage(props: { searchParams: Promise<{ po?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireRoles("WAREHOUSE", "ADMIN");
   const tc = await getTranslations("common");
 

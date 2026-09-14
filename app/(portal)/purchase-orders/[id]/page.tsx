@@ -13,7 +13,8 @@ import { PoDetailActions } from "@/components/po/PoDetailActions";
 import { ShipmentDocsPanel, type ShipDocRow, type CooOpt } from "@/components/trade/ShipmentDocsPanel";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
 
-export default async function PoDetailPage({ params }: { params: { id: string } }) {
+export default async function PoDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("po");
   const st = await getTranslations("status");

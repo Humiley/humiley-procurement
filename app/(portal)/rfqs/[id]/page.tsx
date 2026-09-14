@@ -8,7 +8,8 @@ import { formatVnDate } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { RfqDetail, type RfqLineRow, type RfqVendorCol } from "@/components/rfq/RfqDetail";
 
-export default async function RfqDetailPage({ params }: { params: { id: string } }) {
+export default async function RfqDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("rfq");
   const st = await getTranslations("status");

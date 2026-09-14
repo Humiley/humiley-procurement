@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { changePassword } from "@/app/change-password/actions";
@@ -18,7 +19,9 @@ function SubmitButton() {
 
 export function ChangePasswordForm({ forced }: { forced: boolean }) {
   const t = useTranslations("cp");
-  const [state, action] = useFormState(changePassword, null);
+  // React 19 resets an uncontrolled form after its action returns, so a rejected attempt now
+  // clears the three password fields (Next 14's React kept them). Left as is for passwords.
+  const [state, action] = useActionState(changePassword, null);
 
   return (
     <form action={action} className="space-y-4">

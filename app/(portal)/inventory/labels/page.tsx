@@ -10,7 +10,8 @@ import { PrintButton } from "@/components/inv/PrintButton";
  * §21 label batch print — all lot labels of a GRN (?grn=) or one lot (?lot=), sized 50×30 mm
  * for Zebra stock via @media print CSS. QR payload is the lot barcode code (LOT:<number>).
  */
-export default async function LabelsPage({ searchParams }: { searchParams: { grn?: string; lot?: string } }) {
+export default async function LabelsPage(props: { searchParams: Promise<{ grn?: string; lot?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireUser();
   const t = await getTranslations("labels");
 

@@ -8,7 +8,8 @@ import { formatVnDate, formatVnDateTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { GrnAcceptForm, type GrnQcLine } from "@/components/grn/GrnAcceptForm";
 
-export default async function GrnDetailPage({ params }: { params: { id: string } }) {
+export default async function GrnDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("grn");
   const st = await getTranslations("status");

@@ -8,7 +8,8 @@ import { decToString } from "@/lib/money";
 import { InvoiceForm, type InvPoLine, type InvPoOpt } from "@/components/invoice/InvoiceForm";
 
 /** §9: new invoice — lines default from received-not-yet-invoiced at PO prices (?po=<id>). */
-export default async function NewInvoicePage({ searchParams }: { searchParams: { po?: string } }) {
+export default async function NewInvoicePage(props: { searchParams: Promise<{ po?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireRoles("ACCOUNTANT", "ADMIN");
   const tc = await getTranslations("common");
 

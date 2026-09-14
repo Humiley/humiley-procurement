@@ -8,7 +8,8 @@ import { formatVnDate, formatVnDateTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { CountSheet, type CountLineRow } from "@/components/inv/CountSheet";
 
-export default async function CountDetailPage({ params }: { params: { id: string } }) {
+export default async function CountDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("cnt");
   const st = await getTranslations("status");

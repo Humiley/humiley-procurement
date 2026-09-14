@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { safeCallback } from "../lib/safe-callback";
 import { PASSWORD } from "./helpers";
 
@@ -83,9 +84,8 @@ test("double encoding does not sneak an origin through", () => {
 test("both the page and the action validate, not just the page", () => {
   // The callback travels to the action through a HIDDEN FORM FIELD, so it is ordinary user input
   // by the time it arrives. Validating only where it is rendered protects nobody.
-  const fs = require("node:fs") as typeof import("node:fs");
-  expect(fs.readFileSync("app/login/page.tsx", "utf8")).toContain("safeCallback(");
-  expect(fs.readFileSync("app/login/actions.ts", "utf8")).toContain("safeCallback(");
+  expect(readFileSync("app/login/page.tsx", "utf8")).toContain("safeCallback(");
+  expect(readFileSync("app/login/actions.ts", "utf8")).toContain("safeCallback(");
 });
 
 /**

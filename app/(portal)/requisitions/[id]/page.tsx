@@ -16,7 +16,8 @@ import { DecideInline } from "@/components/approvals/DecideInline";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
 import { checkPrBudget } from "@/lib/budget/check";
 
-export default async function RequisitionDetailPage({ params }: { params: { id: string } }) {
+export default async function RequisitionDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("pr");
   const st = await getTranslations("status");

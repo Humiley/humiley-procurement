@@ -4,7 +4,7 @@ Enterprise procure-to-pay + inventory portal for Humiley Engineering & Solutions
 EN/VN, 21 CFR Part 11-aligned e-signatures, full traceability. Built from
 `HUMILEY-PROCUREMENT-SPEC.md` (17 phases, all complete — see `docs/FINAL-REPORT.md`).
 
-**Stack:** Next.js 14 (App Router) · TypeScript · Prisma 6 + PostgreSQL 16 · Auth.js v5 ·
+**Stack:** Next.js 16 (App Router, Turbopack build) · React 19 · TypeScript · Prisma 6 + PostgreSQL 16 · Auth.js v5 ·
 next-intl · Tailwind (Humiley brand) · Recharts · exceljs · bwip-js · Playwright.
 
 ## Quickstart

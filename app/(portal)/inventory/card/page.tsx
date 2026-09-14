@@ -9,7 +9,8 @@ import { formatVnDateTime } from "@/lib/dates";
 const IN_TYPES = new Set(["GRN_IN", "TRANSFER_IN", "ADJUST_IN", "RETURN_IN"]);
 
 /** §10b stock card — the movement ledger for one item in one warehouse, with a running balance. */
-export default async function StockCardPage({ searchParams }: { searchParams: { wh?: string; item?: string } }) {
+export default async function StockCardPage(props: { searchParams: Promise<{ wh?: string; item?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireUser();
   const t = await getTranslations("inventory");
   if (!searchParams.wh || !searchParams.item) notFound();

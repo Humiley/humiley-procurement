@@ -11,7 +11,8 @@ import { DecideInline } from "@/components/approvals/DecideInline";
 import { GiDetailActions, type GiExecLine } from "@/components/gi/GiDetailActions";
 import { LEVEL_LABELS } from "@/lib/workflow/engine";
 
-export default async function GoodsIssueDetailPage({ params }: { params: { id: string } }) {
+export default async function GoodsIssueDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("gi");
   const st = await getTranslations("status");

@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 
-// Edge middleware: uses the `authorized` callback in authConfig to gate every route.
-export default NextAuth(authConfig).auth;
+// Proxy (Next 16's name for middleware.ts, which it deprecates): uses the `authorized` callback in
+// authConfig to gate every route. Unlike the old edge middleware, a proxy always runs on the Node.js
+// runtime. authConfig stays edge-safe (no Prisma/bcrypt) all the same, so nothing here depends on that.
+export const proxy = NextAuth(authConfig).auth;
 
 export const config = {
   // Run on everything except static assets, image files, /api/v1 (token-authenticated machine API

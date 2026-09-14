@@ -7,7 +7,8 @@ import { SsoAutoSubmit } from "@/components/auth/SsoAutoSubmit";
  * Portal SSO landing. The portal launcher opens /sso?t=<signed token>; this exchanges it for a
  * procurement session and forwards to the dashboard — no login screen for a portal user.
  */
-export default async function SsoPage({ searchParams }: { searchParams: { t?: string | string[] } }) {
+export default async function SsoPage(props: { searchParams: Promise<{ t?: string | string[] }> }) {
+  const searchParams = await props.searchParams;
   const session = await auth();
   if (session?.user) redirect("/dashboard"); // already signed in
 

@@ -27,7 +27,12 @@ test("the sweeps are started by the server, not by a request", () => {
   const inst = page("instrumentation.ts");
   expect(inst).toContain("setInterval");
   expect(inst).toContain('process.env.NEXT_RUNTIME !== "nodejs"');   // edge has no db and no timers
-  expect(page("next.config.mjs")).toContain("instrumentationHook: true");  // Next 14 flags it
+  // Next 14 only ran instrumentation.ts behind experimental.instrumentationHook. From Next 15 the
+  // hook is stable and always on, and the old key is gone — so the guard is the Next major.
+  const nextRange: string = JSON.parse(page("package.json")).dependencies.next;
+  const nextMajor = Number(nextRange.replace(/^[^0-9]*/, "").split(".")[0]);
+  expect(nextMajor, "instrumentation.ts runs without a flag only from Next 15").toBeGreaterThanOrEqual(15);
+  expect(page("next.config.mjs")).not.toContain("instrumentationHook:");
 });
 
 test("instrumentation stays free of Node-only imports", () => {
@@ -51,8 +56,9 @@ test("the internal sweep route is Node-runtime and token-guarded", () => {
   // and the auth middleware must not bounce the timer to /login. Check the MATCHER, not the file:
   // the prose above it names the route too, so a substring test passes even after the exemption
   // is deleted.
-  const matcher = page("middleware.ts").match(/matcher:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
-  expect(matcher, "the middleware matcher must exempt /api/internal").toContain("api/internal");
+  // Next 16 renamed middleware.ts to proxy.ts.
+  const matcher = page("proxy.ts").match(/matcher:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
+  expect(matcher, "the proxy matcher must exempt /api/internal").toContain("api/internal");
 });
 
 test("a failed tick cannot kill the server", () => {

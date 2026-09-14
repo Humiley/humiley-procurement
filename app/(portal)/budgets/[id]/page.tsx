@@ -8,7 +8,8 @@ import { formatVnDate } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 /** §9 budget drill-down — the row's ledger + every PR line that resolves to it. */
-export default async function BudgetDetailPage({ params }: { params: { id: string } }) {
+export default async function BudgetDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   await requireRoles("ADMIN", "DIRECTOR", "ACCOUNTANT", "PURCHASER", "DEPT_MANAGER");
   const t = await getTranslations("budgets");
   const st = await getTranslations("status");

@@ -9,7 +9,8 @@ import { decToString } from "@/lib/money";
 import { PrForm, type CostCenterOpt, type ExistingPr } from "@/components/pr/PrForm";
 import type { CatalogItem, UomOpt, PrEditorLine } from "@/components/pr/PrLinesEditor";
 
-export default async function EditRequisitionPage({ params }: { params: { id: string } }) {
+export default async function EditRequisitionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("pr");
   const tc = await getTranslations("common");

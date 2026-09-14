@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+// A literal, so it is built once. Next 14 prerendered GET handlers like this by default; Next 15
+// renders every GET on demand unless told otherwise — this keeps the Next 14 behaviour.
+export const dynamic = "force-static";
+
 /** §17 OpenAPI description of the read-first v1 API (hand-maintained literal). */
 const LIST_PARAMS = [
   { name: "take", in: "query", schema: { type: "integer", maximum: 200, default: 50 } },

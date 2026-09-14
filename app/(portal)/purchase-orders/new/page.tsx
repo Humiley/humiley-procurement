@@ -7,7 +7,8 @@ import { decToString } from "@/lib/money";
 import { PoForm, type PoFormLine, type PoFormOpt, type PoVendorContract } from "@/components/po/PoForm";
 
 /** §8: new PO — standalone, or prefilled from an APPROVED PR via ?fromPr=<id>. PURCHASER/ADMIN. */
-export default async function NewPoPage({ searchParams }: { searchParams: { fromPr?: string } }) {
+export default async function NewPoPage(props: { searchParams: Promise<{ fromPr?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireRoles("PURCHASER", "ADMIN");
   const tc = await getTranslations("common");
 

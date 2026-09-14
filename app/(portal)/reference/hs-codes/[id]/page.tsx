@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { chapterOf, chapterInfo, sectionOfChapter } from "@/lib/trade/hs-structure";
 
 /** §20 HS-code detail — the duty × C/O form matrix + linked items + regulation notes. */
-export default async function HsCodeDetailPage({ params }: { params: { id: string } }) {
+export default async function HsCodeDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   await requireUser();
   const t = await getTranslations("hs");
 

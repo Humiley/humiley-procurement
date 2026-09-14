@@ -17,12 +17,16 @@ const nextConfig = {
   // Expose the prefix to client code that builds raw URLs (fetch strings, which — unlike <Link>,
   // redirect(), useRouter() — are NOT auto-prefixed by Next). Read via lib/base-path.ts.
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
+  // Next 16's `next dev` writes a managed "agent rules" block into CLAUDE.md (or AGENTS.md) whenever
+  // it detects an AI coding agent. This repo's CLAUDE.md is hand-written and tracked, so a dev server
+  // started by an agent would dirty it on every fresh checkout. Off, as it was before Next 16.
+  agentRules: false,
+  // instrumentation.ts (where the background sweeps start, once per server boot) needs no flag:
+  // Next 15 made the hook stable and removed `experimental.instrumentationHook`.
   experimental: {
-    // Server Actions used for all mutations (spec CLAUDE.md hard rule).
+    // Server Actions used for all mutations (spec CLAUDE.md hard rule). Still under `experimental`
+    // in Next 16 (the build lists it under "Experiments").
     serverActions: { bodySizeLimit: "10mb" },
-    // Runs instrumentation.ts once when the server boots — where the background sweeps start.
-    // Next 14 keeps this behind a flag; it is stable from 15.
-    instrumentationHook: true,
   },
 };
 

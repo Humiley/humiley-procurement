@@ -8,7 +8,8 @@ import { formatVnDate } from "@/lib/dates";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ContractDetailActions } from "@/components/contracts/ContractDetailActions";
 
-export default async function ContractDetailPage({ params }: { params: { id: string } }) {
+export default async function ContractDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const t = await getTranslations("contracts");
   const st = await getTranslations("status");
