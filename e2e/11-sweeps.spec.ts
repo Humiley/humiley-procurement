@@ -56,8 +56,9 @@ test("the internal sweep route is Node-runtime and token-guarded", () => {
   // and the auth middleware must not bounce the timer to /login. Check the MATCHER, not the file:
   // the prose above it names the route too, so a substring test passes even after the exemption
   // is deleted.
-  const matcher = page("middleware.ts").match(/matcher:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
-  expect(matcher, "the middleware matcher must exempt /api/internal").toContain("api/internal");
+  // Next 16 renamed middleware.ts to proxy.ts.
+  const matcher = page("proxy.ts").match(/matcher:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
+  expect(matcher, "the proxy matcher must exempt /api/internal").toContain("api/internal");
 });
 
 test("a failed tick cannot kill the server", () => {

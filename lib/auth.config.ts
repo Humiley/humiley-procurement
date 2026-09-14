@@ -2,7 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import type { Role } from "@prisma/client";
 
 /**
- * Edge-safe Auth.js config (no Prisma/bcrypt) — imported by middleware.ts. The Credentials
+ * Edge-safe Auth.js config (no Prisma/bcrypt) — imported by proxy.ts. The Credentials
  * provider (which needs Node APIs) is added in lib/auth.ts.
  */
 export const authConfig = {

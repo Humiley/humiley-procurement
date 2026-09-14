@@ -42,8 +42,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # using both in one product is the defect ("Hoá đơn" in this tab, "Hóa đơn" in the portal around it).
 RUN node tools/i18n/ortho-scan.js
 RUN npx prisma generate
-# tsc + next lint. `next build` also type-checks and lints today, but says so less clearly, and
-# Next 16 stops linting during build — this line keeps the lint gate whatever next does.
+# tsc + eslint (eslint.config.mjs). Next 16 removed `next lint` and no longer lints during
+# `next build` (it still type-checks), so this line is now the ONLY lint gate.
 RUN npm run check
 # The two money-path properties neither tsc nor the e2e suite can see: a ledger effect that silently
 # does nothing for a whole class of document, and a failure swallowed by a console.warn.

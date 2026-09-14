@@ -27,7 +27,11 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   return (
-    <html lang={locale} className={poppins.variable} suppressHydrationWarning>
+    // data-scroll-behavior: globals.css sets `scroll-behavior: smooth` on <html>. Up to Next 15 the
+    // router switched it off for the jump to the top of a new page; Next 16 only does so when this
+    // attribute is present. Without it, every navigation would smooth-scroll up from where the last
+    // page was left.
+    <html lang={locale} className={poppins.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full text-body antialiased">
         {/* When the Humiley Portal embeds this app in an iframe (Procurement as an in-portal
             section), mark the root so our own top bar is hidden — the portal already provides the
