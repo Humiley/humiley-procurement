@@ -54,8 +54,43 @@ for (const e of flat) {
     OLD.lastIndex = m.index + 1;
   }
 }
+// messages/vi.json is not the only place Vietnamese lives. 48 source files carry it too — mostly
+// titleVn/bodyVn on notifications, which never pass through next-intl at all. A signature-lockout
+// notice read "Khoá ký điện tử" for exactly that reason: this gate was green because it had only
+// ever been shown the catalogue.
+//
+// This file is skipped on purpose: it documents both spellings, so scanning it means the scanner
+// reading its own examples and failing forever.
+const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build']);
+const SELF = path.resolve(__dirname, 'ortho-scan.js');
+let srcFiles = 0, srcWithVn = 0;
+(function walk(dir) {
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(ent.name)) continue;
+    const full = path.join(dir, ent.name);
+    if (ent.isDirectory()) { walk(full); continue; }
+    if (!/\.(ts|tsx|js|jsx)$/.test(ent.name)) continue;
+    if (full === SELF) continue;
+    srcFiles++;
+    const body = fs.readFileSync(full, 'utf8');
+    if (!/[À-ỹ]/.test(body)) continue;
+    srcWithVn++;
+    let mm; OLD.lastIndex = 0;
+    while ((mm = OLD.exec(body))) {
+      const start = body.slice(0, mm.index).match(/[a-zà-ỹA-ZÀ-Ỹ]*$/)[0];
+      const w = start + mm[0];
+      const line = body.slice(0, mm.index).split('\n').length;
+      if (!hits.has(w)) hits.set(w, []);
+      hits.get(w).push({ key: full.replace(path.join(__dirname, '..', '..') + '/', '') + ':' + line, val: body.slice(mm.index - 30, mm.index + 30).replace(/\s+/g, ' ') });
+      OLD.lastIndex = mm.index + 1;
+    }
+    if (BAD.test(body)) corrupt++;
+  }
+})(path.join(__dirname, '..', '..'));
+
 const rows = [...hits].sort((a, b) => b[1].length - a[1].length);
-console.log('strings: ' + flat.length + '   corrupted syllables: ' + corrupt);
+console.log('catalogue strings: ' + flat.length + '   source files: ' + srcFiles +
+            ' (' + srcWithVn + ' carrying Vietnamese)   corrupted syllables: ' + corrupt);
 console.log('old-style OPEN syllables: ' + rows.length + ' distinct\n');
 for (const [w, list] of rows) {
   list.forEach(e => console.log('  ' + w.padEnd(8) + ' ' + e.key.padEnd(26) + ' ' + JSON.stringify(e.val.slice(0, 44))));
